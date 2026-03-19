@@ -1,0 +1,144 @@
+# ------------------------------------
+# 1. Allgemeine Ignorierungen (OS/Git)
+# ------------------------------------
+# Dateien, die von Betriebssystemen generiert werden
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Git-Dateien (wird meistens nicht benötigt, da sie sich in .git/ befinden)
+# *.orig
+
+# Temporäre Dateien für deine Ausarbeitung (Anpassbar)
+# ----------------------------------------------------
+03_Hardware/**
+!03_Hardware/STM32N6_Thesis_Board/
+!03_Hardware/STM32N6_Thesis_Board/**/*
+
+02_Software/**
+!02_Software/Image_Capture_Python/dataset/
+!02_Software/Image_Capture_Python/dataset/**
+
+!05_Edge AI/
+!05_Edge AI/**
+
+# Kapitel 5: diese Ordner weiterhin ignorieren
+05_Edge AI/Training_Scripts/Segmentierung per Blender/dataset/
+05_Edge AI/Training_Scripts/Segmentierung per Blender/pose_dataset/
+05_Edge AI/Training_Scripts/Segmentierung per Blender/robot_arm/
+05_Edge AI/Training_Scripts/Segmentierung per Blender/yolo_dataset/
+05_Edge AI/Training_Scripts/label_studio_import/
+05_Edge AI/Training_Scripts/real_dataset/
+05_Edge AI/Training_Scripts/real_pose_dataset/
+05_Edge AI/Training_Scripts/real_yolo_dataset/
+05_Edge AI/Trained_Models/
+05_Edge AI/runs/
+
+
+
+# -----------------------------------------------------
+# 2. STM32CubeIDE / Eclipse C/C++ (Embedded Code)
+# -----------------------------------------------------
+# Alle Ordner, die Build-Artefakte enthalten
+*/Debug/
+*/Release/
+*/Build/
+
+# Generierte Projekt-Metadaten von Eclipse/CubeIDE
+.project
+.cproject
+.settings/
+.launch
+.metadata/
+
+# Ignoriert spezifische Compiler-Outputs
+*.elf
+*.bin
+*.hex
+*.map
+*.o
+*.d
+*.su
+*.list
+*.cyclo
+*.mk
+*.lib
+*.a
+
+
+# -----------------------------------------------------
+# Ergänzungen für STM32CubeIDE / Eclipse
+# -----------------------------------------------------
+
+# MX-spezifische Dateien (Konfigurationstool)
+# Die .ioc Datei MUSST du behalten, aber Logfiles können weg
+*.log
+*.history
+
+# Falls du mit dem TouchGFX Designer arbeitest (N6 hat oft Displays)
+**/TouchGFX/build/
+**/TouchGFX/generated/
+
+# STM32CubeIDE Metadata (Index-Dateien)
+.metadata/
+*.pdom
+
+# ------------------------------------
+# 3. KiCad (Hardware-Entwicklung)
+# ------------------------------------
+# Backup- und Autosave-Dateien
+*.bak
+*-bak
+*.sch-bak
+*.kicad_sch-bak
+*.pcb-bak
+*.kicad_pcb-bak
+*~
+
+# Auto-generierte Dateien (können jederzeit neu erzeugt werden)
+# Standard-Plot- und Gerber-Dateien
+gerbers/
+*.gbr
+*.drl
+*.xln
+*.pdf # Wenn Plot-Dateien als PDF exportiert werden
+
+# BOM (Stückliste)
+*.xml
+*.csv
+
+# KICAD spezifische Backup-Dateien und Logfiles
+fp-info-cache
+*.dcm.tmp
+*.net.tmp
+*.drc.rpt
+kicad_3dshapes/
+
+# Hardware-Backups und große Archive
+*.zip
+*.7z
+*.rar
+
+# ------------------------------------
+# 5. Keras / TensorFlow / Python-Entwicklung
+# ------------------------------------
+# Python Virtual Environments (sehr wichtig!)
+venv/
+.venv/
+env/
+.env/
+
+# Bytecode und Cache-Dateien
+__pycache__/
+*.pyc
+*.pyd
+
+# Generierte Modelle, Checkpoints und Logs
+*.h5
+*.hdf5
+model_weights/
+checkpoints/
+tensorboard_logs/
+
+# Jupyter Notebook Checkpoints (optional, aber oft nützlich)
+.ipynb_checkpoints/

@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP STL40DN3LLH5
+D Automotive-grade dual N-channel 30 V, 0.016 Ohm typ., 11 A STripFET H5 Power MOSFET in a PowerFLAT 5x6 double island package
+K
+F https://www.st.com/resource/en/datasheet/stl40dn3llh5.pdf
+$ENDCMP
+#
+#End Doc Library

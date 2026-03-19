@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP STM32F723IEK6
+D STMicroelectronics STM32F723IEK6, 32bit ARM Cortex M7 Microcontroller, STM32, 216MHz, 512 kB Flash, 176-Pin UFBGA
+K
+F 
+$ENDCMP
+#
+#End Doc Library

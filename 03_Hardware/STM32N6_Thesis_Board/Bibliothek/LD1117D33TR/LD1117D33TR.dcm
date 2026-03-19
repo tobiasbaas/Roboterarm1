@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP LD1117D33TR
+D LD1117D33TR, Low Dropout Voltage Regulator, 1.3A, 3.3V +/-1%, 8-Pin SO
+K
+F http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00000544.pdf
+$ENDCMP
+#
+#End Doc Library

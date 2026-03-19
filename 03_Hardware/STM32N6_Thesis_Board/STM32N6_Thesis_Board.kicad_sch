@@ -1,0 +1,1204 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "b7a85424-73c8-4e3d-8597-8001dcd52f18")
+	(paper "A4")
+	(title_block
+		(title "Overview STM32N6 Beachlor Dev Board")
+		(date "2025-09-30")
+	)
+	(lib_symbols)
+	(text "Top Down View of STM32N6 Beachlor Project"
+		(exclude_from_sim no)
+		(at 153.162 21.844 0)
+		(effects
+			(font
+				(size 5.08 5.08)
+				(thickness 1.016)
+				(bold yes)
+			)
+		)
+		(uuid "77e3245e-8191-49df-9704-7d3f3717d564")
+	)
+	(junction
+		(at 156.21 100.33)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0ffa3d0f-d43c-4c03-b7e6-c4d0a7f00662")
+	)
+	(junction
+		(at 162.56 83.82)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "58e88004-9c35-41fd-aa03-26b3773e1316")
+	)
+	(junction
+		(at 156.21 50.8)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "afda5e1f-2047-4528-a79f-f08701a87ff1")
+	)
+	(wire
+		(pts
+			(xy 156.21 100.33) (xy 166.37 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "09635057-1ed5-4481-8f3a-c095ab3cc642")
+	)
+	(bus
+		(pts
+			(xy 139.7 64.77) (xy 166.37 64.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "122e37a8-0073-4104-b849-50ec4236f6fb")
+	)
+	(wire
+		(pts
+			(xy 156.21 121.92) (xy 156.21 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1f635c36-588d-46f0-8ad6-82620470cea2")
+	)
+	(bus
+		(pts
+			(xy 162.56 139.7) (xy 162.56 83.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "26e3d40d-06f5-40de-b57b-372d763d6575")
+	)
+	(bus
+		(pts
+			(xy 162.56 74.93) (xy 166.37 74.93)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "274e06e7-3a7c-4257-9b4d-163b0ffb744f")
+	)
+	(wire
+		(pts
+			(xy 86.36 134.62) (xy 86.36 104.14)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2b459f12-bea0-457e-900e-68080a9a8124")
+	)
+	(wire
+		(pts
+			(xy 96.52 115.57) (xy 100.33 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2ff05c7b-68db-45cb-bb3f-817000a58fab")
+	)
+	(wire
+		(pts
+			(xy 96.52 127) (xy 96.52 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "32ed7f8a-9101-43b0-b2c7-e178b9ad51e7")
+	)
+	(wire
+		(pts
+			(xy 139.7 102.87) (xy 166.37 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "363b5711-171d-4676-88c5-c64d821d6f05")
+	)
+	(wire
+		(pts
+			(xy 166.37 147.32) (xy 156.21 147.32)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4e074a60-0068-4e54-acd7-9277659c11c5")
+	)
+	(bus
+		(pts
+			(xy 139.7 110.49) (xy 166.37 110.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "54a55385-31df-49da-8eac-9813dfdb7c39")
+	)
+	(bus
+		(pts
+			(xy 139.7 115.57) (xy 152.4 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "552998e6-f5cb-49fc-96ec-7b67ab713b3d")
+	)
+	(wire
+		(pts
+			(xy 96.52 127) (xy 166.37 127)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "62ac5f09-9d3b-4f0f-8efa-0f7d1093fb8f")
+	)
+	(bus
+		(pts
+			(xy 139.7 69.85) (xy 166.37 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "63ce5dca-72e8-4273-91f3-c81ce603b02c")
+	)
+	(wire
+		(pts
+			(xy 100.33 111.76) (xy 93.98 111.76)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6cb7bcba-5317-43d7-b6ab-04da04c8ec67")
+	)
+	(wire
+		(pts
+			(xy 86.36 104.14) (xy 100.33 104.14)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6f6f8bfc-a09d-4a84-a63f-8343838158fa")
+	)
+	(wire
+		(pts
+			(xy 90.17 132.08) (xy 158.75 132.08)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8205ee10-d7a9-47cc-a3e0-15d2832bcaaf")
+	)
+	(wire
+		(pts
+			(xy 166.37 121.92) (xy 156.21 121.92)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "85a9083d-f14b-4321-a26a-27ee531f3a58")
+	)
+	(wire
+		(pts
+			(xy 90.17 132.08) (xy 90.17 107.95)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "89c58baa-6990-43b7-b904-181e24596e5f")
+	)
+	(bus
+		(pts
+			(xy 166.37 139.7) (xy 162.56 139.7)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8c42a7bb-f536-42dc-9a7d-61fb2f22c10a")
+	)
+	(wire
+		(pts
+			(xy 86.36 134.62) (xy 156.21 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "92a0664e-2241-4507-8225-bfbbe76159b6")
+	)
+	(bus
+		(pts
+			(xy 139.7 67.31) (xy 166.37 67.31)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "934338cb-03fb-4bba-b3a3-ea42ec9f2187")
+	)
+	(bus
+		(pts
+			(xy 139.7 151.13) (xy 166.37 151.13)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9c6bc09d-68b4-433e-a475-c610033cb9b8")
+	)
+	(bus
+		(pts
+			(xy 162.56 83.82) (xy 166.37 83.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a245fc96-0d41-42c9-a4c8-5632e0abb671")
+	)
+	(wire
+		(pts
+			(xy 93.98 111.76) (xy 93.98 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a30189b3-84b0-467f-9bd9-6644c5851830")
+	)
+	(wire
+		(pts
+			(xy 139.7 50.8) (xy 156.21 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a93b1b02-5a3e-4a45-9208-bf6c8f99b03b")
+	)
+	(wire
+		(pts
+			(xy 156.21 147.32) (xy 156.21 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a9571123-2504-453a-a9ed-40b5e95e132e")
+	)
+	(wire
+		(pts
+			(xy 156.21 50.8) (xy 156.21 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a9a374e5-4239-4072-af24-ffd665ec471f")
+	)
+	(bus
+		(pts
+			(xy 152.4 115.57) (xy 152.4 124.46)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ac970a18-0ed1-4e22-a037-0f4c9641be10")
+	)
+	(wire
+		(pts
+			(xy 158.75 143.51) (xy 158.75 132.08)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b0ae7303-6ed6-43ff-bc34-bf850f9b413a")
+	)
+	(bus
+		(pts
+			(xy 139.7 46.99) (xy 166.37 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b2bc6957-9b86-4a76-b987-8263d5736e9d")
+	)
+	(bus
+		(pts
+			(xy 139.7 86.36) (xy 166.37 86.36)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b58559ea-7741-41b4-9366-daaf220a8157")
+	)
+	(wire
+		(pts
+			(xy 166.37 143.51) (xy 158.75 143.51)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bc148081-4398-4de5-8b66-9917cf1b5c20")
+	)
+	(bus
+		(pts
+			(xy 139.7 88.9) (xy 166.37 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c2fc54b8-4adf-455f-98f2-50ff254cb6d6")
+	)
+	(bus
+		(pts
+			(xy 162.56 74.93) (xy 162.56 83.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d8127c14-0b98-4c8f-ae5a-ca0ca3b184af")
+	)
+	(bus
+		(pts
+			(xy 152.4 124.46) (xy 166.37 124.46)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "db38f9e8-ca58-44d6-b6c9-2c3ca42d333c")
+	)
+	(wire
+		(pts
+			(xy 156.21 50.8) (xy 166.37 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dbe705a2-dea3-488d-bd63-df43908d950f")
+	)
+	(wire
+		(pts
+			(xy 90.17 107.95) (xy 100.33 107.95)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "decf0a28-236c-4d3b-ab20-496451d8d8e2")
+	)
+	(wire
+		(pts
+			(xy 93.98 129.54) (xy 166.37 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e4d882a8-f75a-4322-8622-7f2110ea783b")
+	)
+	(bus
+		(pts
+			(xy 139.7 83.82) (xy 162.56 83.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e5fd5f0a-7ef7-4bf6-a87d-ae61a7d9f687")
+	)
+	(bus
+		(pts
+			(xy 139.7 72.39) (xy 166.37 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fac5bd3c-70f9-4e39-87ec-3d6d1cc583e1")
+	)
+	(bus
+		(pts
+			(xy 139.7 105.41) (xy 166.37 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fb4af06b-d78f-4037-991f-f9fa13a3db1a")
+	)
+	(sheet
+		(at 166.37 119.38)
+		(size 24.13 12.7)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "6afefdcc-0dc2-43bc-9495-72dadec8e99b")
+		(property "Sheetname" "Peripherals"
+			(at 166.37 118.6684 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "Peripherals.kicad_sch"
+			(at 166.37 132.6646 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "BOOT0" input
+			(at 166.37 127 180)
+			(uuid "3ae8fe42-27e1-4589-a32d-497a0055697b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "BOOT1" input
+			(at 166.37 129.54 180)
+			(uuid "0f1dfdc7-4d72-43a6-868d-aca8a5ccc689")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "NRST" input
+			(at 166.37 121.92 180)
+			(uuid "e933aa00-1c18-49a2-956d-ad598569c27c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "Peripherals[1..4]" input
+			(at 166.37 124.46 180)
+			(uuid "314678aa-47c5-42ad-b9e7-e29d7d983e44")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "STM32N6_Thesis_Board"
+				(path "/b7a85424-73c8-4e3d-8597-8001dcd52f18"
+					(page "8")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 166.37 97.79)
+		(size 25.4 15.24)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "7ac62a58-38a7-4611-aa5d-b2bce75c0175")
+		(property "Sheetname" "External Interface"
+			(at 166.37 97.0784 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "External Interface.kicad_sch"
+			(at 166.37 113.6146 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "JNTRST" input
+			(at 166.37 102.87 180)
+			(uuid "4f2dd083-e428-4c6f-b6dc-45b1b73bee8d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "NRST" input
+			(at 166.37 100.33 180)
+			(uuid "aa2a39cb-787d-4d32-af8f-2fa5fb011a20")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "TRACE[1..5]" bidirectional
+			(at 166.37 110.49 180)
+			(uuid "3392abb2-8068-4548-a814-c65b6be7b96a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "MCU[1..7]" input
+			(at 166.37 105.41 180)
+			(uuid "036893ab-c0f2-42e2-ae63-81c36ee83289")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "STM32N6_Thesis_Board"
+				(path "/b7a85424-73c8-4e3d-8597-8001dcd52f18"
+					(page "7")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 100.33 41.91)
+		(size 39.37 76.2)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "8fc493ff-4811-423a-964f-4ea55a2f9fc8")
+		(property "Sheetname" "STM32N6_microcontroller"
+			(at 100.33 41.1984 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "STM32N6_microcontroller.kicad_sch"
+			(at 100.33 118.6946 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "OCTOSPI[1..11]" bidirectional
+			(at 139.7 46.99 0)
+			(uuid "26f7b44c-0a3c-443d-bae6-0abb22b9306c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "BOOT0" input
+			(at 100.33 115.57 180)
+			(uuid "7fc1bb78-806a-47fb-b794-15d9203fc9fc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "I2C[1..2]" bidirectional
+			(at 139.7 83.82 0)
+			(uuid "fbcc425f-2ed6-4d7c-af1f-ab30eb72e4e9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "NRST" bidirectional
+			(at 139.7 50.8 0)
+			(uuid "571b692a-dd73-4fe8-a40b-faeeb8cce15f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "Peripherals[1..4]" input
+			(at 139.7 115.57 0)
+			(uuid "085cf60a-df7e-4ae2-b368-51fb339515e0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "PWR_ON" input
+			(at 100.33 104.14 180)
+			(uuid "27deab98-5339-4da9-b529-1f99862f8ed0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "TRACE[1..5]" bidirectional
+			(at 139.7 110.49 0)
+			(uuid "ff2f25d3-2246-4e14-b548-0e68c8e82268")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "USB[1..7]" bidirectional
+			(at 139.7 86.36 0)
+			(uuid "79a78aaf-d0b8-42d4-b2b6-d3f85cbbd93f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "JNTRST" bidirectional
+			(at 139.7 102.87 0)
+			(uuid "12ae0ac1-0fe4-4dde-b93d-5ff1dcb15323")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "EXT_SMPS_MODE" bidirectional
+			(at 100.33 107.95 180)
+			(uuid "a8a4d222-9064-4919-88e5-2efdc6337d79")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "BOOT1" input
+			(at 100.33 111.76 180)
+			(uuid "a9dac544-6ce9-4242-8508-a2d3c6a1bbcc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "MCU[1..7]" input
+			(at 139.7 105.41 0)
+			(uuid "fdd52680-990a-4e6d-9610-9410d6f5e448")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "USB1HS{D+ D-}" bidirectional
+			(at 139.7 88.9 0)
+			(uuid "2610de48-890b-4ace-8821-0a889734a4fc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "Camera[1..6]" input
+			(at 139.7 64.77 0)
+			(uuid "885f6ea4-fe55-4ed7-9707-80971fd6f691")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "CSICLK{D+ D-}" input
+			(at 139.7 67.31 0)
+			(uuid "3e9987b5-26a6-477c-b118-a6e7190164cd")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "CSID0{D+ D-}" input
+			(at 139.7 69.85 0)
+			(uuid "17a3ff69-50af-4096-af99-0255d3c9c4a5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "CSID1{D+ D-}" input
+			(at 139.7 72.39 0)
+			(uuid "fdbe8e4f-0ce7-4162-9a09-c402d984e044")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(instances
+			(project "STM32N6_Thesis_Board"
+				(path "/b7a85424-73c8-4e3d-8597-8001dcd52f18"
+					(page "1")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 99.06 144.78)
+		(size 40.64 10.16)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "a52265c3-cc93-4efd-9815-ffcc2c46d94c")
+		(property "Sheetname" "STM32N6_Power"
+			(at 99.06 144.0684 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "STM32N6_Power.kicad_sch"
+			(at 99.06 155.5246 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "MCUPower[1..2]" input
+			(at 139.7 151.13 0)
+			(uuid "99ce710c-7973-47f9-8863-eba977a1ddc6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(instances
+			(project "STM32N6_Thesis_Board"
+				(path "/b7a85424-73c8-4e3d-8597-8001dcd52f18"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 166.37 137.16)
+		(size 24.13 17.78)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "ac3c98fd-6fd1-4f27-97f6-cf23bb8e5358")
+		(property "Sheetname" "Power"
+			(at 166.37 136.4484 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "Power.kicad_sch"
+			(at 166.37 155.5246 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "EXT_SMPS_MODE" input
+			(at 166.37 143.51 180)
+			(uuid "0fc3a4b0-e8bf-4c8f-9550-2f0b1929c48e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "I2C[1..2]" input
+			(at 166.37 139.7 180)
+			(uuid "76902a3d-545c-4610-b825-e794608935a5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "MCUPower[1..2]" input
+			(at 166.37 151.13 180)
+			(uuid "6d145b2c-2dc0-41f1-9dc4-35d709d3915d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PWR_ON" input
+			(at 166.37 147.32 180)
+			(uuid "9ac7350b-d2ca-4acf-ae85-8d1b0e568cef")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "STM32N6_Thesis_Board"
+				(path "/b7a85424-73c8-4e3d-8597-8001dcd52f18"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 166.37 41.91)
+		(size 24.13 13.97)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "c25eb34b-33b4-4ed9-964c-3ae85cf1d6a4")
+		(property "Sheetname" "Octa_Flash"
+			(at 166.37 41.1984 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "Octa_Flash.kicad_sch"
+			(at 166.37 56.4646 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "OCTOSPI[1..11]" bidirectional
+			(at 166.37 46.99 180)
+			(uuid "5bf38bbf-87dd-4dd5-92de-aa9562383f34")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "NRST" bidirectional
+			(at 166.37 50.8 180)
+			(uuid "6225e76b-1998-4426-9d92-a4e362963c6f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "STM32N6_Thesis_Board"
+				(path "/b7a85424-73c8-4e3d-8597-8001dcd52f18"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 166.37 62.23)
+		(size 25.4 13.97)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "cd6478cd-0545-440f-85c1-4aa5b40d6d44")
+		(property "Sheetname" "Camera"
+			(at 166.37 61.5184 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "Camera.kicad_sch"
+			(at 166.37 76.7846 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "I2C[1..2]" input
+			(at 166.37 74.93 180)
+			(uuid "42eb75d3-cb9e-45c5-a5ab-89f4def7cc26")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "Camera[1..6]" input
+			(at 166.37 64.77 180)
+			(uuid "8b0716d5-8fcd-42fd-8da3-8102adfa7aae")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "CSICLK{D+ D-}" input
+			(at 166.37 67.31 180)
+			(uuid "cc8185b0-4b68-42fe-9a91-ce8502a39a0e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "CSID0{D+ D-}" input
+			(at 166.37 69.85 180)
+			(uuid "b8aa5702-65a2-44c6-835f-34add649852b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "CSID1{D+ D-}" input
+			(at 166.37 72.39 180)
+			(uuid "778ce528-e574-43c0-a082-688152863bf2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "STM32N6_Thesis_Board"
+				(path "/b7a85424-73c8-4e3d-8597-8001dcd52f18"
+					(page "5")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 166.37 81.28)
+		(size 25.4 10.16)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "f94b0c3a-1d1a-4c66-add5-2c9f8c3a0bb3")
+		(property "Sheetname" "USB"
+			(at 166.37 80.5684 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "USB.kicad_sch"
+			(at 166.37 92.0246 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "I2C[1..2]" bidirectional
+			(at 166.37 83.82 180)
+			(uuid "5457d3ad-e1d3-4355-878a-05fdf85a374c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "USB[1..7]" bidirectional
+			(at 166.37 86.36 180)
+			(uuid "4c84abc8-6544-4d38-b31a-b30cd38b23de")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "USB1HS{D+ D-}" bidirectional
+			(at 166.37 88.9 180)
+			(uuid "91966f39-c613-441a-b35e-80e49201c3b6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "STM32N6_Thesis_Board"
+				(path "/b7a85424-73c8-4e3d-8597-8001dcd52f18"
+					(page "6")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

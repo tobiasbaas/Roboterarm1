@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP KSC721J_LFS
+D Tactile Switches 4.3mmIP67 1.6N Soft Actuator J-Bend
+K
+F https://componentsearchengine.com/Datasheets/1/KSC721J LFS.pdf
+$ENDCMP
+#
+#End Doc Library

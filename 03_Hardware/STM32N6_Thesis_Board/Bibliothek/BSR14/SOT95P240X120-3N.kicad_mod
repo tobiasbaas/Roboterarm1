@@ -1,0 +1,237 @@
+(footprint "SOT95P240X120-3N"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "BSR14")
+	(tags "Transistor BJT NPN")
+	(property "Reference" "Q**"
+		(at 0 0 0)
+		(layer "F.SilkS")
+		(uuid "f2b5808f-3caa-419f-b3be-3d5df94cde2a")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(property "Value" "SOT95P240X120-3N"
+		(at 0 0 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "29cdb75a-2dd3-45df-88a1-9acb3979b579")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "f9cbb691-af61-4936-b847-c9a2ed8a19e7")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "5031c08b-49fd-4e96-8c37-0bf0eef552a6")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start -1.7 -1.55)
+		(end -0.7 -1.55)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "8b436b05-9867-4016-9386-daac08ffd1c1")
+	)
+	(fp_line
+		(start -0.35 -1.46)
+		(end 0.35 -1.46)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "caa155ea-acab-434d-bd82-2c1c99ebcbdb")
+	)
+	(fp_line
+		(start -0.35 1.46)
+		(end -0.35 -1.46)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "1c87c3aa-ad6f-41b7-a78a-bdbecc74eaef")
+	)
+	(fp_line
+		(start 0.35 -1.46)
+		(end 0.35 1.46)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "f9f6c064-4cf0-4cdc-93ec-f7bfaacef2a1")
+	)
+	(fp_line
+		(start 0.35 1.46)
+		(end -0.35 1.46)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "1716dfee-3b50-4a2a-a893-c89b3bd1e307")
+	)
+	(fp_line
+		(start -1.95 -1.81)
+		(end 1.95 -1.81)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "8ed6a938-d5a3-446e-ae13-ad5d4e10dc09")
+	)
+	(fp_line
+		(start -1.95 1.81)
+		(end -1.95 -1.81)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "a7365435-121c-4e1a-98b2-8530d71a6ab6")
+	)
+	(fp_line
+		(start 1.95 -1.81)
+		(end 1.95 1.81)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "7349e12f-8a02-49ab-9731-7579fce088d6")
+	)
+	(fp_line
+		(start 1.95 1.81)
+		(end -1.95 1.81)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "265a3353-7a31-4cc1-a3a9-cd4826368d63")
+	)
+	(fp_line
+		(start -0.662 -1.46)
+		(end 0.662 -1.46)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "f1f43cc5-bee1-43e9-82d2-e3a5065649c7")
+	)
+	(fp_line
+		(start -0.662 -0.51)
+		(end 0.288 -1.46)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "ede80c2b-8cc3-446d-b52b-31a7030fd63f")
+	)
+	(fp_line
+		(start -0.662 1.46)
+		(end -0.662 -1.46)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "63abe000-1cb2-4c7d-b616-fc1b719cabb8")
+	)
+	(fp_line
+		(start 0.662 -1.46)
+		(end 0.662 1.46)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "9a335f3a-1909-48ad-a40d-84c4572b5282")
+	)
+	(fp_line
+		(start 0.662 1.46)
+		(end -0.662 1.46)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "035c6d44-73cb-4f5f-9df2-4f95746d427c")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(uuid "77acfed0-be5b-4f99-b2f7-a896c18fb3d9")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(pad "1" smd rect
+		(at -1.2 -0.95 90)
+		(size 0.7 1)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "45dbd0a9-eb59-4b75-a8c0-1b28de59f72b")
+	)
+	(pad "2" smd rect
+		(at -1.2 0.95 90)
+		(size 0.7 1)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "2a695dd6-ad45-4ea4-a759-2fc62a941adc")
+	)
+	(pad "3" smd rect
+		(at 1.2 0 90)
+		(size 0.7 1)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "827eaf5a-d2c9-472a-a777-a6ed6273185f")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/Bibliothek/BSR14/3D/BSR14.stp"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

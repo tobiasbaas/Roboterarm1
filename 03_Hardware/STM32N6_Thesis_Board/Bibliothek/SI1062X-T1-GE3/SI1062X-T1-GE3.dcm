@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP SI1062X-T1-GE3
+D SI1062X-T1-GE3 N-Channel MOSFET, 530 mA, 20 V, 3-Pin SOT-523 Vishay
+K
+F https://www.vishay.com/docs/62661/si1062x.pdf
+$ENDCMP
+#
+#End Doc Library

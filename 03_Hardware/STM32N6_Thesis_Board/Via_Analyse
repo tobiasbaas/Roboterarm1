@@ -1,0 +1,32 @@
+# Importiere das aktuelle Board
+board = pcbnew.Get  Board()
+# Dictionary zum Speichern der Via-Typen und ihrer Anzahl
+via_counts = {}
+
+# Durchlaufe alle Objekte auf der Platine
+for item in board.GetDrawings():
+    # Prüfe, ob das Objekt ein Via ist
+    if item.GetClass() == "PCB_VIA":
+        # Hole Start- und End-Layer-Nummern
+        start_layer = item.GetStartLayer()
+        end_layer = item.GetEndLayer()
+
+        # Erstelle einen Schlüssel aus den Layer-Namen
+        # (Beispiel: 0 ist F.Cu, max_layer ist B.Cu, dazwischen sind innere Lagen)
+        layer_start_name = board.GetLayerName(start_layer)
+        layer_end_name = board.GetLayerName(end_layer)
+        
+        # Via-Typ als String (z.B. "F.Cu - B.Cu" oder "In1.Cu - In2.Cu")
+        via_type = f"{layer_start_name} - {layer_end_name}"
+        
+        # Zähle den Via-Typ
+        if via_type in via_counts:
+            via_counts[via_type] += 1
+        else:
+            via_counts[via_type] = 1
+
+# Gib das Ergebnis aus
+print("\n=== VIA-ANALYSE ===")
+for type, count in via_counts.items():
+    print(f"Typ '{type}': {count} Vias")
+print("===================\n")

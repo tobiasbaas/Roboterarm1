@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP CM7V-T1A-32.768KHZ-6PF-20PPM-TA-QC
+D CRYSTAL 32.768KHZ SMD
+K
+F https://www.microcrystal.com/fileadmin/Media/Products/32kHz/Datasheet/CM7V-T1A.pdf
+$ENDCMP
+#
+#End Doc Library

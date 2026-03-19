@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP TPS259535DSGR
+D 2.7V to 18V, 4A, 34m eFuse With Fast Overvoltage Protection
+K
+F http://www.ti.com/lit/gpn/tps2595
+$ENDCMP
+#
+#End Doc Library

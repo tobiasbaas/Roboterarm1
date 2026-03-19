@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP TPS62088YFPT
+D 2.4V-5.5V input, tiny 6-pin 3A step-down converter in 1.2-mm x 0.8-mm WCSP
+K
+F http://www.ti.com/lit/gpn/TPS62088
+$ENDCMP
+#
+#End Doc Library

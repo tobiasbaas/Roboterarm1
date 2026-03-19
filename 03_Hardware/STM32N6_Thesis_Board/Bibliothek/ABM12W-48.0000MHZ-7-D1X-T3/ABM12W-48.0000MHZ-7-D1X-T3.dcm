@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ABM12W-48.0000MHZ-7-D1X-T3
+D IoT OPTIMIZED LOW PROFILE QUARTZ CRYSTAL
+K
+F https://abracon.com/Resonators/ABM12W.pdf
+$ENDCMP
+#
+#End Doc Library

@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP LD56100DPU18R
+D 1 A very low dropout fast transient ultra-low noise linear regulator
+K
+F https://www.st.com/resource/en/datasheet/ld56100.pdf
+$ENDCMP
+#
+#End Doc Library

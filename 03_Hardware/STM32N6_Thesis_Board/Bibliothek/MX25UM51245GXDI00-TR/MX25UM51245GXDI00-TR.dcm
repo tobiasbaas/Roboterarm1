@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP MX25UM51245GXDI00-TR
+D GENERAL  Supports Serial Peripheral Interface -- Mode 0  Single Power Supply Operation  - 1.65 to 2.0 volt for read, erase, and program operations  512Mb: 536,870,912 x 1 bit structure or 67,108,864 x 8 bits (Octa I/O mode) structure  Protocol Support  - Single I/O and Octa I/O - Support DTR (Double Transfer Rate) Mode  Latch-up protected to 100mA from -1V to Vcc +1V  Fast frequency support - Support clock frequency up to  - Single I/O mode: 133MHz  - Octa I/O mode: 200MHz - Configurable 
+K
+F https://www.mouser.cn/datasheet/2/819/MX25UM51245G_2c_1_8V_2c_512Mb_2c_v1_5-3371051.pdf
+$ENDCMP
+#
+#End Doc Library

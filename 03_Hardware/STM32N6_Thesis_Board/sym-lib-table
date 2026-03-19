@@ -1,0 +1,5 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "LD39020ADTPU33R")(type "KiCad")(uri "${KIPRJMOD}/Bibliothek/LD39020ADTPU33R.kicad_sym")(options "")(descr ""))
+  (lib (name "LD1117S33TR")(type "KiCad")(uri "${KIPRJMOD}/Bibliothek/LD1117S33TR.kicad_sym")(options "")(descr ""))
+)

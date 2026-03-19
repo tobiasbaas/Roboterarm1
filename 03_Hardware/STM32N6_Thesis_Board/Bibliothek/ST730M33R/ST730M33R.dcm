@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ST730M33R
+D LDO Voltage Regulators 300 mA 28 V 5 uA quiescent current
+K
+F https://www.mouser.at/datasheet/2/389/st730-1621297.pdf
+$ENDCMP
+#
+#End Doc Library

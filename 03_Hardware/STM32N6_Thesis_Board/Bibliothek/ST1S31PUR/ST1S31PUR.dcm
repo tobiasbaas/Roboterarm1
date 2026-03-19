@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ST1S31PUR
+D 3 A DC step-down switching regulator
+K
+F https://www.st.com/resource/en/datasheet/st1s31.pdf
+$ENDCMP
+#
+#End Doc Library

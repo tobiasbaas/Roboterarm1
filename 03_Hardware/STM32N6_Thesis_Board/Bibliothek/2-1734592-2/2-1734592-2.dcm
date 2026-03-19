@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP 2-1734592-2
+D Body Features: Primary Product Color Natural | Configuration Features: PCB Mount Orientation Right Angle | Number of Positions 22 | Compatible With Wire & Cable Type FFC | Number of Rows 1 | Compatible With Wire & Cable Type FPC | Contact Features: Contact Mating Area Plating Material Gold | Contact Current Rating (Max) .5 AMP | Contact Mating Area Plating Material Thickness .025 MICM | Contact Base Material Phosphor Bronze | Contact Mating Area Plating Material Thickness 100 MICIN | PCB Contact Termination
+K
+F https://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1-1773959-7-FPC-Connectors-CN&DocType=Data%20Sheet&DocLang=Chinese (Simplified)&PartCntxt=2-1734592-2&DocFormat=pdf
+$ENDCMP
+#
+#End Doc Library

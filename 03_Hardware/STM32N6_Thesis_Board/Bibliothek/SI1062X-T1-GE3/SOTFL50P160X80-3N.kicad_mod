@@ -1,0 +1,237 @@
+(footprint "SOTFL50P160X80-3N"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "SC89-3-1")
+	(tags "MOSFET (N-Channel)")
+	(property "Reference" "Q**"
+		(at 0 0 0)
+		(layer "F.SilkS")
+		(uuid "17fc4ed2-84d2-478d-a0b1-46893dd0b836")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(property "Value" "SOTFL50P160X80-3N"
+		(at 0 0 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "5e7c4e87-d6e2-4639-9349-f46a914df009")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "6595794b-ac38-4721-a211-6d5df201b444")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "926d2e27-e287-4d15-8e20-e64e846e190c")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start -1.075 -0.98)
+		(end -0.425 -0.98)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "20491865-38e9-4ed0-bae4-cc2d7a9b619a")
+	)
+	(fp_line
+		(start -0.075 -0.8)
+		(end 0.075 -0.8)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "8d7124b5-f751-4193-afaf-df71e808b0c9")
+	)
+	(fp_line
+		(start -0.075 0.8)
+		(end -0.075 -0.8)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "b38ddcff-7d7f-434e-a1eb-ada068b2fb7c")
+	)
+	(fp_line
+		(start 0.075 -0.8)
+		(end 0.075 0.8)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "fad2f149-aba8-498f-a8e4-d10b76bd41a2")
+	)
+	(fp_line
+		(start 0.075 0.8)
+		(end -0.075 0.8)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "661cb2bd-9676-4f3e-b3af-7b2d6e7e448a")
+	)
+	(fp_line
+		(start -1.225 -1)
+		(end 1.225 -1)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "31476442-6249-49c1-8f83-90ee6db9775c")
+	)
+	(fp_line
+		(start -1.225 1)
+		(end -1.225 -1)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "3d1186c9-6e7e-4cfe-836d-e71028cf6a28")
+	)
+	(fp_line
+		(start 1.225 -1)
+		(end 1.225 1)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "97da9733-0d5a-44fc-8fc3-e907b2fd865b")
+	)
+	(fp_line
+		(start 1.225 1)
+		(end -1.225 1)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "b3a01f5b-c2c7-4cb9-856a-aaba1ea85c48")
+	)
+	(fp_line
+		(start -0.425 -0.8)
+		(end 0.425 -0.8)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "83ae6e94-68fe-405f-aaf3-5e49cc223c46")
+	)
+	(fp_line
+		(start -0.425 -0.3)
+		(end 0.075 -0.8)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "eccd7f4e-3706-455b-92f5-7081b3a6bc52")
+	)
+	(fp_line
+		(start -0.425 0.8)
+		(end -0.425 -0.8)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "02205663-bf65-47ff-82a3-751e768e63c6")
+	)
+	(fp_line
+		(start 0.425 -0.8)
+		(end 0.425 0.8)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "82ee6dee-aa70-4f2c-8a85-0402d793200a")
+	)
+	(fp_line
+		(start 0.425 0.8)
+		(end -0.425 0.8)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "03934cad-bf1d-4e36-8993-f2bc474695af")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(uuid "cad21312-bfc1-47af-a6f5-15b1c88abe7e")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(pad "1" smd rect
+		(at -0.75 -0.5 90)
+		(size 0.46 0.65)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "6964a9a4-432d-4162-a611-679988dfb141")
+	)
+	(pad "2" smd rect
+		(at -0.75 0.5 90)
+		(size 0.46 0.65)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "99fd9856-9b2f-44c6-bb73-6cba2be3b303")
+	)
+	(pad "3" smd rect
+		(at 0.75 0 90)
+		(size 0.46 0.65)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "9be6794e-4d82-4c66-8ba9-5cd558d69af8")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/Bibliothek/SI1062X-T1-GE3/3D/SI1062X-T1-GE3.stp"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

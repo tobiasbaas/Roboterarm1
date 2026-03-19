@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ECMF2-40A100N6
+D 2 lines Common mode filter with ESD protection for High Speed Serial interface
+K
+F https://www.st.com/resource/en/datasheet/ecmf2-40a100n6.pdf
+$ENDCMP
+#
+#End Doc Library

@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP TCPP03-M20
+D USB Type C Overvoltage Protection for VBUS and CC Lines 4V 20-Pin QFN T/R - Tape and Reel
+K
+F https://www.st.com/resource/en/datasheet/tcpp03-m20.pdf
+$ENDCMP
+#
+#End Doc Library

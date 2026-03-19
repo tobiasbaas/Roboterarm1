@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP PJ-002AH
+D 2.0 x 6.5 mm, 5.0 A, Horizontal, Through Hole, Dc Power Jack Connector
+K
+F https://www.sameskydevices.com/product/resource/pj-002ah.pdf
+$ENDCMP
+#
+#End Doc Library
