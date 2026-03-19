@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Dev/Thesis_Robot_Pose/FSBL/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

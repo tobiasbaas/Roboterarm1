@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"name": "Image_Capture_Python",
+			"path": "../../../../../../../Dev/Image_Capture_Python"
+		},
+		{
+			"name": "Beachlor_Thesis_AI",
+			"path": "../../../../../../../Dev/AI/Beachlor_Thesis_AI"
+		},
+		{
+			"name": "Thesis_Robot_Pose",
+			"path": "../../../../../../../Dev/Thesis_Robot_Pose"
+		},
+		{
+			"name": "New_Image_Capture",
+			"path": "../../../../../../../Dev/New_Image_Capture/New_Image_Capture"
+		},
+		{
+			"name": "STM32Cube_FW_N6_V1.3.0",
+			"path": "../../../../../../../STM32Cube_FW_N6_V1.3.0"
+		}
+	],
+	"settings": {
+		"stm32cube-ide-clangd.path": "cube",
+		"stm32cube-ide-clangd.arguments": [
+			"starm-clangd",
+			"--query-driver=${env:CUBE_BUNDLE_PATH}/gnu-tools-for-stm32/14.3.1+st.2/bin/arm-none-eabi-gcc.exe",
+			"--query-driver=${env:CUBE_BUNDLE_PATH}/gnu-tools-for-stm32/14.3.1+st.2/bin/arm-none-eabi-g++.exe"
+		]
+	}
+}

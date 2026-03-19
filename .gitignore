@@ -9,15 +9,24 @@ desktop.ini
 # Git-Dateien (wird meistens nicht benötigt, da sie sich in .git/ befinden)
 # *.orig
 
+# 1. Große Datensätze ignorieren (KI/Training)
+**/dataset/
+**/pose_dataset/
+**/robot_arm/
+**/yolo_dataset/
+**/real_dataset/
+**/real_pose_dataset/
+**/real_yolo_dataset/
+**/runs/
+
 # Temporäre Dateien für deine Ausarbeitung (Anpassbar)
 # ----------------------------------------------------
 03_Hardware/**
 !03_Hardware/STM32N6_Thesis_Board/
 !03_Hardware/STM32N6_Thesis_Board/**/*
 
-02_Software/**
-!02_Software/Image_Capture_Python/dataset/
-!02_Software/Image_Capture_Python/dataset/**
+02_Software/Image_Capture_Python/dataset/
+05_Edge AI/Training_Scripts/
 
 !05_Edge AI/
 !05_Edge AI/**
@@ -136,6 +145,7 @@ __pycache__/
 # Generierte Modelle, Checkpoints und Logs
 *.h5
 *.hdf5
+*.tflite
 model_weights/
 checkpoints/
 tensorboard_logs/

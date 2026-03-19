@@ -1,0 +1,4 @@
+SEGGER J-Link Commander V9.10 (Compiled Jan 14 2026 11:36:46)
+DLL version V9.10, compiled Jan 14 2026 11:35:51
+
+Unknown command line option -ListEmu.
