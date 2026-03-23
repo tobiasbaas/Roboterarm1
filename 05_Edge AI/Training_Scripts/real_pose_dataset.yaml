@@ -1,9 +1,0 @@
-path: C:\Dev\AI\Beachlor_Thesis_AI\Training_Scripts\real_pose_dataset
-train: images/train
-val: images/val
-
-kpt_shape: [9, 3]
-flip_idx: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-
-names:
-  0: robot_arm
