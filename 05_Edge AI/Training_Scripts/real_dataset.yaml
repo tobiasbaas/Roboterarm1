@@ -1,0 +1,10 @@
+path: real_yolo_dataset
+train: images/train
+val: images/val
+
+names:
+  0: Base
+  1: Joint_1
+  2: Joint_2
+  3: Joint_3
+  4: Joint_4_Finger
