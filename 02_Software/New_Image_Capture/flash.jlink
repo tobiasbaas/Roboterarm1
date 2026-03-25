@@ -1,6 +1,0 @@
-r 
-loadbin "FSBL\build\CDC_ACM_FSBL-trusted.bin", 0x70000000 
-loadbin "Appli\build\CDC_ACM_Appli-trusted.bin", 0x70100000 
-r 
-g 
-exit 
