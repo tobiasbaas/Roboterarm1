@@ -1,0 +1,171 @@
+>>> C:\ST\STEdgeAI\3.0\Utilities\windows\stedgeai.exe analyze --model C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\roboterarm_real_opt_v004_20260324_int8.onnx --batch-size 10 --mode host --st-neural-art custom@C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-1\.ai\profile-neural-art.json --name network --verbosity 1 --c-api st-ai --target stm32n6 --workspace C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-1\.ai\st_ai_ws --output C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-1\.ai\st_ai_output
+ST Edge AI Core v3.0.0-20426 123672867
+
+ >>>> EXECUTING NEURAL ART COMPILER
+   C:/ST/STEdgeAI/3.0/Utilities/windows/atonn.exe -i "C:/Dev/AI/Beachlor_Thesis_AI/Edge Export/AICubeStudio/Robot_Segmentierung/.ai/run/run-1/.ai/st_ai_output/roboterarm_real_opt_v004_20260324_int8_OE_3_3_1.onnx" --json-quant-file "C:/Dev/AI/Beachlor_Thesis_AI/Edge Export/AICubeStudio/Robot_Segmentierung/.ai/run/run-1/.ai/st_ai_output/roboterarm_real_opt_v004_20260324_int8_OE_3_3_1_Q.json" -g "network.c" --load-mdesc "C:/ST/STEdgeAI/3.0/Utilities/configs/stm32n6.mdesc" --load-mpool "C:/Dev/AI/Beachlor_Thesis_AI/Edge Export/AICubeStudio/Robot_Segmentierung/.ai/run/run-1/.ai/memory_pool.mpool" --load-cdesc C:/ST/STEdgeAI/3.0/Utilities/configs/cortex-m55.cdesc --save-mpool-file "C:/Dev/AI/Beachlor_Thesis_AI/Edge Export/AICubeStudio/Robot_Segmentierung/.ai/run/run-1/.ai/st_ai_ws/neural_art__network/memory_pool.mpool" --out-dir-prefix "C:/Dev/AI/Beachlor_Thesis_AI/Edge Export/AICubeStudio/Robot_Segmentierung/.ai/run/run-1/.ai/st_ai_ws/neural_art__network/" --network-name "network" --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --enable-epoch-controller --output-info-file "c_info.json" --generate-stai
+
+ <<<< DONE EXECUTING NEURAL ART COMPILER
+
+ >>>> EXECUTING EPOCH_CONTROLLER POST_PROCESSING
+
+ <<<< DONE EXECUTING EPOCH_CONTROLLER POST_PROCESSING
+
+ Exec/report summary (analyze)
+ ----------------------------------------------------------------------------------------------------------------------------------
+ model file         :   C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\roboterarm_real_opt_v004_20260324_int8.onnx                       
+ type               :   onnx                                                                                                       
+ c_name             :   network                                                                                                    
+ compression        :   lossless                                                                                                   
+ options            :   allocate-inputs, allocate-outputs, use-lite-runtime, use-st-ai                                             
+ optimization       :   balanced                                                                                                   
+ target/series      :   stm32n6npu                                                                                                 
+ workspace dir      :   C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-1\.ai\st_ai_ws       
+ output dir         :   C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-1\.ai\st_ai_output   
+ model_fmt          :   sa/sa per tensor                                                                                           
+ model_name         :   roboterarm_real_opt_v004_20260324_int8                                                                     
+ model_hash         :   0x2347e8221ee48acd5bd32f377feb5968                                                                         
+ params #           :   2,877,566 items (10.98 MiB)                                                                                
+ ----------------------------------------------------------------------------------------------------------------------------------
+ input 1/1          :   'Input_4_out_0', int8(1x3x640x640), 1200.00 KBytes, QLinear(0.003921569,-128,int8), activations            
+ output 1/2         :   'Quantize_820_out_0', int8(1x41x8400), 336.33 KBytes, QLinear(2.608879090,-122,int8), activations          
+ output 2/2         :   'Quantize_807_out_0', int8(1x32x160x160), 800.00 KBytes, QLinear(0.047815464,-122,int8), activations       
+ outputs (total)    :   1136.33 KBytes                                                                                             
+ macc               :   0                                                                                                          
+ weights (ro)       :   3,333,889 B (3.18 MiB) (1 segment) / -8,176,375(-71.0%) vs float model                                     
+ activations (rw)   :   10,291,200 B (9.81 MiB) (6 segments) *                                                                     
+ ram (total)        :   10,291,200 B (9.81 MiB) = 10,291,200 + 0 + 0                                                               
+ ----------------------------------------------------------------------------------------------------------------------------------
+ (*) 'input'/'output' buffers are allocated in the activations buffer
+
+Computing AI RT data/code size (target=stm32n6npu)..
+
+Compilation details
+   ---------------------------------------------------------------------------------
+Compiler version: 1.1.3-8
+
+Compiler arguments:  -i C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-1\.ai\st_ai_output\roboterarm_real_opt_v004_20260324_int8_OE_3_3_1.onnx --json-quant-file C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-1\.ai\st_ai_output\roboterarm_real_opt_v004_20260324_int8_OE_3_3_1_Q.json -g network.c --load-mdesc C:\ST\STEdgeAI\3.0\Utilities\configs\stm32n6.mdesc --load-mpool C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-1\.ai\memory_pool.mpool --load-cdesc C:\ST\STEdgeAI\3.0\Utilities\configs\cortex-m55.cdesc --save-mpool-file C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-1\.ai\st_ai_ws\neural_art__network\memory_pool.mpool --out-dir-prefix C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-1\.ai\st_ai_ws\neural_art__network/ --network-name network --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --enable-epoch-controller --output-info-file c_info.json --generate-stai
+====================================================================================
+Memory usage information  (input/output buffers are included in activations)
+   ---------------------------------------------------------------------------------
+	flexMEM    [0x34000000 - 0x34000000]:          0  B /          0  B  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	cpuRAM1    [0x34064000 - 0x34064000]:          0  B /          0  B  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	cpuRAM2    [0x34100000 - 0x34200000]:      1.000 MB /      1.000 MB  (100.00 % used) -- weights:          0  B (  0.00 % used)  activations:      1.000 MB (100.00 % used)
+	npuRAM3    [0x34200000 - 0x34270000]:    448.000 kB /    448.000 kB  (100.00 % used) -- weights:          0  B (  0.00 % used)  activations:    448.000 kB (100.00 % used)
+	npuRAM4    [0x34270000 - 0x342E0000]:    448.000 kB /    448.000 kB  (100.00 % used) -- weights:          0  B (  0.00 % used)  activations:    448.000 kB (100.00 % used)
+	npuRAM5    [0x342E0000 - 0x34350000]:    448.000 kB /    448.000 kB  (100.00 % used) -- weights:          0  B (  0.00 % used)  activations:    448.000 kB (100.00 % used)
+	npuRAM6    [0x34350000 - 0x343C0000]:    432.000 kB /    448.000 kB  ( 96.43 % used) -- weights:          0  B (  0.00 % used)  activations:    432.000 kB ( 96.43 % used)
+
+	octoFlash  [0x71000000 - 0x78000000]:      3.179 MB /    112.000 MB  (  2.84 % used) -- weights:      3.179 MB (  2.84 % used)  activations:          0  B (  0.00 % used)
+	hyperRAM   [0x90000000 - 0x92000000]:      7.080 MB /     32.000 MB  ( 22.13 % used) -- weights:          0  B (  0.00 % used)  activations:      7.080 MB ( 22.13 % used)
+Total:                                            12.994 MB                                  -- weights:      3.179 MB                  activations:      9.814 MB
+====================================================================================
+Used memory ranges
+   ---------------------------------------------------------------------------------
+	cpuRAM2    [0x34100000 - 0x34200000]: 0x34100000-0x34200000
+	npuRAM3    [0x34200000 - 0x34270000]: 0x34200000-0x34270000
+	npuRAM4    [0x34270000 - 0x342E0000]: 0x34270000-0x342E0000
+	npuRAM5    [0x342E0000 - 0x34350000]: 0x342E0000-0x34350000
+	npuRAM6    [0x34350000 - 0x343C0000]: 0x34350000-0x343BC000
+	octoFlash  [0x71000000 - 0x78000000]: 0x71000000-0x7132DF10
+	hyperRAM   [0x90000000 - 0x92000000]: 0x90000000-0x90714800
+====================================================================================
+Epochs details
+   ---------------------------------------------------------------------------------
+Total number of epochs                               249
+>> pure software (SW) epochs                          10
+>> hybrid epochs (using both software and hardware)   18
+>> pure hardware (HW or EC) epochs                   221  (implemented in 18 epoch controller blobs/meta epochs)
++----------------------+--------+------------------+
+| epoch ID             |  Type  |     Details      |
++----------------------+--------+------------------+
+| epochs    1 -> 8     |   EC   |                  |
+| epoch_9              | Hybrid |      Split       |
+| epochs   10 -> 100   |   EC   |                  |
+| epoch_102            | Hybrid |    Transpose     |
+
+| epoch_103            | Hybrid |      Split       |
+| epoch_104            | Hybrid |      Split       |
+| epochs  105 -> 105   |   EC   |                  |
+| epoch_106            | Hybrid |      Split       |
+| epochs  107 -> 107   |   EC   |                  |
+| epoch_108            |   SW   |       Conv       |
+| epoch_109            |   SW   |       Conv       |
+| epochs  110 -> 113   |   EC   |                  |
+| epoch_114            |   SW   |     Softmax      |
+| epoch_115            | Hybrid |    Transpose     |
+| <no executed epochs> |   EC   |                  |
+
+| epoch_117            | Hybrid |      Split       |
+| epochs  119 -> 119   |   EC   |                  |
+| epoch_120            |   SW   |       Conv       |
+| epoch_121            |   SW   |       Conv       |
+| epochs  122 -> 130   |   EC   |                  |
+| epoch_131            | Hybrid |   DepthToSpace   |
+| epochs  132 -> 132   |   EC   |                  |
+| epoch_133            | Hybrid |      Concat      |
+
+| epochs  134 -> 144   |   EC   |                  |
+| epoch_145            | Hybrid |   DepthToSpace   |
+| epochs  146 -> 146   |   EC   |                  |
+| epoch_147            | Hybrid |      Concat      |
+| epochs  148 -> 165   |   EC   |                  |
+| epoch_166            | Hybrid |      Concat      |
+
+| epoch_167            | Hybrid |   DepthToSpace   |
+| epochs  168 -> 173   |   EC   |                  |
+| epoch_174            | Hybrid |      Concat      |
+| epochs  175 -> 251   |   EC   |                  |
+| epoch_252            | Hybrid |      Concat      |
+| epochs  253 -> 254   |   EC   |                  |
+
+| epoch_255            | Hybrid |      Concat      |
+| epoch_256            | Hybrid |    Transpose     |
+| epochs  257 -> 257   |   EC   |                  |
+| epoch_258            |   SW   |     Softmax      |
+| epochs  259 -> 261   |   EC   |                  |
+| epoch_262            | Hybrid |      Concat      |
+| epoch_263            |   SW   | DequantizeLinear |
+
+| epoch_264            |   SW   |    Sub(float)    |
+| epoch_265            |   SW   |  QuantizeLinear  |
+| epoch_266            |   SW   |  QuantizeLinear  |
+| epochs  267 -> 270   |   EC   |                  |
++----------------------+--------+------------------+
+====================================================================================
+
+ Requested memory size by section - "stm32n6npu" target
+ ------------------------------- --------- ----------- ------ ------------
+ module                               text      rodata   data          bss
+ ------------------------------- --------- ----------- ------ ------------
+ network.o                           3,134     492,304      0            0
+ NetworkRuntime1100_CM55_GCC.a      97,568          16     32            0
+ stai_network.o                          0           0      0            0
+
+ lib (toolchain)*                    1,334         632      0            0
+ ll atonn runtime                   16,410      13,111    312        1,741
+ ------------------------------- --------- ----------- ------ ------------
+ RT total**                        118,446     506,063    344        1,741
+ ------------------------------- --------- ----------- ------ ------------
+ weights                                 0   3,333,889      0            0
+
+ activations                             0           0      0   10,291,200
+ io                                      0           0      0            0
+ ------------------------------- --------- ----------- ------ ------------
+ TOTAL                             118,446   3,839,952    344   10,292,941
+ ------------------------------- --------- ----------- ------ ------------
+ *  toolchain objects (libm/libgcc*)
+ ** RT AI runtime objects (kernels+infrastructure)
+  Summary - "stm32n6npu" target
+  ----------------------------------------------------
+               FLASH (ro)      %*     RAM (rw)      %
+  ----------------------------------------------------
+
+  RT total        624,853   15.8%        2,085   0.0%
+  ----------------------------------------------------
+  TOTAL         3,958,742           10,293,285
+  ----------------------------------------------------
+  *  rt/total
+Creating txt report file C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-1\.ai\st_ai_output\network_analyze_report.txt
+
+elapsed time (ANALYZE): 228.039s
+

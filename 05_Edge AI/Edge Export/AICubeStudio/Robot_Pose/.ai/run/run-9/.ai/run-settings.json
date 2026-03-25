@@ -1,0 +1,53 @@
+{
+  "args": {
+    "model": "C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\best.onnx",
+    "valinput": "C:\\Dev\\Image_Capture_Python\\dataset\\images\\angepasstes_seitenv_20260311_170850\\calibration.npz",
+    "valoutput": "",
+    "mode": "target",
+    "st-neural-art": "default",
+    "atonnOptions": {
+      "native-float": true,
+      "cache-maintenance": true,
+      "Ocache-opt": true,
+      "enable-virtual-mem-pools": true,
+      "Os": true,
+      "Oauto-sched": true,
+      "enable-epoch-controller": true
+    },
+    "name": "network",
+    "verbosity": 1,
+    "c-api": "st-ai",
+    "target": "stm32n6",
+    "workspace": "C:\\Users\\marce\\.stm32cubeaistudio\\workspace\\Robot_Pose\\.ai\\run\\run-9\\.ai\\st_ai_ws",
+    "output": "C:\\Users\\marce\\.stm32cubeaistudio\\workspace\\Robot_Pose\\.ai\\run\\run-9\\.ai\\st_ai_output",
+    "memory-pool": "C:\\Users\\marce\\.stm32cubeaistudio\\workspace\\Robot_Pose\\.ai\\run\\run-9\\.ai\\mempools.json"
+  },
+  "mempools": [
+    {
+      "driver": "RAM",
+      "size": 1411437,
+      "offset": 872939520,
+      "name": "POOL_0_RAM",
+      "max": 1572864,
+      "noload": true
+    },
+    {
+      "driver": "AXISRAM3_4_5_6",
+      "size": 1835008,
+      "offset": 874512384,
+      "name": "POOL_1_AXISRAM3_4_5_6",
+      "max": 1835008,
+      "noload": true
+    },
+    {
+      "driver": "xSPI1",
+      "name": "POOL_XSPI1",
+      "offset": 2415919104,
+      "size": 32505856,
+      "max": 32505856,
+      "noload": true
+    }
+  ],
+  "automaticMempools": true,
+  "automaticFlash": true
+}

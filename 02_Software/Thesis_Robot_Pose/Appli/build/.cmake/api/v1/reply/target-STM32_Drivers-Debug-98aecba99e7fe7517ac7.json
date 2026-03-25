@@ -1,0 +1,378 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./Core/Src/system_stm32n6xx_s.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_exti.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_dma.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_dma_ex.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_rcc.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_rcc_ex.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_gpio.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_pwr.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_pwr_ex.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_cortex.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_exti.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_rcc.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_utils.c.obj"
+		},
+		{
+			"path" : "CMakeFiles/STM32_Drivers.dir/./C_/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_rif.c.obj"
+		}
+	],
+	"backtrace" : 3,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"include",
+			"target_link_libraries",
+			"target_sources"
+		],
+		"files" : 
+		[
+			"mx-generated.cmake",
+			"CMakeLists.txt",
+			"ai-integration.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 41,
+				"parent" : 0
+			},
+			{
+				"file" : 0,
+				"parent" : 1
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 71,
+				"parent" : 2
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 73,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 72,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 44,
+				"parent" : 0
+			},
+			{
+				"file" : 2,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 56,
+				"parent" : 7
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : " -mcpu=cortex-m55 -mfpu=fpv5-d16 -mfloat-abi=hard -mcmse  -Wall -fdata-sections -ffunction-sections -O0 -g3 -std=gnu11"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 4,
+					"define" : "DEBUG"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "LL_ATON_OSAL=LL_ATON_OSAL_BARE_METAL"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "LL_ATON_PLATFORM=LL_ATON_PLAT_STM32N6"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "LL_ATON_RT_MODE=LL_ATON_RT_ASYNC"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "LL_ATON_SW_FALLBACK=1"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "STM32N657xx"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "TX_INCLUDE_USER_DEFINE_FILE"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "TX_SINGLE_MODE_SECURE=1"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "USE_HAL_DRIVER"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "USE_NPU_CACHE=1"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "USE_THREADX_AI_RUNTIME"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 4,
+					"path" : "C:/Dev/Thesis_Robot_Pose/Appli/Core/Inc"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Dev/Thesis_Robot_Pose/Appli/../Secure_nsclib"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Dev/Thesis_Robot_Pose/Appli/../Drivers/STM32N6xx_HAL_Driver/Inc"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Dev/Thesis_Robot_Pose/Appli/../Drivers/CMSIS/Device/ST/STM32N6xx/Include"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Dev/Thesis_Robot_Pose/Appli/../Drivers/STM32N6xx_HAL_Driver/Inc/Legacy"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Dev/Thesis_Robot_Pose/Appli/../Middlewares/ST/threadx/common/inc"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Dev/Thesis_Robot_Pose/Appli/../Middlewares/ST/threadx/ports/cortex_m55/gnu/inc"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Dev/Thesis_Robot_Pose/Appli/../Drivers/CMSIS/Include"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Dev/Thesis_Robot_Pose/Appli/AI/App"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Dev/Thesis_Robot_Pose/Appli/AI/generated"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Dev/Thesis_Robot_Pose/Appli/../Middlewares/ST/AI/Inc"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Dev/Thesis_Robot_Pose/Appli/../Middlewares/ST/AI/Npu"
+				}
+			],
+			"language" : "C",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					3
+				],
+				"standard" : "11"
+			},
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14
+			]
+		}
+	],
+	"id" : "STM32_Drivers::@6890427a1f51a3e7e1df",
+	"name" : "STM32_Drivers",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/system_stm32n6xx_s.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_exti.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_dma.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_dma_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_rcc.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_rcc_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_gpio.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_pwr.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_pwr_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_cortex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_exti.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_rcc.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_utils.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 8,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Dev/Thesis_Robot_Pose/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_rif.c",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "OBJECT_LIBRARY"
+}

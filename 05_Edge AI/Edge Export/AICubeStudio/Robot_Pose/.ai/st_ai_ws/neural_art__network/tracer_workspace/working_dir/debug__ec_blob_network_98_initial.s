@@ -1,0 +1,293 @@
+;; Start Blob '_ec_blob_network_98'
+;; Start Epoch 98
+label 0x62
+writefield 0 4 [4] 0x1
+write 9 0 0x80000
+write 9 2 0x34270000
+write 9 3 0x10190
+write 9 4 0x1900001
+write 9 6 0x1
+write 9 8 0x27100
+write 9 7 0x190
+write 9 12 0x6
+write 9 12 0x7
+write 9 14 0x3429713f
+write 9 13 0x190
+write 9 9 0x24
+write 9 5 0x7100
+write 9 18 0x20000
+write 9 10 0x100000
+write 9 17 0x0
+writefield 0 4 [2] 0x1
+write 7 0 0x80000
+write 7 2 0x34297100
+write 7 3 0x10190
+write 7 4 0x1900001
+write 7 6 0x1
+write 7 8 0x27100
+write 7 7 0x190
+write 7 12 0x6
+write 7 12 0x7
+write 7 14 0x342be23f
+write 7 13 0x190
+write 7 9 0x24
+write 7 5 0x7100
+write 7 18 0x20000
+write 7 10 0x100000
+write 7 17 0x0
+writefield 0 4 [5] 0x1
+write 10 0 0x8010c
+write 10 2 0x342e0000
+write 10 3 0x27100
+write 10 6 0x27100
+write 10 8 0x0
+write 10 7 0x0
+write 10 12 0x6
+write 10 12 0x7
+write 10 14 0x3430713f
+write 10 13 0x1
+write 10 9 0x24
+write 10 5 0x0
+write 10 18 0x0
+write 10 10 0x100000
+write 10 17 0x0
+writefield 0 4 [9] 0x1
+write 14 0 0x8010c
+write 14 2 0x34307100
+write 14 3 0x27100
+write 14 6 0x27100
+write 14 8 0x0
+write 14 7 0x0
+write 14 12 0x6
+write 14 12 0x7
+write 14 14 0x3432e23f
+write 14 13 0x1
+write 14 9 0x24
+write 14 5 0x0
+write 14 18 0x0
+write 14 10 0x100000
+write 14 17 0x0
+write 4 0 0x2
+poll 4 0 [1] 0x0 100
+write 4 0 0x40000000
+poll 4 0 [30] 0x0 100
+write 4 0 0x1
+write 4 7 0x9
+write 4 11 0x5
+writefield 10 0 [0] 0x1
+writefield 14 0 [0] 0x1
+writefield 7 0 [0] 0x1
+writefield 9 0 [0] 0x1
+poll 10 0 [31] 0x0 100
+poll 14 0 [31] 0x0 100
+write 4 7 0x0
+write 4 11 0x0
+write 10 0 0x2
+poll 10 0 [1] 0x0 100
+write 10 0 0x40000000
+poll 10 0 [30] 0x0 100
+writefield 0 4 [5] 0x0
+write 14 0 0x2
+poll 14 0 [1] 0x0 100
+write 14 0 0x40000000
+poll 14 0 [30] 0x0 100
+writefield 0 4 [9] 0x0
+write 7 0 0x2
+poll 7 0 [1] 0x0 100
+write 7 0 0x40000000
+poll 7 0 [30] 0x0 100
+writefield 0 4 [2] 0x0
+write 9 0 0x2
+poll 9 0 [1] 0x0 100
+write 9 0 0x40000000
+poll 9 0 [30] 0x0 100
+writefield 0 4 [4] 0x0
+;; End Epoch 98
+;; Start Epoch 99
+label 0x63
+;; End Epoch 99
+;; Start Epoch 100
+label 0x64
+writefield 0 4 [21] 0x1
+write 26 0 0x8000000
+write 26 0 0x9000060
+write 26 13 0x10411041
+write 26 2 0x0
+write 26 7 0x7f
+write 26 8 0x0
+write 26 12 0x0
+writefield 0 4 [4] 0x1
+write 9 0 0x80100
+write 9 2 0x342e0000
+write 9 3 0x27100
+write 9 6 0x27100
+write 9 8 0x0
+write 9 7 0x0
+write 9 12 0x6
+write 9 12 0x7
+write 9 14 0x3432e23f
+write 9 13 0x2
+write 9 9 0x24
+write 9 5 0x0
+write 9 18 0x0
+write 9 10 0x100000
+write 9 17 0x0
+writefield 0 4 [7] 0x1
+write 12 0 0x880108
+write 12 2 0x34100000
+write 12 3 0x27100
+write 12 6 0x4e200
+write 12 8 0x0
+write 12 7 0x0
+write 12 12 0x6
+write 12 12 0x7
+write 12 14 0x3419c43f
+write 12 13 0x2
+write 12 9 0x24
+write 12 5 0x0
+write 12 18 0x0
+write 12 10 0x100000
+write 12 17 0x0
+write 4 0 0x2
+poll 4 0 [1] 0x0 100
+write 4 0 0x40000000
+poll 4 0 [30] 0x0 100
+write 4 0 0x1
+write 4 36 0x9
+write 4 9 0x2b
+writefield 12 0 [0] 0x1
+writefield 26 0 [0] 0x1
+writefield 9 0 [0] 0x1
+poll 12 0 [31] 0x0 100
+write 4 36 0x0
+write 4 9 0x0
+write 12 0 0x2
+poll 12 0 [1] 0x0 100
+write 12 0 0x40000000
+poll 12 0 [30] 0x0 100
+writefield 0 4 [7] 0x0
+write 26 0 0x8000002
+poll 26 0 [1] 0x0 100
+write 26 0 0x48000000
+poll 26 0 [30] 0x0 100
+writefield 0 4 [21] 0x0
+write 9 0 0x2
+poll 9 0 [1] 0x0 100
+write 9 0 0x40000000
+poll 9 0 [30] 0x0 100
+writefield 0 4 [4] 0x0
+;; End Epoch 100
+;; Start Epoch 101
+label 0x65
+writefield 0 4 [18] 0x1
+write 23 0 0x8000000
+write 23 0 0x9000160
+write 23 13 0x10412042
+write 23 2 0x38007
+write 23 7 0x4000
+write 23 8 0x4000
+write 23 12 0x0
+writefield 0 4 [19] 0x1
+write 24 0 0x8000000
+write 24 0 0x15000060
+write 24 13 0x10412042
+write 24 2 0xb0000
+write 24 7 0xfff64040
+write 24 8 0xffff
+write 24 12 0x0
+writefield 0 4 [7] 0x1
+write 12 0 0x880100
+write 12 2 0x34100000
+write 12 3 0x27100
+write 12 6 0x4e200
+write 12 8 0x0
+write 12 7 0x0
+write 12 12 0x6
+write 12 12 0x7
+write 12 14 0x3419c43f
+write 12 13 0x2
+write 12 9 0x24
+write 12 5 0x0
+write 12 18 0x0
+write 12 10 0x100000
+write 12 17 0x0
+writefield 0 4 [1] 0x1
+write 6 0 0x80100
+write 6 2 0x342e0000
+write 6 3 0x27100
+write 6 6 0x27100
+write 6 8 0x0
+write 6 7 0x0
+write 6 12 0x6
+write 6 12 0x7
+write 6 14 0x3432e23f
+write 6 13 0x2
+write 6 9 0x24
+write 6 5 0x0
+write 6 18 0x0
+write 6 10 0x100000
+write 6 17 0x0
+writefield 0 4 [4] 0x1
+write 9 0 0x80008
+write 9 2 0x34270000
+write 9 3 0x1900190
+write 9 4 0x20001
+write 9 6 0x1
+write 9 8 0x4e200
+write 9 7 0x2
+write 9 12 0x6
+write 9 12 0x7
+write 9 14 0x342be23f
+write 9 13 0x2
+write 9 9 0x24
+write 9 5 0x320
+write 9 18 0x0
+write 9 10 0x100000
+write 9 17 0x0
+write 4 0 0x2
+poll 4 0 [1] 0x0 100
+write 4 0 0x40000000
+poll 4 0 [30] 0x0 100
+write 4 0 0x1
+write 4 30 0xf
+write 4 31 0x3
+write 4 32 0x25
+write 4 6 0x27
+writefield 9 0 [0] 0x1
+writefield 23 0 [0] 0x1
+writefield 24 0 [0] 0x1
+writefield 6 0 [0] 0x1
+writefield 12 0 [0] 0x1
+poll 9 0 [31] 0x0 100
+write 4 30 0x0
+write 4 31 0x0
+write 4 32 0x0
+write 4 6 0x0
+write 9 0 0x2
+poll 9 0 [1] 0x0 100
+write 9 0 0x40000000
+poll 9 0 [30] 0x0 100
+writefield 0 4 [4] 0x0
+write 23 0 0x8000002
+poll 23 0 [1] 0x0 100
+write 23 0 0x48000000
+poll 23 0 [30] 0x0 100
+writefield 0 4 [18] 0x0
+write 24 0 0x8000002
+poll 24 0 [1] 0x0 100
+write 24 0 0x48000000
+poll 24 0 [30] 0x0 100
+writefield 0 4 [19] 0x0
+write 6 0 0x2
+poll 6 0 [1] 0x0 100
+write 6 0 0x40000000
+poll 6 0 [30] 0x0 100
+writefield 0 4 [1] 0x0
+write 12 0 0x2
+poll 12 0 [1] 0x0 100
+write 12 0 0x40000000
+poll 12 0 [30] 0x0 100
+writefield 0 4 [7] 0x0
+;; End Epoch 101
+irq 0x0
+;; End Blob '_ec_blob_network_98'

@@ -1,0 +1,35 @@
+      -------------------------------------------------------------------
+                       STM32CubeProgrammer v2.21.0                  
+      -------------------------------------------------------------------
+
+
+
+Warning: No need to these parameters in list command: port=SWD
+=====  DFU Interface   =====
+
+No STM32 device in DFU mode connected
+
+===== J-Link Interface =====
+No J-Link/flasher probe detected.
+===== STLink Interface =====
+
+-------- Connected ST-LINK Probes List --------
+
+ST-Link Probe 0 :
+   ST-LINK SN  : 0027002D3234510137333934
+   ST-LINK FW  : V3J16M8
+   Access Port Number  : 3
+   Board Name  : STM32N6570-DK
+-----------------------------------------------
+
+=====  UART Interface  =====
+
+Total number of serial ports available: 1
+
+Board Name  : STM32N6570-DK
+ST-LINK SN: 0027002D3234510137333934
+Port: COM3
+Location: \\.\COM3
+Description: STMicroelectronics STLink Virtual COM Port
+Manufacturer: STMicroelectronics
+

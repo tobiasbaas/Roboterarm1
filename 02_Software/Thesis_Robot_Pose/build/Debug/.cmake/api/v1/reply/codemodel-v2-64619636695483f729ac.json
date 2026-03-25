@@ -1,0 +1,78 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.22"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "test_cdc_cmake",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "CDC_ACM_Appli::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-CDC_ACM_Appli-Debug-dd4f5fc43226ca4ae4ef.json",
+					"name" : "CDC_ACM_Appli",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "CDC_ACM_FSBL::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-CDC_ACM_FSBL-Debug-01aa9fc65e2579945eb8.json",
+					"name" : "CDC_ACM_FSBL",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "flash::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-flash-Debug-3db88ddf2734e107b0d2.json",
+					"name" : "flash",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Dev/Thesis_Robot_Pose/build/Debug",
+		"source" : "C:/Dev/Thesis_Robot_Pose"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 8
+	}
+}

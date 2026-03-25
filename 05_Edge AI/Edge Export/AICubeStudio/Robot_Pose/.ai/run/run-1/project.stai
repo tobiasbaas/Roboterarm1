@@ -1,0 +1,19 @@
+{
+  "toolchain": "STM32CubeIDE",
+  "variant": "Validation",
+  "fromMx": false,
+  "name": "run-1",
+  "createdAt": 1773607024745,
+  "lastModified": 1773610655486,
+  "lastAccessed": 1773610655482,
+  "path": "C:\\Users\\marce\\.stm32cubeaistudio\\workspace\\Robot_Pose",
+  "board": "STM32N6570-DK",
+  "mcu": "",
+  "type": "BYOM",
+  "uartInstance": {
+    "rxpin": "PE6",
+    "txpin": "PE5",
+    "usart": "USART1",
+    "baudrate": 115200
+  }
+}

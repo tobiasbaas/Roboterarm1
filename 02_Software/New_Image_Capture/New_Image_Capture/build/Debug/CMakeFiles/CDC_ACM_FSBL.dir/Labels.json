@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "C:/Dev/New_Image_Capture/New_Image_Capture/build/Debug/CMakeFiles/CDC_ACM_FSBL"
+		},
+		{
+			"file" : "C:/Dev/New_Image_Capture/New_Image_Capture/build/Debug/CMakeFiles/CDC_ACM_FSBL.rule"
+		},
+		{
+			"file" : "C:/Dev/New_Image_Capture/New_Image_Capture/build/Debug/CMakeFiles/CDC_ACM_FSBL-complete.rule"
+		},
+		{
+			"file" : "C:/Dev/New_Image_Capture/New_Image_Capture/build/Debug/FSBL/src/CDC_ACM_FSBL-stamp/CDC_ACM_FSBL-build.rule"
+		},
+		{
+			"file" : "C:/Dev/New_Image_Capture/New_Image_Capture/build/Debug/FSBL/src/CDC_ACM_FSBL-stamp/CDC_ACM_FSBL-configure.rule"
+		},
+		{
+			"file" : "C:/Dev/New_Image_Capture/New_Image_Capture/build/Debug/FSBL/src/CDC_ACM_FSBL-stamp/CDC_ACM_FSBL-download.rule"
+		},
+		{
+			"file" : "C:/Dev/New_Image_Capture/New_Image_Capture/build/Debug/FSBL/src/CDC_ACM_FSBL-stamp/CDC_ACM_FSBL-install.rule"
+		},
+		{
+			"file" : "C:/Dev/New_Image_Capture/New_Image_Capture/build/Debug/FSBL/src/CDC_ACM_FSBL-stamp/CDC_ACM_FSBL-mkdir.rule"
+		},
+		{
+			"file" : "C:/Dev/New_Image_Capture/New_Image_Capture/build/Debug/FSBL/src/CDC_ACM_FSBL-stamp/CDC_ACM_FSBL-patch.rule"
+		},
+		{
+			"file" : "C:/Dev/New_Image_Capture/New_Image_Capture/build/Debug/FSBL/src/CDC_ACM_FSBL-stamp/CDC_ACM_FSBL-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"CDC_ACM_FSBL"
+		],
+		"name" : "CDC_ACM_FSBL"
+	}
+}

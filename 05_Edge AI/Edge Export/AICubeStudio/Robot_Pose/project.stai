@@ -1,0 +1,21 @@
+{
+  "toolchain": "STM32CubeIDE",
+  "variant": "ApplicationTemplate",
+  "fromMx": false,
+  "name": "Robot_Pose",
+  "createdAt": 1773607024745,
+  "lastModified": 1773781966765,
+  "lastAccessed": 1773780286650,
+  "path": "C:\\Users\\marce\\.stm32cubeaistudio\\workspace",
+  "board": "STM32N6570-DK",
+  "mcu": "",
+  "type": "BYOM",
+  "uartInstance": {
+    "rxpin": "PE6",
+    "txpin": "PE5",
+    "usart": "USART1",
+    "baudrate": 921600
+  },
+  "context": "Appli",
+  "contextProject": "FullSecure"
+}

@@ -1,0 +1,32 @@
+{
+  "args": {
+    "model": "C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\best.onnx",
+    "valinput": "",
+    "valoutput": "",
+    "batch-size": 2,
+    "mode": "target",
+    "st-neural-art": "custom",
+    "atonnOptions": {
+      "native-float": true,
+      "cache-maintenance": true,
+      "Ocache-opt": true,
+      "enable-virtual-mem-pools": true,
+      "Os": true,
+      "Oauto-sched": true,
+      "enable-epoch-controller": true,
+      "optimization": 3,
+      "Oauto": true,
+      "Oauto-kw": true,
+      "Oauto-cw": true,
+      "Oauto-stripe": true,
+      "Oauto-pipe": true,
+      "Oauto-O": true
+    },
+    "name": "network",
+    "verbosity": 1,
+    "c-api": "st-ai"
+  },
+  "mempools": [],
+  "automaticMempools": true,
+  "automaticFlash": true
+}

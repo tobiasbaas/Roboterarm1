@@ -1,0 +1,968 @@
+>>> C:\ST\STEdgeAI\3.0\Utilities\windows\stedgeai.exe analyze --model C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\best.onnx --batch-size 10 --mode host --st-neural-art custom@C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-1\.ai\profile-neural-art.json --name network --verbosity 1 --c-api st-ai --target stm32n6 --workspace C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-1\.ai\st_ai_ws --output C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-1\.ai\st_ai_output
+ST Edge AI Core v3.0.0-20426 123672867
+
+WARNING: _model_0_conv_Conv_output_0 is not quantized
+
+WARNING: _model_0_act_Sigmoid_output_0 is not quantized
+WARNING: _model_0_act_Mul_output_0 is not quantized
+
+WARNING: _model_1_conv_Conv_output_0 is not quantized
+WARNING: _model_1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_1_act_Mul_output_0 is not quantized
+
+WARNING: _model_2_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_2_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_2_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_2_Split_output_0 is not quantized
+WARNING: _model_2_m_0_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_2_m_0_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_2_m_0_cv1_act_Mul_output_0 is not quantized
+
+WARNING: _model_2_m_0_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_2_m_0_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_2_m_0_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_2_m_0_Add_output_0 is not quantized
+WARNING: _model_2_Concat_output_0 is not quantized
+WARNING: _model_2_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_2_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_2_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_3_conv_Conv_output_0 is not quantized
+WARNING: _model_3_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_3_act_Mul_output_0 is not quantized
+WARNING: _model_4_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_4_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_4_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_4_Split_output_0 is not quantized
+WARNING: _model_4_m_0_cv1_conv_Conv_output_0 is not quantized
+
+WARNING: _model_4_m_0_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_4_m_0_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_4_m_0_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_4_m_0_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_4_m_0_cv2_act_Mul_output_0 is not quantized
+
+WARNING: _model_4_m_0_Add_output_0 is not quantized
+WARNING: _model_4_Concat_output_0 is not quantized
+WARNING: _model_4_cv2_conv_Conv_output_0 is not quantized
+
+WARNING: _model_4_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_4_cv2_act_Mul_output_0 is not quantized
+
+WARNING: _model_5_conv_Conv_output_0 is not quantized
+WARNING: _model_5_act_Sigmoid_output_0 is not quantized
+WARNING: _model_5_act_Mul_output_0 is not quantized
+WARNING: _model_6_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_6_cv1_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_6_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_6_Split_output_0 is not quantized
+WARNING: _model_6_m_0_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_6_m_0_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_6_m_0_cv2_act_Mul_output_0 is not quantized
+
+WARNING: _model_6_m_0_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_6_m_0_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_6_m_0_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_6_m_0_m_m_0_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_6_m_0_m_m_0_cv1_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_6_m_0_m_m_0_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_6_m_0_m_m_0_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_6_m_0_m_m_0_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_6_m_0_m_m_0_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_6_m_0_m_m_0_Add_output_0 is not quantized
+
+WARNING: _model_6_m_0_m_m_1_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_6_m_0_m_m_1_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_6_m_0_m_m_1_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_6_m_0_m_m_1_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_6_m_0_m_m_1_cv2_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_6_m_0_m_m_1_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_6_m_0_m_m_1_Add_output_0 is not quantized
+WARNING: _model_6_m_0_Concat_output_0 is not quantized
+WARNING: _model_6_m_0_cv3_conv_Conv_output_0 is not quantized
+WARNING: _model_6_m_0_cv3_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_6_m_0_cv3_act_Mul_output_0 is not quantized
+WARNING: _model_6_Concat_output_0 is not quantized
+WARNING: _model_6_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_6_cv2_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_6_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_7_conv_Conv_output_0 is not quantized
+WARNING: _model_7_act_Sigmoid_output_0 is not quantized
+WARNING: _model_7_act_Mul_output_0 is not quantized
+
+WARNING: _model_8_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_8_cv1_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_8_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_8_Split_output_0 is not quantized
+WARNING: _model_8_m_0_cv2_conv_Conv_output_0 is not quantized
+
+WARNING: _model_8_m_0_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_8_m_0_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_8_m_0_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_8_m_0_cv1_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_8_m_0_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_8_m_0_m_m_0_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_8_m_0_m_m_0_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_8_m_0_m_m_0_cv1_act_Mul_output_0 is not quantized
+
+WARNING: _model_8_m_0_m_m_0_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_8_m_0_m_m_0_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_8_m_0_m_m_0_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_8_m_0_m_m_0_Add_output_0 is not quantized
+WARNING: _model_8_m_0_m_m_1_cv1_conv_Conv_output_0 is not quantized
+
+WARNING: _model_8_m_0_m_m_1_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_8_m_0_m_m_1_cv1_act_Mul_output_0 is not quantized
+
+WARNING: _model_8_m_0_m_m_1_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_8_m_0_m_m_1_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_8_m_0_m_m_1_cv2_act_Mul_output_0 is not quantized
+
+WARNING: _model_8_m_0_m_m_1_Add_output_0 is not quantized
+WARNING: _model_8_m_0_Concat_output_0 is not quantized
+WARNING: _model_8_m_0_cv3_conv_Conv_output_0 is not quantized
+
+WARNING: _model_8_m_0_cv3_act_Sigmoid_output_0 is not quantized
+WARNING: _model_8_m_0_cv3_act_Mul_output_0 is not quantized
+
+WARNING: _model_8_Concat_output_0 is not quantized
+WARNING: _model_8_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_8_cv2_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_8_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_9_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_9_m_MaxPool_output_0 is not quantized
+WARNING: _model_9_m_1_MaxPool_output_0 is not quantized
+WARNING: _model_9_m_2_MaxPool_output_0 is not quantized
+
+WARNING: _model_9_Concat_output_0 is not quantized
+WARNING: _model_9_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_9_cv2_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_9_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_10_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_10_cv1_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_10_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_10_Split_output_0 is not quantized
+WARNING: _model_10_m_m_0_attn_qkv_conv_Conv_output_0 is not quantized
+
+WARNING: _model_10_m_m_0_attn_Reshape_output_0 is not quantized
+WARNING: _model_10_m_m_0_attn_Split_output_0 is not quantized
+WARNING: _model_10_m_m_0_attn_Reshape_2_output_0 is not quantized
+WARNING: _model_10_m_m_0_attn_pe_conv_Conv_output_0 is not quantized
+
+WARNING: _model_10_m_m_0_attn_MatMul_output_0 is not quantized
+
+WARNING: _model_10_m_m_0_attn_Mul_output_0 is not quantized
+WARNING: _model_10_m_m_0_attn_Softmax_output_0 is not quantized
+
+WARNING: _model_10_m_m_0_attn_MatMul_1_output_0 is not quantized
+WARNING: _model_10_m_m_0_attn_Reshape_1_output_0 is not quantized
+WARNING: _model_10_m_m_0_attn_Add_output_0 is not quantized
+
+WARNING: _model_10_m_m_0_attn_proj_conv_Conv_output_0 is not quantized
+WARNING: _model_10_m_m_0_Add_output_0 is not quantized
+WARNING: _model_10_m_m_0_ffn_ffn_0_conv_Conv_output_0 is not quantized
+
+WARNING: _model_10_m_m_0_ffn_ffn_0_act_Sigmoid_output_0 is not quantized
+WARNING: _model_10_m_m_0_ffn_ffn_0_act_Mul_output_0 is not quantized
+WARNING: _model_10_m_m_0_ffn_ffn_1_conv_Conv_output_0 is not quantized
+WARNING: _model_10_m_m_0_Add_1_output_0 is not quantized
+
+WARNING: _model_10_Concat_output_0 is not quantized
+WARNING: _model_10_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_10_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_10_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_11_Resize_output_0 is not quantized
+
+WARNING: _model_12_Concat_output_0 is not quantized
+WARNING: _model_13_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_13_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_13_cv1_act_Mul_output_0 is not quantized
+
+WARNING: _model_13_Split_output_0 is not quantized
+WARNING: _model_13_m_0_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_13_m_0_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_13_m_0_cv1_act_Mul_output_0 is not quantized
+
+WARNING: _model_13_m_0_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_13_m_0_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_13_m_0_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_13_m_0_Add_output_0 is not quantized
+WARNING: _model_13_Concat_output_0 is not quantized
+
+WARNING: _model_13_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_13_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_13_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_14_Resize_output_0 is not quantized
+
+WARNING: _model_15_Concat_output_0 is not quantized
+WARNING: _model_16_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_16_cv1_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_16_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_16_Split_output_0 is not quantized
+
+WARNING: _model_16_m_0_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_16_m_0_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_16_m_0_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_16_m_0_cv2_conv_Conv_output_0 is not quantized
+
+WARNING: _model_16_m_0_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_16_m_0_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_16_m_0_Add_output_0 is not quantized
+
+WARNING: _model_16_Concat_output_0 is not quantized
+WARNING: _model_16_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_16_cv2_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_16_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv4_0_cv4_0_0_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv4_0_cv4_0_0_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv4_0_cv4_0_0_act_Mul_output_0 is not quantized
+
+WARNING: _model_23_cv4_0_cv4_0_1_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv4_0_cv4_0_1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv4_0_cv4_0_1_act_Mul_output_0 is not quantized
+
+WARNING: _model_23_cv4_0_cv4_0_2_Conv_output_0 is not quantized
+WARNING: _model_23_Reshape_6_output_0 is not quantized
+WARNING: _model_23_cv3_0_cv3_0_0_cv3_0_0_0_conv_Conv_output_0 is not quantized
+
+WARNING: _model_23_cv3_0_cv3_0_0_cv3_0_0_0_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv3_0_cv3_0_0_cv3_0_0_0_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv3_0_cv3_0_0_cv3_0_0_1_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv3_0_cv3_0_0_cv3_0_0_1_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_23_cv3_0_cv3_0_0_cv3_0_0_1_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv3_0_cv3_0_1_cv3_0_1_0_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv3_0_cv3_0_1_cv3_0_1_0_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv3_0_cv3_0_1_cv3_0_1_0_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv3_0_cv3_0_1_cv3_0_1_1_conv_Conv_output_0 is not quantized
+
+WARNING: _model_23_cv3_0_cv3_0_1_cv3_0_1_1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv3_0_cv3_0_1_cv3_0_1_1_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv3_0_cv3_0_2_Conv_output_0 is not quantized
+WARNING: _model_23_Reshape_3_output_0 is not quantized
+WARNING: _model_23_cv2_0_cv2_0_0_conv_Conv_output_0 is not quantized
+
+WARNING: _model_23_cv2_0_cv2_0_0_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv2_0_cv2_0_0_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv2_0_cv2_0_1_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv2_0_cv2_0_1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv2_0_cv2_0_1_act_Mul_output_0 is not quantized
+
+WARNING: _model_23_cv2_0_cv2_0_2_Conv_output_0 is not quantized
+WARNING: _model_23_Reshape_output_0 is not quantized
+WARNING: _model_17_conv_Conv_output_0 is not quantized
+WARNING: _model_17_act_Sigmoid_output_0 is not quantized
+WARNING: _model_17_act_Mul_output_0 is not quantized
+
+WARNING: _model_18_Concat_output_0 is not quantized
+WARNING: _model_19_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_19_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_19_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_19_Split_output_0 is not quantized
+WARNING: _model_19_m_0_cv1_conv_Conv_output_0 is not quantized
+
+WARNING: _model_19_m_0_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_19_m_0_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_19_m_0_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_19_m_0_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_19_m_0_cv2_act_Mul_output_0 is not quantized
+
+WARNING: _model_19_m_0_Add_output_0 is not quantized
+WARNING: _model_19_Concat_output_0 is not quantized
+WARNING: _model_19_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_19_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_19_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv4_1_cv4_1_0_conv_Conv_output_0 is not quantized
+
+WARNING: _model_23_cv4_1_cv4_1_0_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv4_1_cv4_1_0_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv4_1_cv4_1_1_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv4_1_cv4_1_1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv4_1_cv4_1_1_act_Mul_output_0 is not quantized
+
+WARNING: _model_23_cv4_1_cv4_1_2_Conv_output_0 is not quantized
+WARNING: _model_23_Reshape_7_output_0 is not quantized
+WARNING: _model_23_cv3_1_cv3_1_0_cv3_1_0_0_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv3_1_cv3_1_0_cv3_1_0_0_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv3_1_cv3_1_0_cv3_1_0_0_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv3_1_cv3_1_0_cv3_1_0_1_conv_Conv_output_0 is not quantized
+
+WARNING: _model_23_cv3_1_cv3_1_0_cv3_1_0_1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv3_1_cv3_1_0_cv3_1_0_1_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv3_1_cv3_1_1_cv3_1_1_0_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv3_1_cv3_1_1_cv3_1_1_0_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv3_1_cv3_1_1_cv3_1_1_0_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv3_1_cv3_1_1_cv3_1_1_1_conv_Conv_output_0 is not quantized
+
+WARNING: _model_23_cv3_1_cv3_1_1_cv3_1_1_1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv3_1_cv3_1_1_cv3_1_1_1_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv3_1_cv3_1_2_Conv_output_0 is not quantized
+WARNING: _model_23_Reshape_4_output_0 is not quantized
+WARNING: _model_23_cv2_1_cv2_1_0_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv2_1_cv2_1_0_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_23_cv2_1_cv2_1_0_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv2_1_cv2_1_1_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv2_1_cv2_1_1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv2_1_cv2_1_1_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv2_1_cv2_1_2_Conv_output_0 is not quantized
+
+WARNING: _model_23_Reshape_1_output_0 is not quantized
+WARNING: _model_20_conv_Conv_output_0 is not quantized
+WARNING: _model_20_act_Sigmoid_output_0 is not quantized
+WARNING: _model_20_act_Mul_output_0 is not quantized
+WARNING: _model_21_Concat_output_0 is not quantized
+WARNING: _model_22_cv1_conv_Conv_output_0 is not quantized
+
+WARNING: _model_22_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_22_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_22_Split_output_0 is not quantized
+WARNING: _model_22_m_0_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_22_m_0_cv2_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_22_m_0_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_22_m_0_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_22_m_0_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_22_m_0_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_22_m_0_m_m_0_cv1_conv_Conv_output_0 is not quantized
+WARNING: _model_22_m_0_m_m_0_cv1_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_22_m_0_m_m_0_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_22_m_0_m_m_0_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_22_m_0_m_m_0_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_22_m_0_m_m_0_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_22_m_0_m_m_0_Add_output_0 is not quantized
+WARNING: _model_22_m_0_m_m_1_cv1_conv_Conv_output_0 is not quantized
+
+WARNING: _model_22_m_0_m_m_1_cv1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_22_m_0_m_m_1_cv1_act_Mul_output_0 is not quantized
+WARNING: _model_22_m_0_m_m_1_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_22_m_0_m_m_1_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_22_m_0_m_m_1_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_22_m_0_m_m_1_Add_output_0 is not quantized
+
+WARNING: _model_22_m_0_Concat_output_0 is not quantized
+WARNING: _model_22_m_0_cv3_conv_Conv_output_0 is not quantized
+WARNING: _model_22_m_0_cv3_act_Sigmoid_output_0 is not quantized
+WARNING: _model_22_m_0_cv3_act_Mul_output_0 is not quantized
+WARNING: _model_22_Concat_output_0 is not quantized
+
+WARNING: _model_22_cv2_conv_Conv_output_0 is not quantized
+WARNING: _model_22_cv2_act_Sigmoid_output_0 is not quantized
+WARNING: _model_22_cv2_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv4_2_cv4_2_0_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv4_2_cv4_2_0_act_Sigmoid_output_0 is not quantized
+
+WARNING: _model_23_cv4_2_cv4_2_0_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv4_2_cv4_2_1_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv4_2_cv4_2_1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv4_2_cv4_2_1_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv4_2_cv4_2_2_Conv_output_0 is not quantized
+WARNING: _model_23_Reshape_8_output_0 is not quantized
+
+WARNING: _model_23_Concat_2_output_0 is not quantized
+WARNING: _model_23_Reshape_9_output_0 is not quantized
+WARNING: _model_23_Slice_3_output_0 is not quantized
+
+WARNING: _model_23_Sigmoid_1_output_0 is not quantized
+WARNING: _model_23_Slice_2_output_0 is not quantized
+WARNING: _model_23_Mul_3_output_0 is not quantized
+
+WARNING: _model_23_Add_3_output_0 is not quantized
+WARNING: _model_23_Mul_4_output_0 is not quantized
+WARNING: _model_23_Concat_4_output_0 is not quantized
+WARNING: _model_23_Reshape_10_output_0 is not quantized
+WARNING: _model_23_cv3_2_cv3_2_0_cv3_2_0_0_conv_Conv_output_0 is not quantized
+
+WARNING: _model_23_cv3_2_cv3_2_0_cv3_2_0_0_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv3_2_cv3_2_0_cv3_2_0_0_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv3_2_cv3_2_0_cv3_2_0_1_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv3_2_cv3_2_0_cv3_2_0_1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv3_2_cv3_2_0_cv3_2_0_1_act_Mul_output_0 is not quantized
+
+WARNING: _model_23_cv3_2_cv3_2_1_cv3_2_1_0_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv3_2_cv3_2_1_cv3_2_1_0_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv3_2_cv3_2_1_cv3_2_1_0_act_Mul_output_0 is not quantized
+
+WARNING: _model_23_cv3_2_cv3_2_1_cv3_2_1_1_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv3_2_cv3_2_1_cv3_2_1_1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv3_2_cv3_2_1_cv3_2_1_1_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv3_2_cv3_2_2_Conv_output_0 is not quantized
+WARNING: _model_23_Reshape_5_output_0 is not quantized
+
+WARNING: _model_23_Concat_1_output_0 is not quantized
+WARNING: _model_23_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv2_2_cv2_2_0_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv2_2_cv2_2_0_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv2_2_cv2_2_0_act_Mul_output_0 is not quantized
+
+WARNING: _model_23_cv2_2_cv2_2_1_conv_Conv_output_0 is not quantized
+WARNING: _model_23_cv2_2_cv2_2_1_act_Sigmoid_output_0 is not quantized
+WARNING: _model_23_cv2_2_cv2_2_1_act_Mul_output_0 is not quantized
+WARNING: _model_23_cv2_2_cv2_2_2_Conv_output_0 is not quantized
+WARNING: _model_23_Reshape_2_output_0 is not quantized
+WARNING: _model_23_Concat_output_0 is not quantized
+
+WARNING: _model_23_dfl_Reshape_output_0 is not quantized
+WARNING: _model_23_dfl_Softmax_output_0 is not quantized
+WARNING: _model_23_dfl_conv_Conv_output_0 is not quantized
+WARNING: _model_23_dfl_Reshape_1_output_0 is not quantized
+WARNING: _model_23_Slice_1_output_0 is not quantized
+
+WARNING: _model_23_Slice_output_0 is not quantized
+WARNING: _model_23_Add_1_output_0 is not quantized
+WARNING: _model_23_Sub_output_0 is not quantized
+WARNING: _model_23_Sub_1_output_0 is not quantized
+WARNING: _model_23_Add_2_output_0 is not quantized
+WARNING: _model_23_Div_1_output_0 is not quantized
+
+WARNING: _model_23_Concat_3_output_0 is not quantized
+WARNING: _model_23_Mul_2_output_0 is not quantized
+WARNING: output0 is not quantized
+
+ >>>> EXECUTING NEURAL ART COMPILER
+   C:/ST/STEdgeAI/3.0/Utilities/windows/atonn.exe -i "C:/Users/marce/.stm32cubeaistudio/workspace/Robot_Pose/.ai/run/run-1/.ai/st_ai_output/best_OE_3_3_1.onnx" --json-quant-file "C:/Users/marce/.stm32cubeaistudio/workspace/Robot_Pose/.ai/run/run-1/.ai/st_ai_output/best_OE_3_3_1_Q.json" -g "network.c" --load-mdesc "C:/ST/STEdgeAI/3.0/Utilities/configs/stm32n6.mdesc" --load-mpool "C:/Users/marce/.stm32cubeaistudio/workspace/Robot_Pose/.ai/run/run-1/.ai/memory_pool.mpool" --load-cdesc C:/ST/STEdgeAI/3.0/Utilities/configs/cortex-m55.cdesc --save-mpool-file "C:/Users/marce/.stm32cubeaistudio/workspace/Robot_Pose/.ai/run/run-1/.ai/st_ai_ws/neural_art__network/memory_pool.mpool" --out-dir-prefix "C:/Users/marce/.stm32cubeaistudio/workspace/Robot_Pose/.ai/run/run-1/.ai/st_ai_ws/neural_art__network/" --network-name "network" --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --enable-epoch-controller --output-info-file "c_info.json" --generate-stai
+
+ <<<< DONE EXECUTING NEURAL ART COMPILER
+
+ >>>> EXECUTING EPOCH_CONTROLLER POST_PROCESSING
+
+ <<<< DONE EXECUTING EPOCH_CONTROLLER POST_PROCESSING
+
+ Exec/report summary (analyze)
+ ---------------------------------------------------------------------------------------------------------------
+ model file         :   C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\best.onnx                                      
+ type               :   onnx                                                                                    
+ c_name             :   network                                                                                 
+ compression        :   lossless                                                                                
+ options            :   allocate-inputs, allocate-outputs, use-lite-runtime, use-st-ai                          
+ optimization       :   balanced                                                                                
+ target/series      :   stm32n6npu                                                                              
+ workspace dir      :   C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-1\.ai\st_ai_ws       
+ output dir         :   C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-1\.ai\st_ai_output   
+ model_fmt          :   float                                                                                   
+ model_name         :   best                                                                                    
+ model_hash         :   0xb1ee2f4ba5093875c41bf53409fac840                                                      
+ params #           :   2,732,028 items (10.42 MiB)                                                             
+ ---------------------------------------------------------------------------------------------------------------
+ input 1/1          :   'Input_6_out_0', f32(1x3x640x640), 4.69 MBytes, activations                             
+ output 1/1         :   'Concat_360_out_0', f32(1x23x8400), 754.69 KBytes, activations                          
+ macc               :   0                                                                                       
+ weights (ro)       :   10,928,404 B (10.42 MiB) (1 segment) / +292(+0.0%) vs float model                       
+ activations (rw)   :   22,495,232 B (21.45 MiB) (6 segments) *                                                 
+ ram (total)        :   22,495,232 B (21.45 MiB) = 22,495,232 + 0 + 0                                           
+ ---------------------------------------------------------------------------------------------------------------
+ (*) 'input'/'output' buffers are allocated in the activations buffer
+
+Computing AI RT data/code size (target=stm32n6npu)..
+
+Compilation details
+   ---------------------------------------------------------------------------------
+Compiler version: 1.1.3-8
+Compiler arguments:  -i C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-1\.ai\st_ai_output\best_OE_3_3_1.onnx --json-quant-file C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-1\.ai\st_ai_output\best_OE_3_3_1_Q.json -g network.c --load-mdesc C:\ST\STEdgeAI\3.0\Utilities\configs\stm32n6.mdesc --load-mpool C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-1\.ai\memory_pool.mpool --load-cdesc C:\ST\STEdgeAI\3.0\Utilities\configs\cortex-m55.cdesc --save-mpool-file C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-1\.ai\st_ai_ws\neural_art__network\memory_pool.mpool --out-dir-prefix C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-1\.ai\st_ai_ws\neural_art__network/ --network-name network --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --enable-epoch-controller --output-info-file c_info.json --generate-stai
+
+====================================================================================
+Memory usage information  (input/output buffers are included in activations)
+   ---------------------------------------------------------------------------------
+	flexMEM    [0x34000000 - 0x34000000]:          0  B /          0  B  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	cpuRAM1    [0x34064000 - 0x34064000]:          0  B /          0  B  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	cpuRAM2    [0x34100000 - 0x34200000]:      1.000 MB /      1.000 MB  (100.00 % used) -- weights:          0  B (  0.00 % used)  activations:      1.000 MB (100.00 % used)
+	npuRAM3    [0x34200000 - 0x34270000]:    448.000 kB /    448.000 kB  (100.00 % used) -- weights:          0  B (  0.00 % used)  activations:    448.000 kB (100.00 % used)
+	npuRAM4    [0x34270000 - 0x342E0000]:    448.000 kB /    448.000 kB  (100.00 % used) -- weights:          0  B (  0.00 % used)  activations:    448.000 kB (100.00 % used)
+	npuRAM5    [0x342E0000 - 0x34350000]:    448.000 kB /    448.000 kB  (100.00 % used) -- weights:          0  B (  0.00 % used)  activations:    448.000 kB (100.00 % used)
+	npuRAM6    [0x34350000 - 0x343C0000]:    400.000 kB /    448.000 kB  ( 89.29 % used) -- weights:          0  B (  0.00 % used)  activations:    400.000 kB ( 89.29 % used)
+	octoFlash  [0x71000000 - 0x78000000]:     10.422 MB /    112.000 MB  (  9.31 % used) -- weights:     10.422 MB (  9.31 % used)  activations:          0  B (  0.00 % used)
+	hyperRAM   [0x90000000 - 0x92000000]:     18.750 MB /     32.000 MB  ( 58.59 % used) -- weights:          0  B (  0.00 % used)  activations:     18.750 MB ( 58.59 % used)
+Total:                                            31.875 MB                                  -- weights:     10.422 MB                  activations:     21.453 MB
+====================================================================================
+Used memory ranges
+   ---------------------------------------------------------------------------------
+
+	cpuRAM2    [0x34100000 - 0x34200000]: 0x34100000-0x34200000
+	npuRAM3    [0x34200000 - 0x34270000]: 0x34200000-0x34270000
+	npuRAM4    [0x34270000 - 0x342E0000]: 0x34270000-0x342E0000
+	npuRAM5    [0x342E0000 - 0x34350000]: 0x342E0000-0x34350000
+	npuRAM6    [0x34350000 - 0x343C0000]: 0x34350000-0x343B4000
+	octoFlash  [0x71000000 - 0x78000000]: 0x71000000-0x71A6C120
+	hyperRAM   [0x90000000 - 0x92000000]: 0x90000000-0x912C0000
+====================================================================================
+Epochs details
+   ---------------------------------------------------------------------------------
+Total number of epochs                               356
+>> pure software (SW) epochs                         299
+>> hybrid epochs (using both software and hardware)   29
+>> pure hardware (HW or EC) epochs                    28  (implemented in 28 epoch controller blobs/meta epochs)
+
++----------------------+--------+----------------+
+| epoch ID             |  Type  |    Details     |
++----------------------+--------+----------------+
+| epochs    1 -> 1     |   EC   |                |
+| epoch_2              |   SW   |  Conv(float)   |
+| epoch_3              |   SW   | Sigmoid(float) |
+| epoch_4              |   SW   |   Mul(float)   |
+| epoch_5              |   SW   |  Conv(float)   |
+
+| epoch_6              |   SW   | Sigmoid(float) |
+| epoch_7              |   SW   |   Mul(float)   |
+| epoch_8              |   SW   |  Conv(float)   |
+| epoch_9              |   SW   | Sigmoid(float) |
+| epoch_10             |   SW   |   Mul(float)   |
+| epoch_11             | Hybrid |     Split      |
+| epoch_12             |   SW   |  Conv(float)   |
+| epoch_13             |   SW   | Sigmoid(float) |
+
+| epoch_14             |   SW   |   Mul(float)   |
+| epoch_15             |   SW   |  Conv(float)   |
+| epoch_16             |   SW   | Sigmoid(float) |
+| epoch_17             |   SW   |   Mul(float)   |
+| epoch_18             |   SW   |   Add(float)   |
+| epochs   19 -> 19    |   EC   |                |
+| epoch_20             |   SW   |  Conv(float)   |
+| epoch_21             |   SW   | Sigmoid(float) |
+
+| epoch_22             |   SW   |   Mul(float)   |
+| epoch_23             |   SW   |  Conv(float)   |
+| epoch_24             |   SW   | Sigmoid(float) |
+| epoch_25             |   SW   |   Mul(float)   |
+| epoch_26             |   SW   |  Conv(float)   |
+
+| epoch_27             |   SW   | Sigmoid(float) |
+| epoch_28             |   SW   |   Mul(float)   |
+| epoch_29             | Hybrid |     Split      |
+| epoch_30             |   SW   |  Conv(float)   |
+| epoch_31             |   SW   | Sigmoid(float) |
+| epoch_32             |   SW   |   Mul(float)   |
+| epoch_33             |   SW   |  Conv(float)   |
+| epoch_34             |   SW   | Sigmoid(float) |
+
+| epoch_35             |   SW   |   Mul(float)   |
+| epoch_36             |   SW   |   Add(float)   |
+| epochs   37 -> 37    |   EC   |                |
+| epoch_38             |   SW   |  Conv(float)   |
+| epoch_39             |   SW   | Sigmoid(float) |
+
+| epoch_40             |   SW   |   Mul(float)   |
+| epoch_41             |   SW   |  Conv(float)   |
+| epoch_42             |   SW   | Sigmoid(float) |
+| epoch_43             |   SW   |   Mul(float)   |
+| epoch_44             |   SW   |  Conv(float)   |
+
+| epoch_45             |   SW   | Sigmoid(float) |
+| epoch_46             |   SW   |   Mul(float)   |
+| epoch_47             | Hybrid |     Split      |
+| epoch_48             |   SW   |  Conv(float)   |
+| epoch_49             |   SW   | Sigmoid(float) |
+| epoch_50             |   SW   |   Mul(float)   |
+| epoch_51             |   SW   |  Conv(float)   |
+
+| epoch_52             |   SW   | Sigmoid(float) |
+| epoch_53             |   SW   |   Mul(float)   |
+| epoch_54             |   SW   |  Conv(float)   |
+| epoch_55             |   SW   | Sigmoid(float) |
+| epoch_56             |   SW   |   Mul(float)   |
+| epoch_57             |   SW   |  Conv(float)   |
+| epoch_58             |   SW   | Sigmoid(float) |
+
+| epoch_59             |   SW   |   Mul(float)   |
+| epoch_60             |   SW   |   Add(float)   |
+| epoch_61             |   SW   |  Conv(float)   |
+| epoch_62             |   SW   | Sigmoid(float) |
+| epoch_63             |   SW   |   Mul(float)   |
+| epoch_64             |   SW   |  Conv(float)   |
+| epoch_65             |   SW   | Sigmoid(float) |
+
+| epoch_66             |   SW   |   Mul(float)   |
+| epoch_67             |   SW   |   Add(float)   |
+| epochs   68 -> 68    |   EC   |                |
+| epoch_69             |   SW   |  Conv(float)   |
+| epoch_70             |   SW   | Sigmoid(float) |
+| epoch_71             |   SW   |   Mul(float)   |
+
+| epochs   72 -> 72    |   EC   |                |
+| epoch_73             |   SW   |  Conv(float)   |
+| epoch_74             |   SW   | Sigmoid(float) |
+| epoch_75             |   SW   |   Mul(float)   |
+| epoch_76             |   SW   |  Conv(float)   |
+| epoch_77             |   SW   | Sigmoid(float) |
+
+| epoch_78             |   SW   |   Mul(float)   |
+| epoch_79             |   SW   |  Conv(float)   |
+| epoch_80             |   SW   | Sigmoid(float) |
+| epoch_81             |   SW   |   Mul(float)   |
+| epoch_82             | Hybrid |     Split      |
+| epoch_83             |   SW   |  Conv(float)   |
+| epoch_84             |   SW   | Sigmoid(float) |
+
+| epoch_85             |   SW   |   Mul(float)   |
+| epoch_86             |   SW   |  Conv(float)   |
+| epoch_87             |   SW   | Sigmoid(float) |
+| epoch_88             |   SW   |   Mul(float)   |
+| epoch_89             |   SW   |  Conv(float)   |
+| epoch_90             |   SW   | Sigmoid(float) |
+
+| epoch_91             |   SW   |   Mul(float)   |
+| epoch_92             |   SW   |  Conv(float)   |
+| epoch_93             |   SW   | Sigmoid(float) |
+| epoch_94             |   SW   |   Mul(float)   |
+| epoch_95             |   SW   |   Add(float)   |
+
+| epoch_96             |   SW   |  Conv(float)   |
+| epoch_97             |   SW   | Sigmoid(float) |
+| epoch_98             |   SW   |   Mul(float)   |
+| epoch_99             |   SW   |  Conv(float)   |
+| epoch_100            |   SW   | Sigmoid(float) |
+| epoch_101            |   SW   |   Mul(float)   |
+
+| epoch_102            |   SW   |   Add(float)   |
+| epochs  103 -> 103   |   EC   |                |
+| epoch_104            |   SW   |  Conv(float)   |
+| epoch_105            |   SW   | Sigmoid(float) |
+| epoch_106            |   SW   |   Mul(float)   |
+| epochs  107 -> 107   |   EC   |                |
+| epoch_108            |   SW   |  Conv(float)   |
+| epoch_109            |   SW   | Sigmoid(float) |
+| epoch_110            |   SW   |   Mul(float)   |
+
+| epoch_111            |   SW   |  Conv(float)   |
+| epoch_112            | Hybrid |      Pad       |
+| epoch_113            |   SW   | MaxPool(float) |
+| epoch_114            |   SW   | MaxPool(float) |
+| epoch_115            | Hybrid |      Pad       |
+| epoch_116            |   SW   | MaxPool(float) |
+
+| epoch_117            |   SW   | MaxPool(float) |
+| epoch_118            | Hybrid |      Pad       |
+| epoch_119            |   SW   | MaxPool(float) |
+| epoch_120            |   SW   | MaxPool(float) |
+
+| epochs  121 -> 121   |   EC   |                |
+| epoch_122            |   SW   |  Conv(float)   |
+| epoch_123            |   SW   | Sigmoid(float) |
+| epoch_124            |   SW   |   Mul(float)   |
+| epoch_125            |   SW   |  Conv(float)   |
+
+| epoch_126            |   SW   | Sigmoid(float) |
+| epoch_127            |   SW   |   Mul(float)   |
+| epoch_128            | Hybrid |     Split      |
+
+| epoch_129            |   SW   |  Conv(float)   |
+| epochs  130 -> 130   |   EC   |                |
+| epoch_132            | Hybrid |     Split      |
+
+| epoch_133            | Hybrid |   Transpose    |
+| epochs  134 -> 134   |   EC   |                |
+| epoch_135            | Hybrid |     Split      |
+
+| epoch_136            |   SW   |  Conv(float)   |
+| epoch_137            |   SW   |  Conv(float)   |
+| epoch_138            |   SW   |  Conv(float)   |
+| epoch_139            | Hybrid |     Split      |
+
+| epochs  140 -> 142   |   EC   |                |
+| epoch_143            |   SW   |   Mul(float)   |
+| epoch_144            |   SW   | Softmax(float) |
+| epoch_145            | Hybrid |   Transpose    |
+| <no executed epochs> |   EC   |                |
+
+| epoch_147            | Hybrid |     Split      |
+| epochs  149 -> 149   |   EC   |                |
+| epoch_150            |   SW   |  Conv(float)   |
+
+| epoch_151            |   SW   |  Conv(float)   |
+| epochs  152 -> 154   |   EC   |                |
+| epoch_155            |   SW   |   Add(float)   |
+| epoch_156            |   SW   |  Conv(float)   |
+
+| epoch_157            |   SW   |   Add(float)   |
+| epoch_158            |   SW   |  Conv(float)   |
+| epoch_159            |   SW   | Sigmoid(float) |
+
+| epoch_160            |   SW   |   Mul(float)   |
+| epoch_161            |   SW   |  Conv(float)   |
+| epoch_162            |   SW   |   Add(float)   |
+
+| epochs  163 -> 163   |   EC   |                |
+| epoch_164            |   SW   |  Conv(float)   |
+| epoch_165            |   SW   | Sigmoid(float) |
+
+| epoch_166            |   SW   |   Mul(float)   |
+| epochs  167 -> 167   |   EC   |                |
+| epoch_168            | Hybrid |  DepthToSpace  |
+
+| epoch_169            | Hybrid |     Concat     |
+| epoch_170            |   SW   |  Conv(float)   |
+| epoch_171            |   SW   | Sigmoid(float) |
+
+| epoch_172            |   SW   |   Mul(float)   |
+| epoch_173            | Hybrid |     Split      |
+| epoch_174            |   SW   |  Conv(float)   |
+
+| epoch_175            |   SW   | Sigmoid(float) |
+| epoch_176            |   SW   |   Mul(float)   |
+| epoch_177            |   SW   |  Conv(float)   |
+| epoch_178            |   SW   | Sigmoid(float) |
+
+| epoch_179            |   SW   |   Mul(float)   |
+| epoch_180            |   SW   |   Add(float)   |
+| epochs  181 -> 181   |   EC   |                |
+| epoch_182            |   SW   |  Conv(float)   |
+
+| epoch_183            |   SW   | Sigmoid(float) |
+| epoch_184            |   SW   |   Mul(float)   |
+| epochs  185 -> 185   |   EC   |                |
+
+| epoch_186            | Hybrid |  DepthToSpace  |
+| epochs  187 -> 187   |   EC   |                |
+| epoch_188            |   SW   |  Conv(float)   |
+| epoch_189            |   SW   | Sigmoid(float) |
+| epoch_190            |   SW   |   Mul(float)   |
+| epoch_191            | Hybrid |     Split      |
+
+| epoch_192            |   SW   |  Conv(float)   |
+| epoch_193            |   SW   | Sigmoid(float) |
+| epoch_194            |   SW   |   Mul(float)   |
+| epoch_195            |   SW   |  Conv(float)   |
+| epoch_196            |   SW   | Sigmoid(float) |
+| epoch_197            |   SW   |   Mul(float)   |
+| epoch_198            |   SW   |   Add(float)   |
+
+| epochs  199 -> 199   |   EC   |                |
+| epoch_200            |   SW   |  Conv(float)   |
+| epoch_201            |   SW   | Sigmoid(float) |
+| epoch_202            |   SW   |   Mul(float)   |
+| epoch_203            |   SW   |  Conv(float)   |
+| epoch_204            |   SW   | Sigmoid(float) |
+| epoch_205            |   SW   |   Mul(float)   |
+| epoch_206            |   SW   |  Conv(float)   |
+
+| epoch_207            |   SW   | Sigmoid(float) |
+| epoch_208            |   SW   |   Mul(float)   |
+| epoch_209            |   SW   |  Conv(float)   |
+| epoch_210            |   SW   |  Conv(float)   |
+| epoch_211            |   SW   | Sigmoid(float) |
+| epoch_212            |   SW   |   Mul(float)   |
+| epoch_213            |   SW   |  Conv(float)   |
+
+| epoch_214            |   SW   | Sigmoid(float) |
+| epoch_215            |   SW   |   Mul(float)   |
+| epoch_216            |   SW   |  Conv(float)   |
+| epoch_217            |   SW   | Sigmoid(float) |
+| epoch_218            |   SW   |   Mul(float)   |
+| epoch_219            |   SW   |  Conv(float)   |
+| epoch_220            |   SW   | Sigmoid(float) |
+
+| epoch_221            |   SW   |   Mul(float)   |
+| epoch_222            |   SW   |  Conv(float)   |
+| epoch_223            |   SW   |  Conv(float)   |
+| epoch_224            |   SW   | Sigmoid(float) |
+| epoch_225            |   SW   |   Mul(float)   |
+| epoch_226            |   SW   |  Conv(float)   |
+| epoch_227            |   SW   | Sigmoid(float) |
+| epoch_228            |   SW   |   Mul(float)   |
+
+| epoch_229            |   SW   |  Conv(float)   |
+| epoch_230            |   SW   |  Conv(float)   |
+| epoch_231            |   SW   | Sigmoid(float) |
+| epoch_232            |   SW   |   Mul(float)   |
+| epoch_233            | Hybrid |     Concat     |
+
+| epoch_234            |   SW   |  Conv(float)   |
+| epoch_235            |   SW   | Sigmoid(float) |
+| epoch_236            |   SW   |   Mul(float)   |
+| epoch_237            | Hybrid |     Split      |
+| epoch_238            |   SW   |  Conv(float)   |
+| epoch_239            |   SW   | Sigmoid(float) |
+
+| epoch_240            |   SW   |   Mul(float)   |
+| epoch_241            |   SW   |  Conv(float)   |
+| epoch_242            |   SW   | Sigmoid(float) |
+| epoch_243            |   SW   |   Mul(float)   |
+| epoch_244            |   SW   |   Add(float)   |
+| epochs  245 -> 245   |   EC   |                |
+
+| epoch_246            |   SW   |  Conv(float)   |
+| epoch_247            |   SW   | Sigmoid(float) |
+| epoch_248            |   SW   |   Mul(float)   |
+| epoch_249            |   SW   |  Conv(float)   |
+| epoch_250            |   SW   | Sigmoid(float) |
+| epoch_251            |   SW   |   Mul(float)   |
+| epoch_252            |   SW   |  Conv(float)   |
+
+| epoch_253            |   SW   | Sigmoid(float) |
+| epoch_254            |   SW   |   Mul(float)   |
+| epoch_255            |   SW   |  Conv(float)   |
+| epoch_256            |   SW   |  Conv(float)   |
+| epoch_257            |   SW   | Sigmoid(float) |
+| epoch_258            |   SW   |   Mul(float)   |
+
+| epoch_259            |   SW   |  Conv(float)   |
+| epoch_260            |   SW   | Sigmoid(float) |
+| epoch_261            |   SW   |   Mul(float)   |
+| epoch_262            |   SW   |  Conv(float)   |
+| epoch_263            |   SW   | Sigmoid(float) |
+| epoch_264            |   SW   |   Mul(float)   |
+| epoch_265            |   SW   |  Conv(float)   |
+
+| epoch_266            |   SW   | Sigmoid(float) |
+| epoch_267            |   SW   |   Mul(float)   |
+| epoch_268            |   SW   |  Conv(float)   |
+| epoch_269            |   SW   |  Conv(float)   |
+| epoch_270            |   SW   | Sigmoid(float) |
+
+| epoch_271            |   SW   |   Mul(float)   |
+| epoch_272            |   SW   |  Conv(float)   |
+| epoch_273            |   SW   | Sigmoid(float) |
+| epoch_274            |   SW   |   Mul(float)   |
+
+| epoch_275            |   SW   |  Conv(float)   |
+| epoch_276            |   SW   |  Conv(float)   |
+| epoch_277            |   SW   | Sigmoid(float) |
+
+| epoch_278            |   SW   |   Mul(float)   |
+| epoch_279            | Hybrid |     Concat     |
+| epoch_280            |   SW   |  Conv(float)   |
+| epoch_281            |   SW   | Sigmoid(float) |
+| epoch_282            |   SW   |   Mul(float)   |
+| epoch_283            | Hybrid |     Split      |
+| epoch_284            |   SW   |  Conv(float)   |
+| epoch_285            |   SW   | Sigmoid(float) |
+| epoch_286            |   SW   |   Mul(float)   |
+| epoch_287            |   SW   |  Conv(float)   |
+| epoch_288            |   SW   | Sigmoid(float) |
+| epoch_289            |   SW   |   Mul(float)   |
+| epoch_290            |   SW   |  Conv(float)   |
+| epoch_291            |   SW   | Sigmoid(float) |
+| epoch_292            |   SW   |   Mul(float)   |
+| epoch_293            |   SW   |  Conv(float)   |
+| epoch_294            |   SW   | Sigmoid(float) |
+| epoch_295            |   SW   |   Mul(float)   |
+| epoch_296            |   SW   |   Add(float)   |
+| epoch_297            |   SW   |  Conv(float)   |
+| epoch_298            |   SW   | Sigmoid(float) |
+
+| epoch_299            |   SW   |   Mul(float)   |
+| epoch_300            |   SW   |  Conv(float)   |
+| epoch_301            |   SW   | Sigmoid(float) |
+| epoch_302            |   SW   |   Mul(float)   |
+| epoch_303            |   SW   |   Add(float)   |
+| epochs  304 -> 304   |   EC   |                |
+| epoch_305            |   SW   |  Conv(float)   |
+| epoch_306            |   SW   | Sigmoid(float) |
+
+| epoch_307            |   SW   |   Mul(float)   |
+| epochs  308 -> 308   |   EC   |                |
+| epoch_309            |   SW   |  Conv(float)   |
+| epoch_310            |   SW   | Sigmoid(float) |
+| epoch_311            |   SW   |   Mul(float)   |
+| epoch_312            |   SW   |  Conv(float)   |
+| epoch_313            |   SW   | Sigmoid(float) |
+
+| epoch_314            |   SW   |   Mul(float)   |
+| epoch_315            |   SW   |  Conv(float)   |
+| epoch_316            |   SW   | Sigmoid(float) |
+| epoch_317            |   SW   |   Mul(float)   |
+| epoch_318            |   SW   |  Conv(float)   |
+| epoch_319            |   SW   |  Conv(float)   |
+| epoch_320            |   SW   | Sigmoid(float) |
+| epoch_321            |   SW   |   Mul(float)   |
+
+| epoch_322            |   SW   |  Conv(float)   |
+| epoch_323            |   SW   | Sigmoid(float) |
+| epoch_324            |   SW   |   Mul(float)   |
+| epoch_325            |   SW   |  Conv(float)   |
+| epoch_326            |   SW   | Sigmoid(float) |
+| epoch_327            |   SW   |   Mul(float)   |
+
+| epoch_328            |   SW   |  Conv(float)   |
+| epoch_329            |   SW   | Sigmoid(float) |
+| epoch_330            |   SW   |   Mul(float)   |
+| epoch_331            |   SW   |  Conv(float)   |
+| epoch_332            |   SW   |  Conv(float)   |
+| epoch_333            |   SW   | Sigmoid(float) |
+| epoch_334            |   SW   |   Mul(float)   |
+
+| epoch_335            |   SW   |  Conv(float)   |
+| epoch_336            |   SW   | Sigmoid(float) |
+| epoch_337            |   SW   |   Mul(float)   |
+| epoch_338            |   SW   |  Conv(float)   |
+| epochs  339 -> 339   |   EC   |                |
+| epoch_340            | Hybrid |     Concat     |
+| epoch_341            |   SW   | Sigmoid(float) |
+
+| epoch_342            | Hybrid |     Concat     |
+| epoch_343            | Hybrid |     Concat     |
+| epochs  344 -> 344   |   EC   |                |
+| epoch_345            | Hybrid |   Transpose    |
+| epochs  346 -> 346   |   EC   |                |
+| epoch_347            |   SW   |   Mul(float)   |
+| epoch_348            |   SW   |   Add(float)   |
+
+| epoch_349            |   SW   |   Mul(float)   |
+| epoch_350            |   SW   | Sigmoid(float) |
+| epoch_351            |   SW   | Softmax(float) |
+| epoch_352            |   SW   |  Conv(float)   |
+| epoch_353            | Hybrid |     Concat     |
+| epochs  354 -> 354   |   EC   |                |
+| epoch_355            |   SW   |   Add(float)   |
+
+| epoch_356            |   SW   |   Sub(float)   |
+| epoch_357            |   SW   |   Add(float)   |
+| epoch_358            |   SW   |   Div(float)   |
+| epoch_359            |   SW   |   Sub(float)   |
+| <no executed epochs> |   EC   |                |
+| epoch_361            |   SW   |   Mul(float)   |
+| epoch_362            | Hybrid |     Concat     |
+
++----------------------+--------+----------------+
+====================================================================================
+ Requested memory size by section - "stm32n6npu" target
+ ------------------------------- -------- ------------ ------ ------------
+
+ module                              text       rodata   data          bss
+ ------------------------------- -------- ------------ ------ ------------
+ network.o                         36,536       42,312      0            0
+ NetworkRuntime1100_CM55_GCC.a     13,848           32      0            0
+ stai_network.o                         0            0      0            0
+
+ lib (toolchain)*                  11,036        2,260      0            0
+ ll atonn runtime                  19,482       13,372    352        1,741
+ ------------------------------- -------- ------------ ------ ------------
+ RT total**                        80,902       57,976    352        1,741
+
+ ------------------------------- -------- ------------ ------ ------------
+ weights                                0   10,928,404      0            0
+ activations                            0            0      0   22,495,232
+ io                                     0            0      0            0
+ ------------------------------- -------- ------------ ------ ------------
+ TOTAL                             80,902   10,986,380    352   22,496,973
+ ------------------------------- -------- ------------ ------ ------------
+
+ *  toolchain objects (libm/libgcc*)
+ ** RT AI runtime objects (kernels+infrastructure)
+  Summary - "stm32n6npu" target
+  ---------------------------------------------------
+               FLASH (ro)     %*     RAM (rw)      %
+  ---------------------------------------------------
+
+  RT total        139,230   1.3%        2,093   0.0%
+  ---------------------------------------------------
+  TOTAL        11,067,634          22,497,325
+  ---------------------------------------------------
+  *  rt/total
+
+Creating txt report file C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-1\.ai\st_ai_output\network_analyze_report.txt
+
+elapsed time (ANALYZE): 119.309s
+

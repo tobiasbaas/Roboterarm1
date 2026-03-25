@@ -1,0 +1,4 @@
+Generate Project
+Copying previous project files from C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-11 to C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-11\.ai\generate\backup
+Calculating memory footprint...
+Run failed: Error: analyze error: NOT IMPLEMENTED: Onnx exporting model with quantized unsigned integer format is not supported

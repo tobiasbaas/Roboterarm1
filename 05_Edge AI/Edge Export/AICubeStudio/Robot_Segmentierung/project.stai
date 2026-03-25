@@ -1,0 +1,13 @@
+{
+  "toolchain": "STM32CubeIDE",
+  "variant": "ApplicationTemplate",
+  "fromMx": false,
+  "name": "Robot_Segmentierung",
+  "createdAt": 1774381105503,
+  "lastModified": 1774381105520,
+  "lastAccessed": 1774381105503,
+  "path": "C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\AICubeStudio",
+  "board": "STM32N6570-DK",
+  "mcu": "",
+  "type": "BYOM"
+}
