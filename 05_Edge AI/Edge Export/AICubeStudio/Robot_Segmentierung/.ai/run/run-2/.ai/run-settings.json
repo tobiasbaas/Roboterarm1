@@ -1,0 +1,54 @@
+{
+  "args": {
+    "model": "C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\roboterarm_real_opt_v004_20260324_int8.onnx",
+    "valinput": "",
+    "valoutput": "",
+    "batch-size": 3,
+    "mode": "target",
+    "st-neural-art": "default",
+    "atonnOptions": {
+      "native-float": true,
+      "cache-maintenance": true,
+      "Ocache-opt": true,
+      "enable-virtual-mem-pools": true,
+      "Os": true,
+      "Oauto-sched": true,
+      "enable-epoch-controller": true
+    },
+    "name": "network",
+    "verbosity": 1,
+    "c-api": "st-ai",
+    "target": "stm32n6",
+    "workspace": "C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\AICubeStudio\\Robot_Segmentierung\\.ai\\run\\run-2\\.ai\\st_ai_ws",
+    "output": "C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\AICubeStudio\\Robot_Segmentierung\\.ai\\run\\run-2\\.ai\\st_ai_output",
+    "memory-pool": "C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\AICubeStudio\\Robot_Segmentierung\\.ai\\run\\run-2\\.ai\\mempools.json"
+  },
+  "mempools": [
+    {
+      "driver": "RAM",
+      "size": 1411445,
+      "offset": 872939520,
+      "name": "POOL_0_RAM",
+      "max": 1572864,
+      "noload": true
+    },
+    {
+      "driver": "AXISRAM3_4_5_6",
+      "size": 1835008,
+      "offset": 874512384,
+      "name": "POOL_1_AXISRAM3_4_5_6",
+      "max": 1835008,
+      "noload": true
+    },
+    {
+      "driver": "xSPI1",
+      "name": "POOL_XSPI1",
+      "offset": 2415919104,
+      "size": 32505856,
+      "max": 32505856,
+      "noload": true
+    }
+  ],
+  "automaticMempools": true,
+  "automaticFlash": true
+}

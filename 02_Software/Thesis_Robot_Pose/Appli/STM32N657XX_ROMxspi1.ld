@@ -40,7 +40,7 @@ _Min_Stack_Size = 0x800; /* required amount of stack */
 /* Memories definition */
 MEMORY
 {
-  ROM    (xrw)    : ORIGIN = 0x90100400,   LENGTH = 511K
+  ROM    (xrw)    : ORIGIN = 0x70100400,   LENGTH = 2047K
   RAM    (xrw)    : ORIGIN = 0x34000000,   LENGTH = 2048K
 }
 /* Highest address of the user mode stack */

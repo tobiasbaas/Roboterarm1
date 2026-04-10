@@ -2,7 +2,14 @@
 /**
   ******************************************************************************
   * @file           : main.c
-  * @brief          : Main program body
+  * @brief          : FSBL (First Stage Bootloader) - minimal bootloader only
+  * 
+  * PURPOSE: 
+  *   - Minimal hardware initialization required for boot
+  *   - Copy RAM sections if needed
+  *   - Jump to Appli vector table at 0x70100400
+  *   - Do NOT initialize Camera, Display, AI threads (those are Appli responsibility)
+  *
   ******************************************************************************
   * @attention
   *
@@ -16,214 +23,76 @@
   ******************************************************************************
   */
 /* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
-#include "app_threadx.h"
+
 #include "main.h"
-#include "usbpd.h"
-
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-#include <string.h>
-#include <assert.h>
-#include "cmw_camera.h"
-#include "stm32n6570_discovery.h"
-#include "stm32n6570_discovery_bus.h"
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-#define LCD_FB_ADDRESS        0x34200000U
-#define LCD_WIDTH             640
-#define LCD_HEIGHT            480
-#define LCD_BPP               2  /* RGB565 = 2 bytes per pixel */
-
-#define SENSOR_IMX335_WIDTH   2592
-#define SENSOR_IMX335_HEIGHT  1944
-#define CAMERA_FPS            30
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
-
-I2C_HandleTypeDef hi2c1;
-I2C_HandleTypeDef hi2c2;
-
-MDF_HandleTypeDef MdfHandle0;
-MDF_FilterConfigTypeDef MdfFilterConfig0;
-
-SAI_HandleTypeDef hsai_BlockA1;
-SAI_HandleTypeDef hsai_BlockB1;
-
-SD_HandleTypeDef hsd2;
-
-UART_HandleTypeDef huart1;
-
-PCD_HandleTypeDef hpcd_USB_OTG_HS1 __attribute__((section(".UsbHpcdSection")));
-HCD_HandleTypeDef hhcd_USB_OTG_HS2;
-
-XSPI_HandleTypeDef hxspi1;
-XSPI_HandleTypeDef hxspi2;
-
-DCMIPP_HandleTypeDef hdcmipp;
-LTDC_HandleTypeDef hltdc;
-RAMCFG_HandleTypeDef hramcfg_SRAM3;
-RAMCFG_HandleTypeDef hramcfg_SRAM4;
-
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
+#include "stm32n657xx.h"
+#include "stm32n6xx_hal_gpio.h"
+#include "stm32n6570_discovery_xspi.h"
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void SystemIsolation_Config(void);
-static void MPU_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_GPDMA1_Init(void);
-static void MX_ADC1_Init(void);
-/* MX_I2C1_Init and MX_I2C2_Init removed - BSP bus driver handles I2C */
-static void MX_MDF1_Init(void);
-static void MX_SAI1_Init(void);
-static void MX_SDMMC2_SD_Init(void);
-static void MX_UCPD1_Init(void);
-static void MX_USART1_UART_Init(void);
-static void MX_USB2_OTG_HS_HCD_Init(void);
-static void MX_XSPI1_Init(void);
-static void MX_XSPI2_Init(void);
-static void MX_DCMIPP_Init(void);
-static void MX_LTDC_Init(void);
-static void MX_RAMCFG_Init(void);
-/* USER CODE BEGIN PFP */
+static void MPU_Config(void);
+static void FSBL_NOR_PreReset(void);
+static void FSBL_XSPI_Init(void);
+static void JumpToApplication(void);
 
-/* USER CODE END PFP */
+/* Debug-visible jump diagnostics (avoid relying on optimized locals). */
+volatile uint32_t g_fsbl_jump_stage = 0U;
+volatile uint32_t g_fsbl_app_msp = 0U;
+volatile uint32_t g_fsbl_app_reset = 0U;
 
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
 
 /**
-  * @brief  DCMIPP Clock Configuration callback (called by CMW Camera Middleware)
-  */
-HAL_StatusTypeDef MX_DCMIPP_ClockConfig(DCMIPP_HandleTypeDef *hdcmipp_ptr)
-{
-  RCC_PeriphCLKInitTypeDef RCC_PeriphCLKInitStruct = {0};
-  HAL_StatusTypeDef ret;
-
-  /* DCMIPP clock: IC17 = PLL1 / 4 = 1200/4 = 300 MHz */
-  RCC_PeriphCLKInitStruct.PeriphClockSelection = RCC_PERIPHCLK_DCMIPP;
-  RCC_PeriphCLKInitStruct.DcmippClockSelection = RCC_DCMIPPCLKSOURCE_IC17;
-  RCC_PeriphCLKInitStruct.ICSelection[RCC_IC17].ClockSelection = RCC_ICCLKSOURCE_PLL1;
-  RCC_PeriphCLKInitStruct.ICSelection[RCC_IC17].ClockDivider = 4;
-  ret = HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphCLKInitStruct);
-  if (ret) return ret;
-
-  /* CSI PHY ref clock: IC18 = PLL1 / 60 = 1200/60 = 20 MHz */
-  RCC_PeriphCLKInitStruct.PeriphClockSelection = RCC_PERIPHCLK_CSI;
-  RCC_PeriphCLKInitStruct.ICSelection[RCC_IC18].ClockSelection = RCC_ICCLKSOURCE_PLL1;
-  RCC_PeriphCLKInitStruct.ICSelection[RCC_IC18].ClockDivider = 60;
-  ret = HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphCLKInitStruct);
-  if (ret) return ret;
-
-  return HAL_OK;
-}
-
-/**
-  * @brief  DCMIPP error callback (called by CMW on pipe error)
-  */
-void CMW_CAMERA_PIPE_ErrorCallback(uint32_t pipe)
-{
-  /* Ignore pipe errors for now */
-}
-
-/* USER CODE END 0 */
-
-/**
-  * @brief  The application entry point.
+  * @brief  The bootloader entry point.
   * @retval int
   */
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
-  /* MPU Configuration — mark USB / USBX pool region as non-cacheable
-     (must be done BEFORE enabling caches) */
-  MPU_Config();
-
-  /* Enable I-Cache only.  D-Cache is intentionally DISABLED because the
-     camera/DMA subsystem was not designed with cache maintenance in mind.
-     Enabling D-Cache introduced hard faults / data corruption on earlier
-     attempts. */
+  /* Minimal MPU configuration for boot */
   SCB_EnableICache();
-  /* SCB_EnableDCache();  — deliberately disabled, see above */
   /* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
+  /* MCU Configuration --------------------------------------------------------*/
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
+  /* Configure the system clock (PLL1 1200 MHz) */
   SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
-  /* Enable AXISRAM3/4 memory clocks early for LTDC framebuffer */
-  __HAL_RCC_AXISRAM3_MEM_CLK_ENABLE();
-  __HAL_RCC_AXISRAM4_MEM_CLK_ENABLE();
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
+  /* Initialize minimal GPIO (only critical pins if needed) */
   MX_GPIO_Init();
-  MX_GPDMA1_Init();
-  MX_ADC1_Init();
-  /* MX_I2C1/I2C2 init handled by BSP bus driver */
-  MX_MDF1_Init();
-  MX_SAI1_Init();
-  MX_SDMMC2_SD_Init();
-  MX_UCPD1_Init();
-  MX_USART1_UART_Init();
-  MX_USB2_OTG_HS_HCD_Init();
-  MX_XSPI1_Init();
-  MX_XSPI2_Init();
-  /* Call PreOsInit function */
- // USBPD_PreInitOs();
-  MX_DCMIPP_Init();
-  MX_LTDC_Init();
-  MX_RAMCFG_Init();
-  SystemIsolation_Config();
+
   /* USER CODE BEGIN 2 */
-  /* Enable AXISRAM3/4 for framebuffer */
+  /* Enable external SRAM clocks for Appli to use */
   __HAL_RCC_AXISRAM3_MEM_CLK_ENABLE();
   __HAL_RCC_AXISRAM4_MEM_CLK_ENABLE();
-  HAL_RAMCFG_EnableAXISRAM(&hramcfg_SRAM3);
-  HAL_RAMCFG_EnableAXISRAM(&hramcfg_SRAM4);
+
+  /* Configure MPU: mark XSPI2 (0x70000000) executable, XSPI1 (0x90000000) cacheable */
+  MPU_Config();
+
+  /* Initialize XSPI2 (NOR Flash) + XSPI1 (HyperRAM) in memory-mapped mode */
+  FSBL_XSPI_Init();
+
+  for (uint32_t i = 0; i < 4; i++)
+  {
+    HAL_GPIO_TogglePin(GPIOO, GPIO_PIN_1);
+    HAL_Delay(200);
+  }
+
   /* USER CODE END 2 */
 
-  MX_ThreadX_Init();
+  /* ========================================================================
+     BOOTLOADER COMPLETE - JUMP TO APPLI WITH PROPER VECTOR TABLE SETUP
+     ======================================================================== */
 
-  /* We should never get here as control is now taken by the scheduler */
+  JumpToApplication();
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+  /* We should never reach here */
   while (1)
   {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
   }
-  /* USER CODE END 3 */
 }
-/* USER CODE BEGIN CLK 1 */
-/* USER CODE END CLK 1 */
 
 /**
   * @brief System Clock Configuration
@@ -235,21 +104,19 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Configure the System Power Supply
-  */
+  /** Configure the System Power Supply */
   if (HAL_PWREx_ConfigSupply(PWR_EXTERNAL_SOURCE_SUPPLY) != HAL_OK)
   {
     Error_Handler();
   }
 
-  /** Configure the main internal regulator output voltage
-  */
+  /** Configure the main internal regulator output voltage */
   if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE0) != HAL_OK)
   {
     Error_Handler();
   }
 
-  /* Enable HSI */
+  /* Enable HSI as startup clock */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
@@ -263,11 +130,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-  /* Wait HSE stabilization time before its selection as PLL source. */
-  HAL_Delay(HSE_STARTUP_TIMEOUT);
-
-  /** Initializes TIMPRE when TIM is used as Systick Clock Source
-  */
+  /** Initializes TIMPRE for TIM clock */
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_TIM;
   PeriphClkInitStruct.TIMPresSelection = RCC_TIMPRES_DIV1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
@@ -275,26 +138,21 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-  /** Get current CPU/System buses clocks configuration and if necessary switch
- to intermediate HSI clock to ensure target clock can be set
-  */
+  /* Switch from HSI to HSI first if needed */
   HAL_RCC_GetClockConfig(&RCC_ClkInitStruct);
   if ((RCC_ClkInitStruct.CPUCLKSource == RCC_CPUCLKSOURCE_IC1) ||
-     (RCC_ClkInitStruct.SYSCLKSource == RCC_SYSCLKSOURCE_IC2_IC6_IC11))
+      (RCC_ClkInitStruct.SYSCLKSource == RCC_SYSCLKSOURCE_IC2_IC6_IC11))
   {
     RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_CPUCLK | RCC_CLOCKTYPE_SYSCLK);
     RCC_ClkInitStruct.CPUCLKSource = RCC_CPUCLKSOURCE_HSI;
     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
     if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct) != HAL_OK)
     {
-      /* Initialization Error */
       Error_Handler();
     }
   }
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+  /* Configure HSE + PLL1 for 600 MHz (IC1/2 = 600/1200) */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL1.PLLState = RCC_PLL_ON;
@@ -312,12 +170,11 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_CPUCLK|RCC_CLOCKTYPE_HCLK
-                              |RCC_CLOCKTYPE_SYSCLK|RCC_CLOCKTYPE_PCLK1
-                              |RCC_CLOCKTYPE_PCLK2|RCC_CLOCKTYPE_PCLK5
-                              |RCC_CLOCKTYPE_PCLK4;
+  /* Configure clocks: CPU/SYS from PLL1, APB from IC dividers */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_CPUCLK | RCC_CLOCKTYPE_HCLK
+                                | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1
+                                | RCC_CLOCKTYPE_PCLK2 | RCC_CLOCKTYPE_PCLK5
+                                | RCC_CLOCKTYPE_PCLK4;
   RCC_ClkInitStruct.CPUCLKSource = RCC_CPUCLKSOURCE_IC1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_IC2_IC6_IC11;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
@@ -341,821 +198,365 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief ADC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC1_Init(void)
-{
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-   return; // bypass configuration
-  /* USER CODE END ADC1_Init 0 */
-
-  ADC_MultiModeTypeDef multimode = {0};
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC1_Init 1 */
-
-  /* USER CODE END ADC1_Init 1 */
-
-  /** Common config
-  */
-  hadc1.Instance = ADC1;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.GainCompensation = 0;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  hadc1.Init.LowPowerAutoWait = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.ConversionDataManagement = ADC_CONVERSIONDATA_DR;
-  hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-  hadc1.Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
-  hadc1.Init.OversamplingMode = DISABLE;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure the ADC multi-mode
-  */
-  multimode.Mode = ADC_MODE_INDEPENDENT;
-  if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_12;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-  sConfig.SingleDiff = ADC_SINGLE_ENDED;
-  sConfig.OffsetNumber = ADC_OFFSET_NONE;
-  sConfig.Offset = 0;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-
-}
-
-/**
-  * @brief GPDMA1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPDMA1_Init(void)
-{
-
-  /* USER CODE BEGIN GPDMA1_Init 0 */
-
-  /* USER CODE END GPDMA1_Init 0 */
-
-  /* Peripheral clock enable */
-  __HAL_RCC_GPDMA1_CLK_ENABLE();
-
-  /* GPDMA1 interrupt Init */
-    HAL_NVIC_SetPriority(GPDMA1_Channel0_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(GPDMA1_Channel0_IRQn);
-    HAL_NVIC_SetPriority(GPDMA1_Channel1_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(GPDMA1_Channel1_IRQn);
-
-  /* USER CODE BEGIN GPDMA1_Init 1 */
-
-  /* USER CODE END GPDMA1_Init 1 */
-  /* USER CODE BEGIN GPDMA1_Init 2 */
-
-  /* USER CODE END GPDMA1_Init 2 */
-
-}
-
-/* MX_I2C1_Init removed - BSP bus driver handles I2C1 initialization */
-
-/* MX_I2C2_Init removed - BSP bus driver handles I2C2 initialization */
-
-/**
-  * @brief MDF1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_MDF1_Init(void)
-{
-
-  /* USER CODE BEGIN MDF1_Init 0 */
-return; // bypass configuration
-  /* USER CODE END MDF1_Init 0 */
-
-  /* USER CODE BEGIN MDF1_Init 1 */
-
-  /* USER CODE END MDF1_Init 1 */
-
-  /**
-    MdfHandle0 structure initialization and HAL_MDF_Init function call
-  */
-  MdfHandle0.Instance = MDF1_Filter0;
-  MdfHandle0.Init.CommonParam.InterleavedFilters = 0;
-  MdfHandle0.Init.CommonParam.ProcClockDivider = 1;
-  MdfHandle0.Init.CommonParam.OutputClock.Activation = DISABLE;
-  MdfHandle0.Init.SerialInterface.Activation = ENABLE;
-  MdfHandle0.Init.SerialInterface.Mode = MDF_SITF_LF_MASTER_SPI_MODE;
-  MdfHandle0.Init.SerialInterface.ClockSource = MDF_SITF_CKI_SOURCE;
-  MdfHandle0.Init.SerialInterface.Threshold = 4;
-  MdfHandle0.Init.FilterBistream = MDF_BITSTREAM0_RISING;
-  if (HAL_MDF_Init(&MdfHandle0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /**
-    MdfFilterConfig0, MdfOldConfig0 and/or MdfScdConfig0 structures initialization
-
-    WARNING : only structures are filled, no specific init function call for filter
-  */
-  MdfFilterConfig0.DataSource = MDF_DATA_SOURCE_BSMX;
-  MdfFilterConfig0.Delay = 0;
-  MdfFilterConfig0.CicMode = MDF_TWO_FILTERS_MCIC_FASTSINC;
-  MdfFilterConfig0.DecimationRatio = 2;
-  MdfFilterConfig0.Offset = 0;
-  MdfFilterConfig0.Gain = 0;
-  MdfFilterConfig0.ReshapeFilter.Activation = DISABLE;
-  MdfFilterConfig0.HighPassFilter.Activation = DISABLE;
-  MdfFilterConfig0.Integrator.Activation = DISABLE;
-  MdfFilterConfig0.SoundActivity.Activation = DISABLE;
-  MdfFilterConfig0.AcquisitionMode = MDF_MODE_ASYNC_CONT;
-  MdfFilterConfig0.FifoThreshold = MDF_FIFO_THRESHOLD_NOT_EMPTY;
-  MdfFilterConfig0.DiscardSamples = 0;
-  /* USER CODE BEGIN MDF1_Init 2 */
-
-  /* USER CODE END MDF1_Init 2 */
-
-}
-
-/**
-  * @brief SAI1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SAI1_Init(void)
-{
-
-  /* USER CODE BEGIN SAI1_Init 0 */
-return; // bypass configuration
-  /* USER CODE END SAI1_Init 0 */
-
-  /* USER CODE BEGIN SAI1_Init 1 */
-
-  /* USER CODE END SAI1_Init 1 */
-  hsai_BlockA1.Instance = SAI1_Block_A;
-  hsai_BlockA1.Init.Protocol = SAI_FREE_PROTOCOL;
-  hsai_BlockA1.Init.AudioMode = SAI_MODEMASTER_TX;
-  hsai_BlockA1.Init.DataSize = SAI_DATASIZE_8;
-  hsai_BlockA1.Init.FirstBit = SAI_FIRSTBIT_MSB;
-  hsai_BlockA1.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
-  hsai_BlockA1.Init.Synchro = SAI_ASYNCHRONOUS;
-  hsai_BlockA1.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
-  hsai_BlockA1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
-  hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
-  hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_192K;
-  hsai_BlockA1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
-  hsai_BlockA1.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
-  hsai_BlockA1.Init.MonoStereoMode = SAI_STEREOMODE;
-  hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
-  hsai_BlockA1.Init.TriState = SAI_OUTPUT_NOTRELEASED;
-  hsai_BlockA1.Init.PdmInit.Activation = DISABLE;
-  hsai_BlockA1.Init.PdmInit.MicPairsNbr = 1;
-  hsai_BlockA1.Init.PdmInit.ClockEnable = SAI_PDM_CLOCK1_ENABLE;
-  hsai_BlockA1.FrameInit.FrameLength = 8;
-  hsai_BlockA1.FrameInit.ActiveFrameLength = 1;
-  hsai_BlockA1.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
-  hsai_BlockA1.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
-  hsai_BlockA1.FrameInit.FSOffset = SAI_FS_FIRSTBIT;
-  hsai_BlockA1.SlotInit.FirstBitOffset = 0;
-  hsai_BlockA1.SlotInit.SlotSize = SAI_SLOTSIZE_DATASIZE;
-  hsai_BlockA1.SlotInit.SlotNumber = 1;
-  hsai_BlockA1.SlotInit.SlotActive = 0x00000000;
-  if (HAL_SAI_Init(&hsai_BlockA1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  hsai_BlockB1.Instance = SAI1_Block_B;
-  hsai_BlockB1.Init.Protocol = SAI_SPDIF_PROTOCOL;
-  hsai_BlockB1.Init.AudioMode = SAI_MODEMASTER_TX;
-  hsai_BlockB1.Init.Synchro = SAI_ASYNCHRONOUS;
-  hsai_BlockB1.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
-  hsai_BlockB1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
-  hsai_BlockB1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
-  hsai_BlockB1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_48K;
-  hsai_BlockB1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
-  hsai_BlockB1.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
-  hsai_BlockB1.Init.MonoStereoMode = SAI_STEREOMODE;
-  hsai_BlockB1.Init.CompandingMode = SAI_NOCOMPANDING;
-  hsai_BlockB1.Init.PdmInit.Activation = DISABLE;
-  hsai_BlockB1.Init.PdmInit.MicPairsNbr = 1;
-  hsai_BlockB1.Init.PdmInit.ClockEnable = SAI_PDM_CLOCK1_ENABLE;
-  if (HAL_SAI_Init(&hsai_BlockB1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN SAI1_Init 2 */
-
-  /* USER CODE END SAI1_Init 2 */
-
-}
-
-/**
-  * @brief SDMMC2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SDMMC2_SD_Init(void)
-{
-
-  /* USER CODE BEGIN SDMMC2_Init 0 */
-return; // bypass configuration
-  /* USER CODE END SDMMC2_Init 0 */
-
-  /* USER CODE BEGIN SDMMC2_Init 1 */
-
-  /* USER CODE END SDMMC2_Init 1 */
-  hsd2.Instance = SDMMC2;
-  hsd2.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
-  hsd2.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
-  hsd2.Init.BusWide = SDMMC_BUS_WIDE_4B;
-  hsd2.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
-  hsd2.Init.ClockDiv = 0;
-  if (HAL_SD_Init(&hsd2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN SDMMC2_Init 2 */
-
-  /* USER CODE END SDMMC2_Init 2 */
-
-}
-
-/**
-  * @brief UCPD1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_UCPD1_Init(void)
-{
-
-  /* USER CODE BEGIN UCPD1_Init 0 */
-
-  /* USER CODE END UCPD1_Init 0 */
-
-  LL_DMA_InitTypeDef DMA_InitStruct = {0};
-
-  /* Peripheral clock enable */
-  LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_UCPD1);
-
-  /* UCPD1 DMA Init */
-
-  /* GPDMA1_REQUEST_UCPD1_RX Init */
-  DMA_InitStruct.SrcAddress = 0x00000000U;
-  DMA_InitStruct.DestAddress = 0x00000000U;
-  DMA_InitStruct.Direction = LL_DMA_DIRECTION_PERIPH_TO_MEMORY;
-  DMA_InitStruct.BlkHWRequest = LL_DMA_HWREQUEST_SINGLEBURST;
-  DMA_InitStruct.DataAlignment = LL_DMA_DATA_ALIGN_ZEROPADD;
-  DMA_InitStruct.SrcBurstLength = 1;
-  DMA_InitStruct.DestBurstLength = 1;
-  DMA_InitStruct.SrcDataWidth = LL_DMA_SRC_DATAWIDTH_BYTE;
-  DMA_InitStruct.DestDataWidth = LL_DMA_DEST_DATAWIDTH_BYTE;
-  DMA_InitStruct.SrcIncMode = LL_DMA_SRC_FIXED;
-  DMA_InitStruct.DestIncMode = LL_DMA_DEST_FIXED;
-  DMA_InitStruct.Priority = LL_DMA_LOW_PRIORITY_LOW_WEIGHT;
-  DMA_InitStruct.BlkDataLength = 0x00000000U;
-  DMA_InitStruct.TriggerMode = LL_DMA_TRIGM_BLK_TRANSFER;
-  DMA_InitStruct.TriggerPolarity = LL_DMA_TRIG_POLARITY_MASKED;
-  DMA_InitStruct.TriggerSelection = 0x00000000U;
-  DMA_InitStruct.Request = LL_GPDMA1_REQUEST_UCPD1_RX;
-  DMA_InitStruct.TransferEventMode = LL_DMA_TCEM_BLK_TRANSFER;
-  DMA_InitStruct.SrcAllocatedPort = LL_DMA_SRC_ALLOCATED_PORT0;
-  DMA_InitStruct.DestAllocatedPort = LL_DMA_DEST_ALLOCATED_PORT0;
-  DMA_InitStruct.LinkAllocatedPort = LL_DMA_LINK_ALLOCATED_PORT1;
-  DMA_InitStruct.LinkStepMode = LL_DMA_LSM_FULL_EXECUTION;
-  DMA_InitStruct.LinkedListBaseAddr = 0x00000000U;
-  DMA_InitStruct.LinkedListAddrOffset = 0x00000000U;
-  LL_DMA_Init(GPDMA1, LL_DMA_CHANNEL_1, &DMA_InitStruct);
-
-  /* GPDMA1_REQUEST_UCPD1_TX Init */
-  DMA_InitStruct.SrcAddress = 0x00000000U;
-  DMA_InitStruct.DestAddress = 0x00000000U;
-  DMA_InitStruct.Direction = LL_DMA_DIRECTION_PERIPH_TO_MEMORY;
-  DMA_InitStruct.BlkHWRequest = LL_DMA_HWREQUEST_SINGLEBURST;
-  DMA_InitStruct.DataAlignment = LL_DMA_DATA_ALIGN_ZEROPADD;
-  DMA_InitStruct.SrcBurstLength = 1;
-  DMA_InitStruct.DestBurstLength = 1;
-  DMA_InitStruct.SrcDataWidth = LL_DMA_SRC_DATAWIDTH_BYTE;
-  DMA_InitStruct.DestDataWidth = LL_DMA_DEST_DATAWIDTH_BYTE;
-  DMA_InitStruct.SrcIncMode = LL_DMA_SRC_FIXED;
-  DMA_InitStruct.DestIncMode = LL_DMA_DEST_FIXED;
-  DMA_InitStruct.Priority = LL_DMA_LOW_PRIORITY_LOW_WEIGHT;
-  DMA_InitStruct.BlkDataLength = 0x00000000U;
-  DMA_InitStruct.TriggerMode = LL_DMA_TRIGM_BLK_TRANSFER;
-  DMA_InitStruct.TriggerPolarity = LL_DMA_TRIG_POLARITY_MASKED;
-  DMA_InitStruct.TriggerSelection = 0x00000000U;
-  DMA_InitStruct.Request = LL_GPDMA1_REQUEST_UCPD1_TX;
-  DMA_InitStruct.TransferEventMode = LL_DMA_TCEM_BLK_TRANSFER;
-  DMA_InitStruct.SrcAllocatedPort = LL_DMA_SRC_ALLOCATED_PORT0;
-  DMA_InitStruct.DestAllocatedPort = LL_DMA_DEST_ALLOCATED_PORT0;
-  DMA_InitStruct.LinkAllocatedPort = LL_DMA_LINK_ALLOCATED_PORT1;
-  DMA_InitStruct.LinkStepMode = LL_DMA_LSM_FULL_EXECUTION;
-  DMA_InitStruct.LinkedListBaseAddr = 0x00000000U;
-  DMA_InitStruct.LinkedListAddrOffset = 0x00000000U;
-  LL_DMA_Init(GPDMA1, LL_DMA_CHANNEL_0, &DMA_InitStruct);
-
-  /* UCPD1 interrupt Init */
-  NVIC_SetPriority(UCPD1_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
-  NVIC_EnableIRQ(UCPD1_IRQn);
-
-  /* USER CODE BEGIN UCPD1_Init 1 */
-
-  /* USER CODE END UCPD1_Init 1 */
-  /* USER CODE BEGIN UCPD1_Init 2 */
-
-  /* USER CODE END UCPD1_Init 2 */
-
-}
-
-/**
-  * @brief USART1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART1_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART1_Init 0 */
-
-  /* USER CODE END USART1_Init 0 */
-
-  /* USER CODE BEGIN USART1_Init 1 */
-
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART1_Init 2 */
-
-  /* USER CODE END USART1_Init 2 */
-
-}
-
-/**
-  * @brief USB1_OTG_HS Initialization Function
-  * @param None
-  * @retval None
-  */
-void MX_USB1_OTG_HS_PCD_Init(void)
-{
-
-  /* USER CODE BEGIN USB1_OTG_HS_Init 0 */
-  /* PCD handle is in non-cacheable (NOLOAD) section — not zeroed by startup
-     code.  Memset it before use. */
-  memset(&hpcd_USB_OTG_HS1, 0, sizeof(hpcd_USB_OTG_HS1));
-  /* USER CODE END USB1_OTG_HS_Init 0 */
-
-  /* USER CODE BEGIN USB1_OTG_HS_Init 1 */
-
-  /* USER CODE END USB1_OTG_HS_Init 1 */
-  hpcd_USB_OTG_HS1.Instance = USB1_OTG_HS;
-  hpcd_USB_OTG_HS1.Init.dev_endpoints = 9;
-  hpcd_USB_OTG_HS1.Init.speed = PCD_SPEED_HIGH;
-  hpcd_USB_OTG_HS1.Init.phy_itface = USB_OTG_HS_EMBEDDED_PHY;
-  hpcd_USB_OTG_HS1.Init.Sof_enable = DISABLE;
-  hpcd_USB_OTG_HS1.Init.low_power_enable = DISABLE;
-  hpcd_USB_OTG_HS1.Init.lpm_enable = DISABLE;
-  hpcd_USB_OTG_HS1.Init.use_dedicated_ep1 = DISABLE;
-  hpcd_USB_OTG_HS1.Init.vbus_sensing_enable = DISABLE;
-  hpcd_USB_OTG_HS1.Init.dma_enable = DISABLE;
-  if (HAL_PCD_Init(&hpcd_USB_OTG_HS1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USB1_OTG_HS_Init 2 */
-
-  /* USER CODE END USB1_OTG_HS_Init 2 */
-
-}
-
-/**
-  * @brief USB2_OTG_HS Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USB2_OTG_HS_HCD_Init(void)
-{
-
-  /* USER CODE BEGIN USB2_OTG_HS_Init 0 */
-return; // bypass configuration
-  /* USER CODE END USB2_OTG_HS_Init 0 */
-
-  /* USER CODE BEGIN USB2_OTG_HS_Init 1 */
-
-  /* USER CODE END USB2_OTG_HS_Init 1 */
-  hhcd_USB_OTG_HS2.Instance = USB2_OTG_HS;
-  hhcd_USB_OTG_HS2.Init.dev_endpoints = 9;
-  hhcd_USB_OTG_HS2.Init.Host_channels = 16;
-  hhcd_USB_OTG_HS2.Init.speed = HCD_SPEED_HIGH;
-  hhcd_USB_OTG_HS2.Init.dma_enable = DISABLE;
-  hhcd_USB_OTG_HS2.Init.phy_itface = USB_OTG_HS_EMBEDDED_PHY;
-  hhcd_USB_OTG_HS2.Init.Sof_enable = DISABLE;
-  hhcd_USB_OTG_HS2.Init.low_power_enable = DISABLE;
-  hhcd_USB_OTG_HS2.Init.vbus_sensing_enable = DISABLE;
-  hhcd_USB_OTG_HS2.Init.use_external_vbus = ENABLE;
-  if (HAL_HCD_Init(&hhcd_USB_OTG_HS2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USB2_OTG_HS_Init 2 */
-
-  /* USER CODE END USB2_OTG_HS_Init 2 */
-
-}
-
-/**
-  * @brief XSPI1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_XSPI1_Init(void)
-{
-
-  /* USER CODE BEGIN XSPI1_Init 0 */
-return; // bypass configuration
-  /* USER CODE END XSPI1_Init 0 */
-
-  XSPIM_CfgTypeDef sXspiManagerCfg = {0};
-
-  /* USER CODE BEGIN XSPI1_Init 1 */
-
-  /* USER CODE END XSPI1_Init 1 */
-  /* XSPI1 parameter configuration*/
-  hxspi1.Instance = XSPI1;
-  hxspi1.Init.FifoThresholdByte = 1;
-  hxspi1.Init.MemoryMode = HAL_XSPI_SINGLE_MEM;
-  hxspi1.Init.MemoryType = HAL_XSPI_MEMTYPE_MICRON;
-  hxspi1.Init.MemorySize = HAL_XSPI_SIZE_16B;
-  hxspi1.Init.ChipSelectHighTimeCycle = 1;
-  hxspi1.Init.FreeRunningClock = HAL_XSPI_FREERUNCLK_DISABLE;
-  hxspi1.Init.ClockMode = HAL_XSPI_CLOCK_MODE_0;
-  hxspi1.Init.WrapSize = HAL_XSPI_WRAP_NOT_SUPPORTED;
-  hxspi1.Init.ClockPrescaler = 0;
-  hxspi1.Init.SampleShifting = HAL_XSPI_SAMPLE_SHIFT_NONE;
-  hxspi1.Init.DelayHoldQuarterCycle = HAL_XSPI_DHQC_DISABLE;
-  hxspi1.Init.ChipSelectBoundary = HAL_XSPI_BONDARYOF_NONE;
-  hxspi1.Init.MaxTran = 0;
-  hxspi1.Init.Refresh = 0;
-  hxspi1.Init.MemorySelect = HAL_XSPI_CSSEL_NCS1;
-  if (HAL_XSPI_Init(&hxspi1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sXspiManagerCfg.nCSOverride = HAL_XSPI_CSSEL_OVR_NCS1;
-  sXspiManagerCfg.IOPort = HAL_XSPIM_IOPORT_1;
-  sXspiManagerCfg.Req2AckTime = 1;
-  if (HAL_XSPIM_Config(&hxspi1, &sXspiManagerCfg, HAL_XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN XSPI1_Init 2 */
-
-  /* USER CODE END XSPI1_Init 2 */
-
-}
-
-/**
-  * @brief XSPI2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_XSPI2_Init(void)
-{
-
-  /* USER CODE BEGIN XSPI2_Init 0 */
-return; // bypass configuration
-  /* USER CODE END XSPI2_Init 0 */
-
-  XSPIM_CfgTypeDef sXspiManagerCfg = {0};
-
-  /* USER CODE BEGIN XSPI2_Init 1 */
-
-  /* USER CODE END XSPI2_Init 1 */
-  /* XSPI2 parameter configuration*/
-  hxspi2.Instance = XSPI2;
-  hxspi2.Init.FifoThresholdByte = 1;
-  hxspi2.Init.MemoryMode = HAL_XSPI_SINGLE_MEM;
-  hxspi2.Init.MemoryType = HAL_XSPI_MEMTYPE_MICRON;
-  hxspi2.Init.MemorySize = HAL_XSPI_SIZE_16B;
-  hxspi2.Init.ChipSelectHighTimeCycle = 1;
-  hxspi2.Init.FreeRunningClock = HAL_XSPI_FREERUNCLK_DISABLE;
-  hxspi2.Init.ClockMode = HAL_XSPI_CLOCK_MODE_0;
-  hxspi2.Init.WrapSize = HAL_XSPI_WRAP_NOT_SUPPORTED;
-  hxspi2.Init.ClockPrescaler = 0;
-  hxspi2.Init.SampleShifting = HAL_XSPI_SAMPLE_SHIFT_NONE;
-  hxspi2.Init.DelayHoldQuarterCycle = HAL_XSPI_DHQC_DISABLE;
-  hxspi2.Init.ChipSelectBoundary = HAL_XSPI_BONDARYOF_NONE;
-  hxspi2.Init.MaxTran = 0;
-  hxspi2.Init.Refresh = 0;
-  hxspi2.Init.MemorySelect = HAL_XSPI_CSSEL_NCS1;
-  if (HAL_XSPI_Init(&hxspi2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sXspiManagerCfg.nCSOverride = HAL_XSPI_CSSEL_OVR_NCS1;
-  sXspiManagerCfg.IOPort = HAL_XSPIM_IOPORT_2;
-  sXspiManagerCfg.Req2AckTime = 1;
-  if (HAL_XSPIM_Config(&hxspi2, &sXspiManagerCfg, HAL_XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN XSPI2_Init 2 */
-
-  /* USER CODE END XSPI2_Init 2 */
-
-}
-
-/**
-  * @brief GPIO Initialization Function
+  * @brief GPIO Initialization Function (minimal)
   * @param None
   * @retval None
   */
 static void MX_GPIO_Init(void)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
-
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOP_CLK_ENABLE();
-  __HAL_RCC_GPIOO_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPION_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-
-  /*Configure GPIO pins : LCD_B4_Pin LCD_B5_Pin LCD_R4_Pin */
-  GPIO_InitStruct.Pin = LCD_B4_Pin|LCD_B5_Pin|LCD_R4_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF14_LCD;
-  HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LCD_R2_Pin LCD_R7_Pin LCD_R1_Pin */
-  GPIO_InitStruct.Pin = LCD_R2_Pin|LCD_R7_Pin|LCD_R1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF14_LCD;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LCD_HSYNC_Pin LCD_B2_Pin LCD_G4_Pin LCD_G6_Pin
-                           LCD_G5_Pin LCD_R3_Pin */
-  GPIO_InitStruct.Pin = LCD_HSYNC_Pin|LCD_B2_Pin|LCD_G4_Pin|LCD_G6_Pin
-                          |LCD_G5_Pin|LCD_R3_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF14_LCD;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LCD_VSYNC_Pin */
-  GPIO_InitStruct.Pin = LCD_VSYNC_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF14_LCD;
-  HAL_GPIO_Init(LCD_VSYNC_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : User_Pin */
-  GPIO_InitStruct.Pin = User_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(User_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LCD_B3_Pin LCD_B0_Pin LCD_G1_Pin LCD_R0_Pin
-                           LCD_G0_Pin LCd_G7_Pin LCD_DE_Pin LCD_R6_Pin */
-  GPIO_InitStruct.Pin = LCD_B3_Pin|LCD_B0_Pin|LCD_G1_Pin|LCD_R0_Pin
-                          |LCD_G0_Pin|LCd_G7_Pin|LCD_DE_Pin|LCD_R6_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF14_LCD;
-  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LCD_G2_Pin LCD_R5_Pin LCD_B1_Pin LCD_B7_Pin
-                           LCD_B6_Pin LCD_G3_Pin */
-  GPIO_InitStruct.Pin = LCD_G2_Pin|LCD_R5_Pin|LCD_B1_Pin|LCD_B7_Pin
-                          |LCD_B6_Pin|LCD_G3_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF14_LCD;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure the EXTI line attribute */
-  HAL_EXTI_ConfigLineAttributes(EXTI_LINE_13, EXTI_LINE_SEC);
+  __HAL_RCC_GPIOO_CLK_ENABLE();
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
 
+    /* User button pin (PC13) as output for quick FSBL tests */
+    GPIO_InitStruct.Pin = GPIO_PIN_13;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    /* LED2 (PG10) als Output für Debug-Blink */
+    GPIO_InitStruct.Pin = GPIO_PIN_10;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+    /* LED1 Green on STM32N6570-DK: GPIOO PIN1 */
+    GPIO_InitStruct.Pin = GPIO_PIN_1;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOO, &GPIO_InitStruct);
+
+    /* Ensure LED starts from OFF state (LED1 is high-active on DK) */
+    HAL_GPIO_WritePin(GPIOO, GPIO_PIN_1, GPIO_PIN_RESET);
+  /* Optional: Initialize only critical GPIOs here if needed */
+  /* Appli will re-initialize all GPIO pins it needs */
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /**
-  * @brief RIF Initialization Function
-  * @param None
-  * @retval None
+  * @brief  Configure MPU for XSPI memory windows.
+  *
+  * The Cortex-M55 default memory map treats 0x60000000-0x7FFFFFFF as Device
+  * memory (non-cacheable, implementation-defined execute permission). We must
+  * add explicit Normal-Cacheable regions so that:
+  *   - 0x70000000 (XSPI2 / NOR Flash) is executable for XiP
+  *   - 0x90000000 (XSPI1 / HyperRAM)  is cacheable for data use
+  *
+  * The Appli will call its own MPU_Config() which starts with HAL_MPU_Disable(),
+  * so these FSBL regions are automatically replaced on handover.
   */
-  static void SystemIsolation_Config(void)
+static void MPU_Config(void)
 {
+  MPU_Region_InitTypeDef     MPU_InitStruct = {0};
+  MPU_Attributes_InitTypeDef MPU_AttrInit   = {0};
 
-/* USER CODE BEGIN RIF_Init 0 */
+  HAL_MPU_Disable();
 
-/* USER CODE END RIF_Init 0 */
+  /* Attribute 0: Normal Write-Back Non-Transient Read+Write-Allocate
+     Used for both NOR Flash (cached XiP reads) and HyperRAM (cached R/W). */
+  MPU_AttrInit.Number     = MPU_ATTRIBUTES_NUMBER0;
+  MPU_AttrInit.Attributes = INNER_OUTER(MPU_NON_TRANSIENT | MPU_WRITE_BACK | MPU_RW_ALLOCATE);
+  HAL_MPU_ConfigMemoryAttributes(&MPU_AttrInit);
 
-  /* set all required IPs as secure privileged */
-  __HAL_RCC_RIFSC_CLK_ENABLE();
+  /* Region 0: XSPI2 NOR Flash  0x70000000 – 0x7FFFFFFF (256 MB)
+     Executable (XN=0) – required for XiP at 0x70100400. */
+  MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
+  MPU_InitStruct.Number           = MPU_REGION_NUMBER0;
+  MPU_InitStruct.BaseAddress      = 0x70000000UL;
+  MPU_InitStruct.LimitAddress     = 0x7FFFFFFFUL;
+  MPU_InitStruct.AttributesIndex  = MPU_ATTRIBUTES_NUMBER0;
+  MPU_InitStruct.AccessPermission = MPU_REGION_ALL_RW;
+  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
+  MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
-  /* RIMC configuration for DCMIPP and LTDC */
-  RIMC_MasterConfig_t RIMC_master = {0};
-  RIMC_master.MasterCID = RIF_CID_1;
-  RIMC_master.SecPriv = RIF_ATTRIBUTE_SEC | RIF_ATTRIBUTE_PRIV;
-  HAL_RIF_RIMC_ConfigMasterAttributes(RIF_MASTER_INDEX_DCMIPP, &RIMC_master);
-  HAL_RIF_RIMC_ConfigMasterAttributes(RIF_MASTER_INDEX_LTDC1, &RIMC_master);
+  /* Region 1: XSPI1 HyperRAM   0x90000000 – 0x9FFFFFFF (256 MB)
+     Non-executable (XN=1) – data RAM only. */
+  MPU_InitStruct.Number           = MPU_REGION_NUMBER1;
+  MPU_InitStruct.BaseAddress      = 0x90000000UL;
+  MPU_InitStruct.LimitAddress     = 0x9FFFFFFFUL;
+  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
-  /* RISUP for DCMIPP and LTDC */
-  HAL_RIF_RISC_SetSlaveSecureAttributes(RIF_RISC_PERIPH_INDEX_DCMIPP, RIF_ATTRIBUTE_SEC | RIF_ATTRIBUTE_PRIV);
-  HAL_RIF_RISC_SetSlaveSecureAttributes(RIF_RISC_PERIPH_INDEX_LTDCL1, RIF_ATTRIBUTE_SEC | RIF_ATTRIBUTE_PRIV);
-
-  /* RIF-Aware IPs Config */
-
-  /* set up GPDMA configuration */
-  /* set GPDMA1 channel 0 used by UCPD1 */
-  LL_DMA_EnableChannelSecure(GPDMA1, LL_DMA_CHANNEL_0);
-  LL_DMA_EnableChannelPrivilege(GPDMA1, LL_DMA_CHANNEL_0);
-  LL_DMA_EnableChannelSrcSecure(GPDMA1, LL_DMA_CHANNEL_0);
-  LL_DMA_EnableChannelDestSecure(GPDMA1, LL_DMA_CHANNEL_0);
-  /* set GPDMA1 channel 1 used by UCPD1 */
-  LL_DMA_EnableChannelSecure(GPDMA1, LL_DMA_CHANNEL_1);
-  LL_DMA_EnableChannelPrivilege(GPDMA1, LL_DMA_CHANNEL_1);
-  LL_DMA_EnableChannelSrcSecure(GPDMA1, LL_DMA_CHANNEL_1);
-  LL_DMA_EnableChannelDestSecure(GPDMA1, LL_DMA_CHANNEL_1);
-
-/* USER CODE BEGIN RIF_Init 1 */
-
-/* USER CODE END RIF_Init 1 */
-/* USER CODE BEGIN RIF_Init 2 */
-
-/* USER CODE END RIF_Init 2 */
-
-}
-
-/* USER CODE BEGIN 4 */
-
-/**
-  * @brief DCMIPP Initialization Function (CMW handles actual init)
-  */
-static void MX_DCMIPP_Init(void)
-{
-  return; /* DCMIPP is initialized by CMW Camera Middleware */
+  /* Enable MPU; privileged accesses to unmapped regions use the default map. */
+  HAL_MPU_Enable(MPU_HFNMI_PRIVDEF);
 }
 
 /**
-  * @brief LTDC Initialization Function with correct RK050HR18 timings
+  * @brief  Initialize XSPI2 (MX66UW1G45G NOR Flash) and XSPI1 (APS256XX HyperRAM)
+  *         in memory-mapped mode so the Appli can execute from 0x70100400 (XiP)
+  *         and use HyperRAM at 0x90000000 without re-initializing.
+  *
+  * Why this is needed:
+  *   The STM32N6 Boot ROM reads the FSBL from XSPI2 in indirect/command mode and
+  *   copies it to AXISRAM2. After that jump, the FSBL reconfigures the system clock
+  *   (SystemClock_Config), which changes HCLK — invalidating the Boot ROM's timing
+  *   calibration for XSPI2. Without re-initializing the XSPI2 controller here,
+  *   any read from 0x70xxxxxx causes a bus error (HardFault).
+  *
+  * The NOR Flash chip (MX66UW1G45G) is already in OctoSPI DTR mode (DOPI,
+  * configured by the Boot ROM). BSP_XSPI_NOR_Init's reset sequence starts with
+  * ReadStatusRegister in SPI mode — but the flash is in DOPI and won't respond,
+  * causing HAL_XSPI_Receive to time out after 5s and leave XSPI2 hardware with
+  * BUSY=1. The next BSP command (SPI ResetEnable) then also times out waiting
+  * for BUSY=0, causing Error_Handler.
+  *
+  * Fix: FSBL_NOR_PreReset() sends OPI DTR Reset Enable + Reset Memory to the
+  * flash first, returning it to SPI mode. After that, BSP_XSPI_NOR_Init's SPI
+  * ReadStatusRegister succeeds, and the full BSP reset+configure sequence works.
+  *
+  * HyperRAM (APS256XX) is not used by the Boot ROM, so it requires full init.
+  * The Appli bypasses MX_XSPI1_Init (return; guard) and expects the FSBL to
+  * have already placed XSPI1 in memory-mapped mode at 0x90000000.
   */
-static void MX_LTDC_Init(void)
-{
-  LTDC_LayerCfgTypeDef pLayerCfg = {0};
 
-  hltdc.Instance = LTDC;
-  hltdc.Init.HSPolarity = LTDC_HSPOLARITY_AL;
-  hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AL;
-  hltdc.Init.DEPolarity = LTDC_DEPOLARITY_AL;
-  hltdc.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
-  hltdc.Init.HorizontalSync = 4;
-  hltdc.Init.VerticalSync = 4;
-  hltdc.Init.AccumulatedHBP = 12;
-  hltdc.Init.AccumulatedVBP = 12;
-  hltdc.Init.AccumulatedActiveW = 812;
-  hltdc.Init.AccumulatedActiveH = 492;
-  hltdc.Init.TotalWidth = 820;
-  hltdc.Init.TotalHeigh = 500;
-  hltdc.Init.Backcolor.Blue = 0;
-  hltdc.Init.Backcolor.Green = 0;
-  hltdc.Init.Backcolor.Red = 0;
-  if (HAL_LTDC_Init(&hltdc) != HAL_OK)
+/**
+  * @brief  Pre-reset the NOR Flash from OPI DTR → SPI mode.
+  *
+  * Boot ROM leaves MX66UW1G45G in DOPI (OPI DTR) mode. The BSP_XSPI_NOR_Init
+  * reset sequence opens with ReadStatusRegister in SPI mode (1-wire). Since the
+  * flash is in DOPI it ignores the SPI command; HAL_XSPI_Receive times out after
+  * 5 s and leaves XSPI2 hardware BUSY=1, causing every subsequent HAL call to
+  * also time out. This function sends OPI DTR Reset Enable + Reset Memory (both
+  * command-only, no data phase → no FT/TC wait, no hang) to put the flash back
+  * in SPI mode BEFORE BSP_XSPI_NOR_Init is called.
+  */
+static void FSBL_NOR_PreReset(void)
+{
+  XSPI_HandleTypeDef     hpre  = {0};
+  XSPIM_CfgTypeDef       xmgr  = {0};
+  XSPI_RegularCmdTypeDef cmd   = {0};
+
+  /* Boot ROM leaves XSPI2 in memory-mapped mode. On STM32N6, the BUSY flag is
+   * asserted permanently while memory-mapped mode is active. HAL_XSPI_Init
+   * waits for BUSY=0 before configuring the prescaler — it would hang for the
+   * full 5 s timeout. Force-reset via RCC first to clear BUSY and all XSPI2
+   * registers, just as BSP_XSPI_NOR_Init's XSPI_NOR_MspInit does.
+   * (HAL_XSPI_MspInit does NOT do this reset; only the BSP MspInit does.) */
+  __HAL_RCC_XSPI2_CLK_ENABLE();
+  __HAL_RCC_XSPI2_FORCE_RESET();
+  __HAL_RCC_XSPI2_RELEASE_RESET();
+
+  /* Minimal XSPI2 init — enough to send two command-only OPI DTR frames.
+   * HAL_XSPI_Init calls HAL_XSPI_MspInit which enables XSPIM/XSPI2 clocks,
+   * sets HCLK as XSPI2 source, and configures GPION alternate functions. */
+  hpre.Instance                     = XSPI2;
+  hpre.Init.FifoThresholdByte       = 4;
+  hpre.Init.MemoryMode              = HAL_XSPI_SINGLE_MEM;
+  hpre.Init.MemoryType              = HAL_XSPI_MEMTYPE_MACRONIX;
+  hpre.Init.MemorySize              = HAL_XSPI_SIZE_1GB;
+  hpre.Init.ChipSelectHighTimeCycle = 2;
+  hpre.Init.FreeRunningClock        = HAL_XSPI_FREERUNCLK_DISABLE;
+  hpre.Init.ClockMode               = HAL_XSPI_CLOCK_MODE_0;
+  hpre.Init.WrapSize                = HAL_XSPI_WRAP_NOT_SUPPORTED;
+  hpre.Init.ClockPrescaler          = 3;   /* 150 MHz HCLK / 4 = 37.5 MHz */
+  hpre.Init.SampleShifting          = HAL_XSPI_SAMPLE_SHIFT_NONE;
+  hpre.Init.DelayHoldQuarterCycle   = HAL_XSPI_DHQC_DISABLE; /* not needed for cmd-only */
+  hpre.Init.ChipSelectBoundary      = HAL_XSPI_BONDARYOF_NONE;
+  hpre.Init.MaxTran                 = 0;
+  hpre.Init.Refresh                 = 0;
+  hpre.Init.MemorySelect            = HAL_XSPI_CSSEL_NCS1;
+  if (HAL_XSPI_Init(&hpre) != HAL_OK) { return; }
+
+  /* Route XSPI2 → Port P2 (NOR flash on GPION, XSPIM_P2) */
+  xmgr.nCSOverride = HAL_XSPI_CSSEL_OVR_NCS1;
+  xmgr.IOPort      = HAL_XSPIM_IOPORT_2;
+  xmgr.Req2AckTime = 1;
+  if (HAL_XSPIM_Config(&hpre, &xmgr, HAL_XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) { return; }
+
+  /* Shared command descriptor: 16-bit OPI DTR instruction, no address/data.
+   * HAL_XSPI_Command only waits for BUSY=0 (no FT/TC), so it cannot hang. */
+  cmd.OperationType      = HAL_XSPI_OPTYPE_COMMON_CFG;
+  cmd.IOSelect           = HAL_XSPI_SELECT_IO_3_0;
+  cmd.InstructionMode    = HAL_XSPI_INSTRUCTION_8_LINES;
+  cmd.InstructionDTRMode = HAL_XSPI_INSTRUCTION_DTR_ENABLE;
+  cmd.InstructionWidth   = HAL_XSPI_INSTRUCTION_16_BITS;
+  cmd.AddressMode        = HAL_XSPI_ADDRESS_NONE;
+  cmd.AlternateBytesMode = HAL_XSPI_ALT_BYTES_NONE;
+  cmd.DataMode           = HAL_XSPI_DATA_NONE;
+  cmd.DummyCycles        = 0;
+  cmd.DQSMode            = HAL_XSPI_DQS_DISABLE;
+
+  /* Reset Enable (0x6699) then Reset Memory (0x9966) in OPI DTR mode */
+  cmd.Instruction = 0x6699U;  /* MX66UW1G45G_OCTA_RESET_ENABLE_CMD */
+  (void)HAL_XSPI_Command(&hpre, &cmd, HAL_XSPI_TIMEOUT_DEFAULT_VALUE);
+
+  cmd.Instruction = 0x9966U;  /* MX66UW1G45G_OCTA_RESET_MEMORY_CMD */
+  (void)HAL_XSPI_Command(&hpre, &cmd, HAL_XSPI_TIMEOUT_DEFAULT_VALUE);
+
+  /* tRST: MX66UW1G45G needs up to 15 ms to complete the reset to SPI mode */
+  HAL_Delay(15);
+
+  /* Flash is now in SPI mode. XSPI2 will be force-reset by BSP's
+   * XSPI_NOR_MspInit (XSPI_NOR_FORCE_RESET) when BSP_XSPI_NOR_Init runs. */
+}
+
+static void FSBL_XSPI_Init(void)
+{
+  BSP_XSPI_NOR_Init_t nor_init;
+
+  /* Pre-reset: send OPI DTR Reset to flash so BSP's SPI ReadStatusRegister
+   * (first call in XSPI_NOR_ResetMemory) can complete without hanging. */
+  FSBL_NOR_PreReset();
+
+  /* --- XSPI2: MX66UW1G45G NOR Flash → OctoSPI STR memory-mapped (XiP) --- */
+  nor_init.InterfaceMode = BSP_XSPI_NOR_OPI_MODE;
+  nor_init.TransferRate  = BSP_XSPI_NOR_STR_TRANSFER;
+  if (BSP_XSPI_NOR_Init(0, &nor_init) != BSP_ERROR_NONE)
+  {
+    Error_Handler();
+  }
+  if (BSP_XSPI_NOR_EnableMemoryMappedMode(0) != BSP_ERROR_NONE)
   {
     Error_Handler();
   }
 
-  pLayerCfg.WindowX0 = 0;
-  pLayerCfg.WindowX1 = LCD_WIDTH;
-  pLayerCfg.WindowY0 = 0;
-  pLayerCfg.WindowY1 = LCD_HEIGHT;
-  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
-  pLayerCfg.Alpha = 255;
-  pLayerCfg.Alpha0 = 0;
-  pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_CA;
-  pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_CA;
-  pLayerCfg.FBStartAdress = LCD_FB_ADDRESS;
-  pLayerCfg.ImageWidth = LCD_WIDTH;
-  pLayerCfg.ImageHeight = LCD_HEIGHT;
-  pLayerCfg.Backcolor.Blue = 0;
-  pLayerCfg.Backcolor.Green = 0;
-  pLayerCfg.Backcolor.Red = 0;
-  if (HAL_LTDC_ConfigLayer(&hltdc, &pLayerCfg, 0) != HAL_OK)
+  /* --- XSPI1: APS256XX HyperRAM → memory-mapped for Appli use ----------- */
+  if (BSP_XSPI_RAM_Init(0) != BSP_ERROR_NONE)
   {
     Error_Handler();
   }
-
-  /* RIMC for LTDC */
-  RIMC_MasterConfig_t RIMC_master = {0};
-  RIMC_master.MasterCID = RIF_CID_1;
-  RIMC_master.SecPriv = RIF_ATTRIBUTE_SEC | RIF_ATTRIBUTE_PRIV;
-  HAL_RIF_RIMC_ConfigMasterAttributes(RIF_MASTER_INDEX_LTDC1, &RIMC_master);
-  HAL_RIF_RISC_SetSlaveSecureAttributes(RIF_RISC_PERIPH_INDEX_LTDCL1, RIF_ATTRIBUTE_SEC | RIF_ATTRIBUTE_PRIV);
-}
-
-/**
-  * @brief RAMCFG Initialization Function for SRAM3/SRAM4
-  */
-static void MX_RAMCFG_Init(void)
-{
-  hramcfg_SRAM3.Instance = RAMCFG_SRAM3_AXI;
-  if (HAL_RAMCFG_Init(&hramcfg_SRAM3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  hramcfg_SRAM4.Instance = RAMCFG_SRAM4_AXI;
-  if (HAL_RAMCFG_Init(&hramcfg_SRAM4) != HAL_OK)
+  if (BSP_XSPI_RAM_EnableMemoryMappedMode(0) != BSP_ERROR_NONE)
   {
     Error_Handler();
   }
 }
 
-/* USER CODE END 4 */
-
 /**
-  * @brief  Period elapsed callback in non blocking mode
-  * @note   This function is called  when TIM6 interrupt took place, inside
-  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
-  * a global variable "uwTick" used as application time base.
-  * @param  htim : TIM handle
-  * @retval None
+  * @brief  Jump to Application vector table at 0x70100400
+  * @retval None (does not return)
+  *
+  * Note: HAL_RCC_DeInit() is intentionally NOT called here.
+  * The FSBL runs from AXISRAM2, but the Appli runs from xSPI1 (0x70100400).
+  * Resetting RCC would risk losing the xSPI1 memory-mapped mode needed for
+  * the CPU to fetch instructions after the jump. The Appli reconfigures
+  * clocks itself in its own SystemClock_Config().
   */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+static void JumpToApplication(void)
 {
-  /* USER CODE BEGIN Callback 0 */
+  /*
+  * Appli vector table is linked at 0x70100400 (xSPI1 ROM, after FSBL at 0x70000000).
+  * For trusted images, the binary must be flashed 0x400 bytes earlier
+  * (at 0x70100000), so payload still starts at 0x70100400.
+  * FSBL Memory Layout:
+  *   0x70000000 - 0x7003FFFF: FSBL (255 KB, from linker script)
+  *
+  * Appli Memory Layout:
+  *   0x70100000 - 0x701003FF: Signing header (trusted image)
+  *   0x70100400 - 0x7025FFFF: Appli ROM payload and vector table
+  *   0x70200400 - 0x7040FFFF: AI Models in ROM2 (2047 KB xSPI2)
+  */
 
-  /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM6)
+  #define APP_VECTOR_ADDRESS      0x70100400UL
+  #define APP_VECTOR_ALT_ADDRESS  (APP_VECTOR_ADDRESS + 0x400UL)
+  typedef void (*pFunction)(void);
+  static pFunction JumpToApp;
+  uint32_t primask_bit;
+  uint32_t app_vector = APP_VECTOR_ADDRESS;
+  uint32_t app_msp_primary;
+  uint32_t app_reset_primary;
+  uint32_t app_msp_alt;
+  uint32_t app_reset_alt;
+
+  g_fsbl_jump_stage = 1U;
+  app_msp_primary = *(__IO uint32_t *)APP_VECTOR_ADDRESS;
+  app_reset_primary = *(__IO uint32_t *)(APP_VECTOR_ADDRESS + 4U);
+  app_msp_alt = *(__IO uint32_t *)APP_VECTOR_ALT_ADDRESS;
+  app_reset_alt = *(__IO uint32_t *)(APP_VECTOR_ALT_ADDRESS + 4U);
+
+  /* Prefer linked vector base (0x70100400). If invalid, fallback to +0x400. */
+  if ((app_msp_primary >= 0x34000000UL) && (app_msp_primary <= 0x34200000UL) &&
+      (app_reset_primary >= 0x70000001UL) && (app_reset_primary <= 0x70400001UL) &&
+      ((app_reset_primary & 1UL) != 0UL))
   {
-    HAL_IncTick();
+    app_vector = APP_VECTOR_ADDRESS;
+    g_fsbl_app_msp = app_msp_primary;
+    g_fsbl_app_reset = app_reset_primary;
   }
-  /* USER CODE BEGIN Callback 1 */
+  else if ((app_msp_alt >= 0x34000000UL) && (app_msp_alt <= 0x34200000UL) &&
+           (app_reset_alt >= 0x70000001UL) && (app_reset_alt <= 0x70400001UL) &&
+           ((app_reset_alt & 1UL) != 0UL))
+  {
+    app_vector = APP_VECTOR_ALT_ADDRESS;
+    g_fsbl_app_msp = app_msp_alt;
+    g_fsbl_app_reset = app_reset_alt;
+  }
+  else
+  {
+    g_fsbl_app_msp = app_msp_primary;
+    g_fsbl_app_reset = app_reset_primary;
+  }
 
-  /* USER CODE END Callback 1 */
+  /* Basic vector sanity checks: valid RAM MSP + Thumb reset handler in XiP window. */
+  if ((g_fsbl_app_msp < 0x34000000UL) || (g_fsbl_app_msp > 0x34200000UL) ||
+      (g_fsbl_app_reset < 0x70000001UL) || (g_fsbl_app_reset > 0x70400001UL) ||
+      ((g_fsbl_app_reset & 1UL) == 0UL))
+  {
+    g_fsbl_jump_stage = 0xE001U;
+  }
+
+
+  /* 1. Suspend SysTick - Appli will reconfigure it */
+  HAL_SuspendTick();
+  g_fsbl_jump_stage = 2U;
+
+  /* 2. Disable I-Cache so Appli starts with a clean cache state */
+  if (SCB->CCR & SCB_CCR_IC_Msk)
+  {
+    SCB_DisableICache();
+  }
+
+  /* 3. Save and disable interrupts during context switch */
+  primask_bit = __get_PRIMASK();
+  __disable_irq();
+  g_fsbl_jump_stage = 3U;
+
+
+
+  /* 4. Set Vector Table Offset Register (VTOR) to application address */
+  SCB->VTOR = app_vector;
+  g_fsbl_jump_stage = 4U;
+
+  /* 5. Read Reset_Handler from application vector table (offset +4) */
+  JumpToApp = (pFunction)g_fsbl_app_reset;
+  g_fsbl_jump_stage = 5U;
+
+  /* 6. ARM v8-M (Cortex-M55): clear MSPLIM BEFORE changing MSP to avoid
+   *    spurious stack overflow faults with the old limit still active */
+  __set_MSPLIM(0x00000000);
+
+  /* 7. Set Main Stack Pointer (MSP) from application vector table (offset +0) */
+  __set_MSP(g_fsbl_app_msp);
+  g_fsbl_jump_stage = 6U;
+
+  /* 8. Memory barriers to ensure all writes complete */
+  __DSB();
+  __ISB();
+
+  /* 9. Restore interrupt state (as per ST reference implementation) */
+  __set_PRIMASK(primask_bit);
+  g_fsbl_jump_stage = 7U;
+  /* 10. Jump to application Reset_Handler */
+  g_fsbl_jump_stage = 8U;
+  JumpToApp();
+  g_fsbl_jump_stage = 0xE002U;
+
+  /* THIS SHOULD NEVER BE REACHED */
+  while (1)
+  {
+    /* Halt forever if jump fails */
+  }
 }
 
 /**
@@ -1164,73 +565,140 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   */
 void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1)
   {
   }
-  /* USER CODE END Error_Handler_Debug */
 }
-#ifdef USE_FULL_ASSERT
+
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
+  * @brief  Period elapsed callback for the HAL timebase timer (TIM6).
+  *
+  * The FSBL uses TIM6 as the HAL timebase (configured in
+  * stm32n6xx_hal_timebase_tim.c).  TIM6_IRQHandler calls
+  * HAL_TIM_IRQHandler which in turn calls this weak override.
+  * Without this override HAL_IncTick() is never called → uwTick
+  * stays at 0 → every XSPI_WaitFlagStateUntilTimeout check
+  * evaluates (0-0) > 5000 = false → infinite loop.
+  *
+  * @param  htim  TIM handle fired by the IRQ
   */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance == TIM6)
+  {
+    HAL_IncTick();
+  }
+}
+
+/**
+  * @brief  Override of BSP __weak MX_XSPI_NOR_Init — adds mandatory
+  *         HAL_XSPIM_Config for XSPI2 → Port P2 (NOR Flash, GPION).
+  *
+  * The BSP weak version only calls HAL_XSPI_Init and returns. It never calls
+  * HAL_XSPIM_Config, which means the XSPI IO Manager (XSPIM) is left in
+  * whatever state the Boot ROM configured it for (memory-mapped OPI mode).
+  * Without re-configuring XSPIM for indirect mode, any attempt to do an
+  * indirect read/write on XSPI2 hangs forever (FT/TC flags never set).
+  *
+  * Parameters mirror the BSP __weak implementation exactly (same Init fields,
+  * same MemoryType=MACRONIX, same ChipSelectHighTimeCycle=2). The only
+  * addition is the HAL_XSPIM_Config call that assigns XSPI2 to IOPORT_2.
+  */
+HAL_StatusTypeDef MX_XSPI_NOR_Init(XSPI_HandleTypeDef *hxspi, MX_XSPI_InitTypeDef *Init)
+{
+  XSPIM_CfgTypeDef sXspiManagerCfg = {0};
+
+  hxspi->Instance                     = XSPI2;
+  hxspi->Init.FifoThresholdByte       = 1;
+  hxspi->Init.MemorySize              = Init->MemorySize;
+  hxspi->Init.ChipSelectHighTimeCycle = 2;
+  hxspi->Init.FreeRunningClock        = HAL_XSPI_FREERUNCLK_DISABLE;
+  hxspi->Init.ClockMode               = HAL_XSPI_CLOCK_MODE_0;
+  hxspi->Init.DelayHoldQuarterCycle   = (Init->TransferRate == (uint32_t)BSP_XSPI_NOR_DTR_TRANSFER)
+                                         ? HAL_XSPI_DHQC_ENABLE : HAL_XSPI_DHQC_DISABLE;
+  hxspi->Init.ClockPrescaler          = Init->ClockPrescaler;
+  hxspi->Init.SampleShifting          = Init->SampleShifting;
+  hxspi->Init.ChipSelectBoundary      = HAL_XSPI_BONDARYOF_NONE;
+  hxspi->Init.MemoryMode              = HAL_XSPI_SINGLE_MEM;
+  hxspi->Init.WrapSize                = HAL_XSPI_WRAP_NOT_SUPPORTED;
+  hxspi->Init.MemoryType              = HAL_XSPI_MEMTYPE_MACRONIX;
+  hxspi->Init.MemorySelect            = HAL_XSPI_CSSEL_NCS1;
+  hxspi->Init.MaxTran                 = 0;
+  hxspi->Init.Refresh                 = 0;
+
+  if (HAL_XSPI_Init(hxspi) != HAL_OK)
+  {
+    return HAL_ERROR;
+  }
+
+  /* Route XSPI2 to Port P2 (NOR Flash, GPION pins via XSPIM_P2).
+   * HAL_XSPIM_Config clears XSPIM->CR and reconfigures it; without this the
+   * XSPIM keeps the Boot ROM's memory-mapped OPI configuration which is
+   * incompatible with the BSP indirect-mode reset/configure sequence. */
+  sXspiManagerCfg.nCSOverride = HAL_XSPI_CSSEL_OVR_NCS1;
+  sXspiManagerCfg.IOPort      = HAL_XSPIM_IOPORT_2;
+  sXspiManagerCfg.Req2AckTime = 1;
+  if (HAL_XSPIM_Config(hxspi, &sXspiManagerCfg, HAL_XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  {
+    return HAL_ERROR;
+  }
+
+  return HAL_OK;
+}
+
+/**
+  * @brief  Override of BSP __weak MX_XSPI_RAM_Init — adds mandatory
+  *         HAL_XSPIM_Config for XSPI1 → Port P1 (HyperRAM, GPIOP/GPIOO).
+  *
+  * Same rationale as MX_XSPI_NOR_Init above. Parameters mirror the BSP
+  * weak implementation exactly (MemoryType=APMEM_16BITS, DHQC_ENABLE,
+  * ChipSelectBoundary=16KB, Refresh formula). The only addition is the
+  * HAL_XSPIM_Config call that assigns XSPI1 to IOPORT_1.
+  */
+HAL_StatusTypeDef MX_XSPI_RAM_Init(XSPI_HandleTypeDef *hxspi, MX_XSPI_InitTypeDef *Init)
+{
+  XSPIM_CfgTypeDef sXspiManagerCfg = {0};
+  uint32_t hspi_clk = HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_XSPI1);
+
+  hxspi->Instance                     = XSPI1;
+  hxspi->Init.FifoThresholdByte       = 8;
+  hxspi->Init.MemoryType              = HAL_XSPI_MEMTYPE_APMEM_16BITS;
+  hxspi->Init.MemoryMode              = HAL_XSPI_SINGLE_MEM;
+  hxspi->Init.MemorySize              = Init->MemorySize;
+  hxspi->Init.MemorySelect            = HAL_XSPI_CSSEL_NCS1;
+  hxspi->Init.ChipSelectHighTimeCycle = 5;
+  hxspi->Init.ClockMode               = HAL_XSPI_CLOCK_MODE_0;
+  hxspi->Init.ClockPrescaler          = Init->ClockPrescaler;
+  hxspi->Init.SampleShifting          = Init->SampleShifting;
+  hxspi->Init.DelayHoldQuarterCycle   = HAL_XSPI_DHQC_ENABLE;
+  hxspi->Init.ChipSelectBoundary      = HAL_XSPI_BONDARYOF_16KB;
+  hxspi->Init.FreeRunningClock        = HAL_XSPI_FREERUNCLK_DISABLE;
+  hxspi->Init.Refresh                 = ((2U * (hspi_clk / hxspi->Init.ClockPrescaler)) / 1000000U) - 4U;
+#if defined (OCTOSPI_DCR1_DLYBYP)
+  hxspi->Init.DelayBlockBypass        = HAL_XSPI_DELAY_BLOCK_BYPASS;
+#endif
+  hxspi->Init.WrapSize                = HAL_XSPI_WRAP_NOT_SUPPORTED;
+
+  if (HAL_XSPI_Init(hxspi) != HAL_OK)
+  {
+    return HAL_ERROR;
+  }
+
+  /* Route XSPI1 to Port P1 (HyperRAM, GPIOP/GPIOO pins via XSPIM_P1). */
+  sXspiManagerCfg.nCSOverride = HAL_XSPI_CSSEL_OVR_NCS1;
+  sXspiManagerCfg.IOPort      = HAL_XSPIM_IOPORT_1;
+  sXspiManagerCfg.Req2AckTime = 1;
+  if (HAL_XSPIM_Config(hxspi, &sXspiManagerCfg, HAL_XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  {
+    return HAL_ERROR;
+  }
+
+  return HAL_OK;
+}
+
+#ifdef  USE_FULL_ASSERT
 void assert_failed(uint8_t *file, uint32_t line)
 {
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-/* ---------------------------------------------------------------------------
-   MPU_Config  –  Mark the .noncacheable linker section (USB PCD handle,
-   USBX byte pool, USBX application buffers) as Device / non-cacheable so
-   that D-Cache cannot create coherency issues with the USB controller.
-   Matching the official ST USBX examples (CDC_ACM, Video, Audio, …).
-   ------------------------------------------------------------------------ */
-static void MPU_Config(void)
-{
-  MPU_Region_InitTypeDef MPU_InitStruct   = {0};
-  MPU_Attributes_InitTypeDef MPU_AttrInit = {0};
-
-  /* Disable MPU before configuration */
-  HAL_MPU_Disable();
-
-  /* --- Attribute 0 : Inner + Outer = Non-cacheable ---------------------- */
-  MPU_AttrInit.Number     = MPU_ATTRIBUTES_NUMBER0;
-  MPU_AttrInit.Attributes = INNER_OUTER(MPU_NOT_CACHEABLE);
-  HAL_MPU_ConfigMemoryAttributes(&MPU_AttrInit);
-
-  /* --- Region 0 : non-cacheable area for USB (PCD + pools) -------------- *
-   * We use the linker symbols __snoncacheable / __enoncacheable.
-   * The region covers at least the .noncacheable output section.
-   * Base and Limit must be 32-byte aligned (ARMv8-M MPU requirement).     */
-  extern uint32_t __snoncacheable;
-  extern uint32_t __enoncacheable;
-
-  uint32_t base  = (uint32_t)&__snoncacheable & ~0x1FU;          /* align down */
-  uint32_t limit = ((uint32_t)&__enoncacheable + 0x1FU) & ~0x1FU; /* align up   */
-  /* Ensure at least 32 bytes (MPU minimum) */
-  if (limit <= base) limit = base + 32;
-
-  MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
-  MPU_InitStruct.Number           = MPU_REGION_NUMBER0;
-  MPU_InitStruct.BaseAddress      = base;
-  MPU_InitStruct.LimitAddress     = limit - 1;   /* inclusive */
-  MPU_InitStruct.AttributesIndex  = MPU_ATTRIBUTES_NUMBER0;
-  MPU_InitStruct.AccessPermission = MPU_REGION_ALL_RW;
-  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
-  MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
-
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
-
-  /* Enable MPU with default memory map for privileged accesses */
-  HAL_MPU_Enable(MPU_HFNMI_PRIVDEF);
-}

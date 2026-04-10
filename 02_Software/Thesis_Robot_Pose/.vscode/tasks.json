@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Sign and Flash",
+            "type": "process",
+            "command": "${workspaceFolder}/sign_binaries.bat",
+            "windows": {
+                "command": "${workspaceFolder}/sign_binaries.bat"
+            },
+            "group": "build",
+            "problemMatcher": []
+        }
+    ]
+}

@@ -1,0 +1,2 @@
+Generate Project
+Copying previous project files from C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-2 to C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Segmentierung\.ai\run\run-2\.ai\generate\backup

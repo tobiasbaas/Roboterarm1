@@ -52,6 +52,7 @@ desktop.ini
 */Debug/
 */Release/
 */Build/
+buid/
 
 # Generierte Projekt-Metadaten von Eclipse/CubeIDE
 .project
@@ -141,6 +142,7 @@ env/
 __pycache__/
 *.pyc
 *.pyd
+*.idx
 
 # Generierte Modelle, Checkpoints und Logs
 *.h5

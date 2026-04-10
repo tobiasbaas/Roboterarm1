@@ -3,14 +3,18 @@
 
 set(AI_APP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/AI/App)
 set(AI_GEN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/AI/generated)
+set(AI_POSE_GEN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/AI/models/pose/generated)
+set(AI_SEG_GEN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/AI/models/seg/generated)
 set(AI_MW_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/ST/AI)
 set(AI_NPU_DIR ${AI_MW_DIR}/Npu)
+
 
 set(AI_APP_SOURCES
     ${AI_APP_DIR}/app_x-cube-ai.c
     ${AI_APP_DIR}/npu_cache.c
     ${AI_APP_DIR}/npu_init.c
-    ${AI_GEN_DIR}/network.c
+    ${AI_APP_DIR}/network_pose_wrap.c
+    ${AI_APP_DIR}/network_seg_wrap.c
 )
 
 set(AI_RUNTIME_SOURCES
@@ -71,6 +75,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 target_include_directories(stm32cubemx INTERFACE
     ${AI_APP_DIR}
     ${AI_GEN_DIR}
+    ${AI_POSE_GEN_DIR}
+    ${AI_SEG_GEN_DIR}
     ${AI_MW_DIR}/Inc
     ${AI_NPU_DIR}
 )

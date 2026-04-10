@@ -60,6 +60,19 @@ Reset_Handler:
   msr   MSPLIM, r0
   ldr   r0, =_estack
   mov   sp, r0          /* set stack pointer */
+
+/* Clear CCR.UNALIGN_TRP (bit 3) set by Boot ROM.
+   The STM32N6 Boot ROM enables strict unaligned-access trapping as part of its
+   security hardening. If not cleared here, the first unaligned LDR/STR in any
+   C function prologue will trigger a UsageFault -> FORCED HardFault.
+   STM32CubeIDE disables this automatically via its debug plugin
+   (startuptab.exception.unaligned = false); we must do it in code
+   so that it works in all environments (debug and production). */
+  ldr   r0, =0xE000ED14       /* SCB->CCR address */
+  ldr   r1, [r0]
+  bic   r1, r1, #8            /* clear bit 3: UNALIGN_TRP */
+  str   r1, [r0]
+
 /* Call the clock system initialization function.*/
   bl  SystemInit
 

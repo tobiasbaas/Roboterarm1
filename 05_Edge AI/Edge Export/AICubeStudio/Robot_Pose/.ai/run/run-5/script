@@ -1,0 +1,51 @@
+config load "C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-5\run-5.ioc"
+project toolchain STM32CubeIDE
+pack context Appli
+project toolchain "STM32CubeIDE"
+set context FSBL EXTMEM_MANAGER
+set mode EXTMEM_MANAGER "Activate_EXTMEM"
+set mode USART1 "Asynchronous"
+set mode XSPIM "Direct"
+set mode XSPI1 "octo_mode"
+set mode XSPI1 "XSPI1_Port1Octo"
+set mode XSPI1 "XSPI1_NCS1_Port1"
+set mode XSPI2 "octo_mode"
+set mode XSPI2 "XSPI2_Port2Octo"
+set mode XSPI2 "XSPI2_NCS1_Port2"
+set ip parameters EXTMEM_MANAGER "RefParam_BOOT_enable" "true"
+set ip parameters EXTMEM_MANAGER "RefParam_BOOT_selection" "XIP"
+set ip parameters EXTMEM_MANAGER "RefParam_XIP_memory" "EXTMEM1"
+set ip parameters EXTMEM_MANAGER "RefParam_MEMORY_1_Driver_Selection"  "EXTMEM_NOR_SFDP"
+set ip parameters EXTMEM_MANAGER "RefParam_MEMORY_1_Instance" "XSPI2"
+set ip parameters EXTMEM_MANAGER "RefParam_MEMORY_1_ConfigType" "EXTMEM_LINK_CONFIG_8LINES"
+set ip parameters XSPI2 "FifoThresholdByte" "4"
+set ip parameters XSPI2 "MemoryType" "HAL_XSPI_MEMTYPE_MACRONIX"
+set ip parameters XSPI2 "MemorySize" "HAL_XSPI_SIZE_1GB"
+set ip parameters XSPI2 "DelayHoldQuarterCycle" "HAL_XSPI_DHQC_ENABLE"
+clock resolution
+updateIpUi XSPI1
+updateIpUi XSPI2
+config save
+set ip parameters CORTEX_M55_S CPU_ICache Enabled
+set ip parameters CORTEX_M55_S CPU_DCache Enabled
+set mode ICACHE DirectMappedCache
+project set stackbycontext Appli 0x2000
+project set heapbycontext Appli 0x800
+set context Appli CACHEAXI
+set mode CACHEAXI "Activated"
+updateIpUi CACHEAXI
+set context Appli RIF
+set ip parameters RIF "RISUP.NPU.Privilege" true
+updateIpUi RIF
+set gpio parameters PE6 GPIO_PuPd GPIO_PULLUP
+unset context FSBL USART1
+set context Appli USART1
+switch context Appli USART1
+set gpio parameters PE6 PinAttribute Appli
+set gpio parameters PE5 PinAttribute Appli
+set pin PE6 USART1_RX
+set pin PE5 USART1_TX
+set mode USART1 Asynchronous
+config save
+set ip parameters USART1 BaudRate 3686400
+set gpio parameters PE6 GPIO_PuPd GPIO_PULLUP

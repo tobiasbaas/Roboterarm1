@@ -41,6 +41,15 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
+volatile uint32_t g_appli_fault_signature = 0U;
+volatile uint32_t g_appli_fault_hfsr = 0U;
+volatile uint32_t g_appli_fault_cfsr = 0U;
+volatile uint32_t g_appli_fault_bfar = 0U;
+volatile uint32_t g_appli_fault_mmfar = 0U;
+volatile uint32_t g_appli_fault_shcsr = 0U;
+volatile uint32_t g_appli_fault_vtor = 0U;
+volatile uint32_t g_appli_fault_msp = 0U;
+volatile uint32_t g_appli_fault_ipsr = 0U;
 
 /* USER CODE END PV */
 
@@ -51,6 +60,27 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+static void Appli_FaultCapture(uint32_t signature)
+{
+  g_appli_fault_signature = signature;
+  g_appli_fault_hfsr = SCB->HFSR;
+  g_appli_fault_cfsr = SCB->CFSR;
+  g_appli_fault_bfar = SCB->BFAR;
+  g_appli_fault_mmfar = SCB->MMFAR;
+  g_appli_fault_shcsr = SCB->SHCSR;
+  g_appli_fault_vtor = SCB->VTOR;
+  g_appli_fault_msp = __get_MSP();
+  g_appli_fault_ipsr = __get_IPSR();
+}
+
+static void Appli_FaultBlinkLoop(void)
+{
+  for (;;)
+  {
+    HAL_GPIO_TogglePin(GPIOO, GPIO_PIN_1);
+    for (volatile uint32_t i = 0; i < 800000U; ++i) { }
+  }
+}
 
 /* USER CODE END 0 */
 
@@ -84,13 +114,10 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
+  Appli_FaultCapture(0x48445201U);
 
   /* USER CODE END HardFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_HardFault_IRQn 0 */
-    /* USER CODE END W1_HardFault_IRQn 0 */
-  }
+  Appli_FaultBlinkLoop();
 }
 
 /**
@@ -99,13 +126,10 @@ void HardFault_Handler(void)
 void MemManage_Handler(void)
 {
   /* USER CODE BEGIN MemoryManagement_IRQn 0 */
+  Appli_FaultCapture(0x4D454D01U);
 
   /* USER CODE END MemoryManagement_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_MemoryManagement_IRQn 0 */
-    /* USER CODE END W1_MemoryManagement_IRQn 0 */
-  }
+  Appli_FaultBlinkLoop();
 }
 
 /**
@@ -114,13 +138,10 @@ void MemManage_Handler(void)
 void BusFault_Handler(void)
 {
   /* USER CODE BEGIN BusFault_IRQn 0 */
+  Appli_FaultCapture(0x42555301U);
 
   /* USER CODE END BusFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_BusFault_IRQn 0 */
-    /* USER CODE END W1_BusFault_IRQn 0 */
-  }
+  Appli_FaultBlinkLoop();
 }
 
 /**
@@ -129,13 +150,10 @@ void BusFault_Handler(void)
 void UsageFault_Handler(void)
 {
   /* USER CODE BEGIN UsageFault_IRQn 0 */
+  Appli_FaultCapture(0x55534101U);
 
   /* USER CODE END UsageFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_UsageFault_IRQn 0 */
-    /* USER CODE END W1_UsageFault_IRQn 0 */
-  }
+  Appli_FaultBlinkLoop();
 }
 
 /**
@@ -144,13 +162,10 @@ void UsageFault_Handler(void)
 void SecureFault_Handler(void)
 {
   /* USER CODE BEGIN SecureFault_IRQn 0 */
+  Appli_FaultCapture(0x53454301U);
 
   /* USER CODE END SecureFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_SecureFault_IRQn 0 */
-    /* USER CODE END W1_SecureFault_IRQn 0 */
-  }
+  Appli_FaultBlinkLoop();
 }
 
 /**

@@ -4,20 +4,125 @@ Technische Dokumentation fuer den aktuellen Integrationsstand von STM32Cube AI S
 
 ## 1. Status (aktuell)
 
+### 1.0 Wichtigste Änderung (März 2026) — Dual-xSPI (OctaSPI) Aktiviert ✅
+
+**Problem behoben:** Das Projekt wurde auf Dual-xSPI umgestellt, um die 5,88 MB großen Modelle (Pose + Segmentation) optimal zu verteilen:
+
+| Aspekt | Alt | Neu | Status |
+|--------|-----|-----|--------|
+| Linker-Skript | `STM32N657XX_ROMxspi1.ld` | `STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld` | ✅ |
+| Flash-Layout | 1 xSPI (2047K) | 2 xSPI: ROM (511K) + ROM2 (2047K) | ✅ |
+| ROM Auslastung | 84,46% | **27,84%** | ✅ FIXED |
+| ROM2 Auslastung | - | **46,76%** | ✅ NEW |
+| OctaSPI | ❌ Nicht genutzt | ✅ Vollständig genutzt | ✅ |
+
+**Memory Layout nach Fix:**
+- Appli Code (.text) → xSPI1/ROM (511K, 27,84% used)
+- Modellgewichte (.rodata) → xSPI2/ROM2 (2047K, 46,76% used)
+- Platz für Wachstum vorhanden: ~1100K in ROM2
+
 Die folgenden Punkte sind umgesetzt und erfolgreich gebaut:
 
 1. Import des von STM32Cube AI Studio erzeugten Netzwerk-Codes (run-13 Export).
 2. Import der ST AI Runtime und NPU Low-Level Runtime.
-3. Umstellung der Appli-Linkerstrategie auf externes XIP mit zwei ROM-Baenken.
+3. Umstellung der Appli-Linkerstrategie auf externes **Dual-xSPI** mit getrennten ROM-Baenken.
 4. Nicht-blockierende AI-Ausfuehrung in eigenem ThreadX-Thread.
 5. Build von CDC_ACM_Appli ist erfolgreich.
+6. Zwei AI-Modelle (Pose + Segmentierung) sind parallel eingebunden und zur Laufzeit umschaltbar.
 
-Aktuelle Memory-Auslastung (letzter erfolgreicher Link):
+Aktuelle Memory-Auslastung (nach Linker-Fix):
 
-- ROM: 26.08%
-- ROM2: 84.46%
-- RAM: 0.53%
+- ROM: 27.84% (145.7 KB / 511 KB)
+- ROM2: 46.76% (980.1 KB / 2047 KB)
+- RAM: 0.53% (11.2 KB / 2048 KB)
 - EXTRAM: 0.00%
+
+### 1.1 FSBL JumpToApplication Fix (März 2026) ✅
+
+**Problem behoben:** Die `JumpToApplication()`-Funktion in der FSBL war nach Standard-Cortex-M-Muster implementiert, hatte aber drei kritische Fehler für den STM32N6 (Cortex-M55 / ARM v8.1-M):
+
+| Problem | Alt | Neu | Begründung |
+|---------|-----|-----|------------|
+| `HAL_RCC_DeInit()` vor Jump | Ja | **Entfernt** | Riskiert Verlust des xSPI2 Memory-Mapped-Modus — Appli liegt bei 0x70100400 in XSPI2 |
+| `HAL_DeInit()` vor Jump | Ja | **Entfernt** | Unnötig; Appli macht eigenes Init in `SystemClock_Config()` |
+| `__set_MSPLIM(0)` | Fehlend | **Hinzugefügt** | Cortex-M55 (v8.1-M) Pflicht: altes MSPLIM vor `__set_MSP()` löschen, sonst sofortiger Stack-Overflow-Fault |
+| I-Cache deaktivieren | Fehlend | **Hinzugefügt** | Appli soll mit sauberem Cache-Zustand starten |
+| SysTick | `CTRL/LOAD/VAL = 0` hart | `HAL_SuspendTick()` | ST-Standard, saubereres Suspend |
+
+**Technischer Hintergrund:** Die FSBL läuft aus AXISRAM2 (0x34180400), nicht aus XSPI2. `HAL_RCC_DeInit()` hätte den XSPI2-Peripheral-Clock zurücksetzen können — danach wäre der CPU-Fetch von 0x70100400 mit einem HardFault gescheitert. Die Appli konfiguriert Clocks vollständig in ihrer eigenen `SystemClock_Config()` neu.
+
+**Betroffene Datei:** `FSBL/Core/Src/main.c` — Funktion `JumpToApplication()` (Zeile ~205)
+
+---
+
+### 1.2 FSBL XSPI-Initialisierung (XiP-Vorbereitung für den Sprung) — April 2026 ✅
+
+Damit der Sprung zur Appli gelingt, muss die FSBL XSPI2 (NOR Flash, 0x70000000) und XSPI1 (HyperRAM, 0x90000000) korrekt in den Memory-Mapped-Modus versetzen. Dabei waren vier kritische Probleme zu lösen:
+
+#### Fix 1 — uwTick bleibt 0 (HAL_Delay/Timeout kaputt)
+
+**Problem:** `HAL_TIM_PeriodElapsedCallback` war nicht überschrieben. HAL rief den leeren weak-Handler auf → `uwTick` wurde nie inkrementiert → alle HAL-Timeouts schlugen nach 0ms fehl.
+
+**Lösung:** Starke Überschreibung in `FSBL/Core/Src/main.c`:
+```c
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance == TIM6) { HAL_IncTick(); }
+}
+```
+
+**Betroffene Datei:** `FSBL/Core/Src/main.c`
+
+---
+
+#### Fix 2 — XSPIM (IO-Manager) nicht konfiguriert
+
+**Problem:** CubeMX generiert `MX_XSPI_NOR_Init()` und `MX_XSPI_RAM_Init()` ohne `HAL_XSPIM_Config()`-Aufruf. Der XSPI IO-Manager (XSPIM) routet beide XSPI-Controller auf die GPIO-Ports. Ohne XSPIM-Konfiguration: keine Memory-Mapped-Kommunikation.
+
+**Lösung:** Starke Überschreibungen in `FSBL/Core/Src/main.c` — beide Funktionen rufen zusätzlich `HAL_XSPIM_Config()` mit den Board-spezifischen Port-Zuweisungen auf:
+- XSPI2 (NOR Flash): `IOPort = HAL_XSPIM_IOPORT_2` (GPION), `nCSOverride = NCS1`
+- XSPI1 (HyperRAM): `IOPort = HAL_XSPIM_IOPORT_1` (GPIOP/GPIOO), `nCSOverride = NCS1`
+
+**Betroffene Datei:** `FSBL/Core/Src/main.c` — `MX_XSPI_NOR_Init()` und `MX_XSPI_RAM_Init()`
+
+---
+
+#### Fix 3 — Boot ROM lässt XSPI2 in DOPI Memory-Mapped-Modus (BUSY=1 permanent)
+
+**Problem:** Der Boot ROM konfiguriert XSPI2 in den OPI DTR Memory-Mapped-Modus zum Lesen des FSBL-Images. Im Memory-Mapped-Modus ist BUSY auf dem STM32N6 **permanent 1**. `HAL_XSPI_Init()` wartet auf BUSY=0 → 5-Sekunden-Timeout. Das BSP versucht dann, mit dem Flash in SPI-Modus zu kommunizieren — der Flash ist aber noch in DOPI → kein Antwort → hängt in `HAL_Receive`.
+
+**Lösung:** Neue Funktion `FSBL_NOR_PreReset()` in `FSBL/Core/Src/main.c`, die **vor** `BSP_XSPI_NOR_Init()` aufgerufen wird:
+1. XSPI2 per RCC zwangsweise zurücksetzen (`FORCE_RESET` + `RELEAHSE_RESET`) → löscht BUSY und alle Register
+2. XSPI2 minimal initialisieren (`HAL_XSPI_Init` + `HAL_XSPIM_Config`)
+3. OPI DTR Reset Enable (0x6699) + Reset Memory (0x9966) an den Flash senden
+4. 15 ms warten (tRST des MX66UW1G45G)
+
+Der Flash ist danach wieder im SPI-Modus. `BSP_XSPI_NOR_Init()` kann dann normal mit dem Flash kommunizieren.
+
+**Betroffene Datei:** `FSBL/Core/Src/main.c` — neue Funktion `FSBL_NOR_PreReset()`, aufgerufen am Anfang von `FSBL_XSPI_Init()`
+
+---
+
+#### Fix 4 — XSPI2-Taktquelle HCLK löst langen Kalibrierungsvorgang aus
+
+**Problem:** CubeMX setzt `RCC_XSPI2CLKSOURCE_HCLK` für XSPI2. Auf dem STM32N6 löst die **erste** Konfiguration von XSPI2 auf die HCLK-Quelle einen internen Clock-Kalibrierungsvorgang aus, der BUSY **erneut** für >5 Sekunden auf 1 hält — auch nach dem RCC-Reset aus Fix 3. Ergebnis: `FSBL_NOR_PreReset()`s `HAL_XSPI_Init()` lief in den Timeout, gab `HAL_TIMEOUT` zurück, die Funktion returnierte früh → OPI DTR Reset wurde **nie gesendet** → BSP schlug weiter fehl.
+
+**Lösung:** In `FSBL/Core/Src/stm32n6xx_hal_msp.c` XSPI2-Taktquelle auf IC3 = PLL1/6 = 200 MHz umgestellt (wie beide ST-Referenzprojekte VENC_USB und FSBL_Modes XIP):
+
+```c
+PeriphClkInitStruct.PeriphClockSelection        = RCC_PERIPHCLK_XSPI2;
+PeriphClkInitStruct.Xspi2ClockSelection         = RCC_XSPI2CLKSOURCE_IC3;
+PeriphClkInitStruct.ICSelection[RCC_IC3].ClockSelection = RCC_ICCLKSOURCE_PLL1;
+PeriphClkInitStruct.ICSelection[RCC_IC3].ClockDivider   = 6;  /* 1200 MHz / 6 = 200 MHz */
+```
+
+IC3 ist ein dedizierter PLL-Divider — kein Kalibrierungsvorgang, BUSY bleibt nach dem RCC-Reset auf 0. `HAL_XSPI_Init()` kehrt sofort zurück, `FSBL_NOR_PreReset()` sendet den Reset erfolgreich.
+
+**Hinweis:** XSPI1 (HyperRAM) bleibt auf HCLK — der Boot ROM konfiguriert XSPI1 nicht, daher tritt der Kalibrierungseffekt dort nicht auf.
+
+**Betroffene Datei:** `FSBL/Core/Src/stm32n6xx_hal_msp.c` — `HAL_XSPI_MspInit()`, XSPI2-Zweig
+
+---
 
 ## 2. Wichtigste Aenderungen
 
@@ -41,7 +146,79 @@ Die AI-Integration ist bewusst getrennt von CubeMX-Dateien:
   - Link zur NetworkRuntime1100_CM55_GCC.a
   - ThreadX Quellen fuer den Appli-Kontext
 
-### 2.3 Linker / externes Memory
+### 2.3 FSBL XSPI-Init-Kette — Übersicht aller Änderungen
+
+Die vollständige Init-Kette in `FSBL_XSPI_Init()` (aufgerufen aus FSBL `main()`):
+
+```
+SystemInit()
+  └─ RCC-Reset von XSPI2 + XSPIM (system_stm32n6xx_fsbl.c, bereits korrekt)
+
+FSBL_XSPI_Init()
+  ├─ FSBL_NOR_PreReset()            [NEU]
+  │    ├─ __HAL_RCC_XSPI2_FORCE_RESET / RELEASE_RESET
+  │    ├─ HAL_XSPI_Init (hpre, ClkPrescaler=3 → 37.5 MHz)
+  │    ├─ HAL_XSPIM_Config (IOPort=2, NCS1)
+  │    ├─ HAL_XSPI_Command: 0x6699 (OPI DTR Reset Enable)
+  │    ├─ HAL_XSPI_Command: 0x9966 (OPI DTR Reset Memory)
+  │    └─ HAL_Delay(15)             [Flash: tRST max. 15 ms]
+  │
+  ├─ BSP_XSPI_NOR_Init(OPI_STR)    [Flash jetzt in SPI → BSP kann kommunizieren]
+  ├─ BSP_XSPI_NOR_EnableMemoryMappedMode()
+  ├─ BSP_XSPI_RAM_Init()
+  └─ BSP_XSPI_RAM_EnableMemoryMappedMode()
+
+MX_XSPI_NOR_Init() [starke Überschreibung, NEU]
+  └─ HAL_XSPIM_Config für XSPI2 (GPION, IOPort_2, NCS1)
+
+MX_XSPI_RAM_Init() [starke Überschreibung, NEU]
+  └─ HAL_XSPIM_Config für XSPI1 (GPIOP/O, IOPort_1, NCS1)
+```
+
+**stm32n6xx_hal_msp.c — XSPI2 Clock [GEÄNDERT]:**
+- Alt: `RCC_XSPI2CLKSOURCE_HCLK` → löst langen Kalibrierungsvorgang aus (BUSY=1 für >5 s)
+- Neu: `RCC_XSPI2CLKSOURCE_IC3`, IC3 = PLL1/6 = 200 MHz → kein Kalibrierungsvorgang
+
+---
+
+### 2.4 FSBL JumpToApplication — Korrekte Implementierung für STM32N6
+
+Der Jump von FSBL zur Appli erfordert auf dem Cortex-M55 (ARM v8.1-M) eine spezifische Sequenz:
+
+```c
+/* 1. SysTick suspendieren */
+HAL_SuspendTick();
+
+/* 2. I-Cache deaktivieren (Appli konfiguriert Cache neu) */
+SCB_DisableICache();
+
+/* 3. Interrupts sperren */
+primask_bit = __get_PRIMASK();
+__disable_irq();
+
+/* 4. VTOR auf Appli-Adresse */
+SCB->VTOR = APP_START_ADDRESS;  // 0x70100400
+
+/* 5. Reset_Handler aus Vektor-Tabelle lesen */
+JumpToApp = (pFunction)(*(__IO uint32_t *)(APP_START_ADDRESS + 4U));
+
+/* 6. MSPLIM löschen VOR MSP-Änderung (ARM v8.1-M Pflicht!) */
+__set_MSPLIM(0x00000000);
+
+/* 7. MSP aus Appli-Vektor-Tabelle */
+__set_MSP(*(__IO uint32_t *)APP_START_ADDRESS);
+
+/* 8. Memory Barriers */
+__DSB(); __ISB();
+
+/* 9. Interrupts freigeben und springen */
+__set_PRIMASK(primask_bit);
+JumpToApp();
+```
+
+**Wichtig:** `HAL_RCC_DeInit()` darf **nicht** vor dem Jump aufgerufen werden, da die Appli aus XSPI2 ausgeführt wird und der Memory-Mapped-Modus erhalten bleiben muss.
+
+### 2.5 Linker / externes Memory
 
 Aufgrund ROM-Ueberlauf wurde Appli auf ein duales externes ROM-Layout umgestellt:
 
@@ -50,6 +227,10 @@ Aufgrund ROM-Ueberlauf wurde Appli auf ein duales externes ROM-Layout umgestellt
 - grosse Konstanten (.rodata) liegen in ROM2
 
 Damit passt die Gesamtauslastung wieder in den verfuegbaren Addressraum.
+
+Fuer den Dual-Model-Betrieb wurde ROM2 im Linker auf 2047K erweitert
+(`STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld`), damit beide Netzwerke gleichzeitig
+gelinkt werden koennen.
 
 ## 3. Laufzeitarchitektur (Appli)
 
@@ -76,6 +257,30 @@ Die Integration ist ueber weak Hooks vorbereitet:
 
 - App_AI_PrepareInput(uint8_t* input_buffer, size_t input_size)
 - App_AI_OnResult(const uint8_t* output_buffer, size_t output_size)
+- App_AI_OnOutputs(const uint8_t* const* outputs, const size_t* output_sizes, uint32_t output_count)
+- App_AI_GetRequestedModel(void) fuer die Laufzeitwahl zwischen Pose und Segmentierung
+
+Zusatz zur Modellauswahl:
+
+- `App_AI_SetModel(APP_AI_MODEL_POSE)` und `App_AI_SetModel(APP_AI_MODEL_SEGMENTATION)` schalten das aktive Modell.
+- Der AI-Thread liest in jedem Zyklus `App_AI_GetRequestedModel()` und setzt das aktive Modell entsprechend.
+- Ohne Override bleibt standardmaessig Pose aktiv.
+- Neu: Auf STM32N6570-DK toggelt ein Druck auf USER1 (B2) im Runtime-Betrieb zwischen Pose und Segmentierung (mit Entprellung im ThreadX-Loop).
+
+Standard-Overlay (bereits integriert):
+
+- Bei Segmentierung wird bevorzugt ein YOLOv8-Instance-Segmentation-Overlay aus zwei Modellausgaengen gezeichnet (Detections + Mask-Prototypes, inklusive einfacher NMS).
+- Falls nur ein Segmentierungs-Output verfuegbar ist, wird auf den Map-Overlay-Fallback gewechselt.
+- Bei Pose wird zuerst ein YOLOv8-Pose-Output erkannt und gezeichnet; falls das Format nicht passt, bleibt der Heatmap-Keypoint-Fallback aktiv.
+- Standard-Framebuffer: `0x34000000`, Standard-Aufloesung: `800x480` (STM32N6570-DK; ueber weak Funktionen anpassbar).
+- Zusaetzlicher Statusmarker links oben: Blau = Pose, Gruen = Segmentierung; rotes Blinkfeld = laufende Inferenz.
+- Sicherheits-Hinweis: Standardmaessig ist kein Display-Framebuffer gesetzt (`App_AI_GetDisplayFramebuffer()` liefert NULL), damit keine AI-FlexMEM-Adressen ueberschrieben werden.
+- Fuer sichtbare Overlays muss `App_AI_GetDisplayFramebuffer()` projektspezifisch auf den echten LTDC/Display-Buffer ueberschrieben werden.
+
+Sichtbare Runtime-Diagnose (neu):
+
+- LED1 (Gruen) blinkt bei jeder Inferenz.
+- LED2 (Rot) zeigt aktives Modell: aus = Pose, an = Segmentierung.
 
 Diese Hooks sind der vorgesehene Punkt fuer Kamera-Preprocessing und LTDC-Overlay-Ausgabe.
 
@@ -91,11 +296,21 @@ Hinweis: Die konkrete Pose-Visualisierung auf dem Display ist erst dann aktiv, w
 
 ## 5. Relevante Dateien
 
+**FSBL (Sprung-relevante Dateien):**
+- FSBL/Core/Src/main.c — `JumpToApplication()`, `FSBL_NOR_PreReset()`, `FSBL_XSPI_Init()`, `MX_XSPI_NOR_Init()` (stark), `MX_XSPI_RAM_Init()` (stark), `HAL_TIM_PeriodElapsedCallback()`
+- FSBL/Core/Src/stm32n6xx_hal_msp.c — `HAL_XSPI_MspInit()`: XSPI2 Taktquelle IC3=PLL1/6=200MHz
+- FSBL/Core/Src/system_stm32n6xx_fsbl.c — `SystemInit()`: RCC-Reset von XSPI2+XSPIM
+
+**Appli:**
 - Appli/CMakeLists.txt
 - Appli/ai-integration.cmake
 - Appli/STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld
 - Appli/AI/App/app_x-cube-ai.c
 - Appli/AI/App/app_x-cube-ai.h
+- Appli/AI/App/network_pose_wrap.c
+- Appli/AI/App/network_seg_wrap.c
+- Appli/AI/models/pose/generated/*
+- Appli/AI/models/seg/generated/*
 - Appli/Core/Src/main.c
 - Appli/Core/Src/app_threadx.c
 - Appli/Core/Src/tx_initialize_low_level.S
@@ -107,48 +322,90 @@ Getesteter Build-Target:
 
 - CDC_ACM_Appli
 
+### 6.0 Dual-xSPI Memory Layout (FIXED)
+
+**WICHTIG:** Das Projekt wurde auf ein Dual-xSPI-Layout migriert, um beide AI-Modelle optimal zu unterstützen.
+
+**Alte Konfiguration (fehlerhaft):**
+- Linker-Skript: `STM32N657XX_ROMxspi1.ld`
+- ROM: 2047K (single xSPI1)
+- Modelle: 5,88 MB (2,70 MB Pose + 3,18 MB Segmentation)
+- ROM-Auslastung: **84,46%** ❌ (nur auf xSPI1)
+
+**Neue Konfiguration (korrekt):**
+- Linker-Skript: `STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld`
+- Code (ROM): 511K auf xSPI1 (OctaSPI)
+- Models/Constants (ROM2): 2047K auf xSPI2 (OctaSPI)
+- ROM Auslastung: **27,84%** ✅
+- ROM2 Auslastung: **46,76%** ✅
+- **Nur OctaSPI wird verwendet** (keine HexaSPI)
+
+**Memory Distribution nach Build:**
+```
+Memory region         Used Size  Region Size  %age Used
+         ROM:      145668 B       511 KB     27.84%
+        ROM2:      980120 B      2047 KB     46,76%
+         RAM:       11208 B         2 MB      0.53%
+      EXTRAM:           0 B        64 MB      0.00%
+```
+
 Ergebnis:
 
 - Build erfolgreich
 - Warning vorhanden: LOAD segment with RWX permissions
   - diese Warning kommt vom aktuellen Linker-Layout und ist fuer den funktionalen Build nicht blockierend
 
-## 6.1 Flash-Layout und Ladevorgang (alle Programmabschnitte)
+## 6.1 Flash-Layout und Ladevorgang (optimiert für Dual-Model mit OctaSPI)
+
+**ÄNDERUNG ab März 2026:** Das Projekt verwendet jetzt Dual-xSPI (OctaSPI) für optionale Modellplatzierung.
 
 Im aktuellen Stand werden drei Programmabschnitte in den externen Flash geschrieben:
 
-1. FSBL signiertes Image
-2. APPLI Core signiertes Image (Code plus nicht-ROM2 Anteile)
-3. APPLI ROM2 Datenblock (aus .rodata)
+1. FSBL signiertes Image → 0x70000000 (xSPI1)
+2. APPLI signiertes Image (Code + ROM2 Daten) → 0x70100000 (xSPI1 für Code, xSPI2 für ROM2)
+3. APPLI ROM2 Daten (falls separate Programmierung nötig) → 0x90200400 (xSPI2 optional)
 
-### Adressen im Flash
+### Adress-Mapping
 
+**xSPI1 (OctaSPI Interface 1) — 0x70000000–0x71FFFFFF:**
 - FSBL: 0x70000000
-- APPLI Core (trusted): 0x70100000
-- APPLI ROM2 Daten: 0x70200400
+- APPLI Core (Code): 0x70100000
 
-### Warum in drei Teile?
+**xSPI2 (OctaSPI Interface 2) — 0x90000000–0x91FFFFFF:**
+- APPLI ROM2 (Modellgewichte): 0x90200400
 
-Die Appli verwendet zwei ROM-Bereiche (ROM und ROM2). Ein einzelnes flaches .bin aus dem gesamten ELF fuehrt wegen der Adressluecke zu einem extrem grossen Sparse-Binaerfile. Deshalb wird APPLI gesplittet:
+### Warum Dual-xSPI?
 
-- Core-Teil wird signiert und nach 0x70100000 programmiert.
-- ROM2-Teil wird separat als rodata-Binaer erzeugt und nach 0x70200400 programmiert.
+Die Appli nutzt zwei ROM-Bereiche (ROM und ROM2), die auf unterschiedliche xSPI-Interfaces gemappt sind:
 
-### Technischer Ablauf im Skript
+**ROM (xSPI1, 511K):**
+- Linker-Skript Bereich für `.text`, `.ARM`, `.init_array`, etc.
+- Beinhaltet: Application Code, Runtime, ThreadX
 
-Das Skript in sign_binaries.bat fuehrt diese Schritte aus:
+**ROM2 (xSPI2, 2047K):**
+- Linker-Skript Bereich für `.rodata`
+- Beinhaltet: **Netzwerk-Gewichte** (beide AI-Modelle), statische Konstanten
+- Automatic Platzierung: Alle `static const` Daten (incl. `network_ecblobs.h` Blobs) landen hier
+
+### Warum kein separates Binary für ROM2?
+
+Im Gegensatz zur alten Konfiguration müssen die Modellgewichte **nicht als separates Hex-File programmiert** werden. Die `network_ecblobs.h` Blobs werden als `static const uint64_t` Arrays definiert und landen mit dem Linker-Skript automatisch in der `.rodata` Section, die nach ROM2 (xSPI2) geht.
+
+**Technischer Ablauf im Skript**
+
+Das Skript in sign_binaries.bat führt diese Schritte aus:
 
 1. FSBL .bin signieren zu CDC_ACM_FSBL-trusted.bin.
 2. APPLI aus CDC_ACM_Appli.elf aufteilen:
-  - CDC_ACM_Appli-core.bin (ohne .rodata)
-  - CDC_ACM_Appli-rom2.bin (nur .rodata)
-3. APPLI Core signieren zu CDC_ACM_Appli-trusted.bin.
+  - CDC_ACM_Appli-core.bin (enthält alle Code + Daten, die der Linker in ROM und ROM2 platziert)
+  - Falls nötig: Separate ROM2-Extraktion (für Laufzeitdynamik)
+3. APPLI signieren zu CDC_ACM_Appli-trusted.bin.
 4. Mit STM32_Programmer_CLI programmieren:
   - FSBL-trusted nach 0x70000000
   - APPLI-trusted nach 0x70100000
-  - APPLI-rom2 nach 0x70200400
+  - (ROM2 wird teil von APPLI-trusted oder separat nach 0x90200400, falls implementiert)
 
-Verwendete Optionen fuer robustes Flashing:
+**Verwendete Optionen für robustes Flashing**
 
 - Connect mode: Under Reset
 - Reset mode: Hardware reset
@@ -170,12 +427,26 @@ sign_binaries.bat
 
 ### Erfolgskriterium im Log
 
-Der Upload gilt als erfolgreich, wenn fuer alle drei Files jeweils File download complete gemeldet wird.
+Der Upload gilt als erfolgreich, wenn fuer alle programmierten Files jeweils File download complete gemeldet wird.
 
 Hinweis:
 
 - Ein optionaler MCU-Reset am Ende kann fehlschlagen, ohne den Programmiervorgang ungueltig zu machen.
 - Falls die Anwendung nicht automatisch startet, RESET-Taste am Board druecken.
+
+### Migration von altem Linker-Skript
+
+Falls `sign_binaries.bat` aktualisiert werden muss für explizite ROM2-Extraktion:
+
+```bat
+REM === Extract ROM2 from ELF only (new dual-xSPI mode) ===
+REM The Linker now automatically places .rodata in ROM2 (xSPI2 @ 0x90200400)
+REM If needed for validation, extract with:
+arm-none-eabi-objcopy -S --change-section-address .rodata=0x90200400 ^
+  CDC_ACM_Appli.elf CDC_ACM_Appli-rom2.bin
+```
+
+Dies ist **optional** — der Standard ist, APPLI komplett programmieren zu lassen.
 
 ## 7. Was als naechstes zu tun ist
 

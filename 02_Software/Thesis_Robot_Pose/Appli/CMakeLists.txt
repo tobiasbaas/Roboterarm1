@@ -26,7 +26,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 set(STM32_MCU_FLAGS  "-mcpu=cortex-m55 -mfpu=fpv5-d16 -mfloat-abi=hard -mcmse " )
 
 #Linker options
-# Run code directly from external memory using both XSPI ROM banks.
+# Dual xSPI layout: Code on xSPI1 (ROM: 511K), Model weights on xSPI2 (ROM2: 2047K)
+# This layout supports dual-model AI deployment (Pose + Segmentation)
 set(STM32_LINKER_SCRIPT STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld)
 set(STM32_LINKER_OPTION  )
 
@@ -42,7 +43,6 @@ include("mx-generated.cmake")
 
 # User-maintained AI integration (kept separate from CubeMX-generated files)
 include("ai-integration.cmake")
-
 
 # In order to use CMake for cross-compiling
 set(CMAKE_CXX_COMPILER_FORCED "true")

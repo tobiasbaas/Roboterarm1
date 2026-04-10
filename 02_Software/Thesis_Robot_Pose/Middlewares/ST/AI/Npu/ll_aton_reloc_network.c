@@ -174,7 +174,7 @@ static struct ll_aton_reloc_callback _network_reloc_callback = {
 #define AI_RELOC_FLASH_BASE   (0x20000000UL)
 #define AI_RELOC_RAM_BASE     (0x40000000UL)
 #define AI_RELOC_PARAM_0_BASE (0x80000000UL)
-#define AI_RELOC_PARAM_1_BASE (0x90000000UL)
+#define AI_RELOC_PARAM_1_BASE (0x70000000UL)
 
 #define AI_RELOC_MASK_ID     (0xF0000000UL)
 #define AI_RELOC_MASK_OFFSET (0x0FFFFFFFUL)

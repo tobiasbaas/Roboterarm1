@@ -1,0 +1,21 @@
+{
+  "toolchain": "STM32CubeIDE",
+  "variant": "Validation",
+  "fromMx": false,
+  "name": "run-15",
+  "createdAt": 1773607024745,
+  "lastModified": 1774460744485,
+  "lastAccessed": 1774460744451,
+  "path": "C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\AICubeStudio\\Robot_Pose",
+  "board": "STM32N6570-DK",
+  "mcu": "STM32N657X0H3Q",
+  "type": "BYOM",
+  "uartInstance": {
+    "rxpin": "PE6",
+    "txpin": "PE5",
+    "usart": "USART1",
+    "baudrate": 921600
+  },
+  "context": "Appli",
+  "contextProject": "FullSecure"
+}

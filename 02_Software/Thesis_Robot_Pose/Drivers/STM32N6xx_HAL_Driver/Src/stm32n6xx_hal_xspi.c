@@ -3224,7 +3224,7 @@ static HAL_StatusTypeDef XSPI_WaitFlagStateUntilTimeout(XSPI_HandleTypeDef *hxsp
     /* Check for the Timeout */
     if (Timeout != HAL_MAX_DELAY)
     {
-      if (((HAL_GetTick() - Tickstart) > Timeout) || (Timeout == 0U))
+      if ((( HAL_GetTick() - Tickstart) > Timeout) || (Timeout == 0U))
       {
         hxspi->State     = HAL_XSPI_STATE_READY;
         hxspi->ErrorCode |= HAL_XSPI_ERROR_TIMEOUT;

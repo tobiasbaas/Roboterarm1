@@ -4,8 +4,14 @@ cmake_minimum_required(VERSION 3.22)
 set(MX_Defines_Syms 
 	USE_HAL_DRIVER 
 	STM32N657xx 
+    USE_FULL_LL_DRIVER 
 	TX_INCLUDE_USER_DEFINE_FILE 
 	TX_SINGLE_MODE_SECURE=1
+    UX_INCLUDE_USER_DEFINE_FILE
+    USBPD_PORT_COUNT=1
+    _DRP
+    USBPDCORE_LIB_PD3_FULL
+    USE_IMX335_SENSOR
     $<$<CONFIG:Debug>:DEBUG>
 )
 # STM32CubeMX generated include paths
@@ -18,6 +24,24 @@ set(MX_Include_Dirs
     ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/ST/threadx/common/inc
     ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/ST/threadx/ports/cortex_m55/gnu/inc
     ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/CMSIS/Include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/BSP/STM32N6570-DK
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/BSP/Components/Common
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/BSP/Components/rk050hr18
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/Camera_Middleware
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/Camera_Middleware/sensors
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/Camera_Middleware/sensors/imx335
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/Camera_Middleware/ISP_Library/isp/Inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBX/App
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBX/Target
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBPD/App
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBPD/Target
+    ${CMAKE_CURRENT_SOURCE_DIR}/AZURE_RTOS/App
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/ST/STM32_USBPD_Library/Core/inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/ST/STM32_USBPD_Library/Devices/STM32N6XX/inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/ST/usbx/common/core/inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/ST/usbx/common/usbx_device_classes/inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/ST/usbx/common/usbx_stm32_device_controllers
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/ST/usbx/ports/generic/inc
 )
 # STM32CubeMX generated application sources
 set(MX_Application_Src
@@ -28,12 +52,57 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/sysmem.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/syscalls.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Core/Startup/startup_stm32n657xx.s
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBX/App/app_usbx.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBX/App/app_usbx_device.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBX/App/ux_device_cdc_acm.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBX/App/ux_device_descriptors.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBPD/App/usbpd.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBPD/App/usbpd_dpm_core.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBPD/App/usbpd_pwr_if.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBPD/App/usbpd_usb_if.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBPD/Target/usbpd_dpm_user.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBPD/Target/usbpd_pwr_user.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/USBPD/Target/usbpd_vdm_user.c
+)
+
+file(GLOB USBX_CORE_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/ST/usbx/common/core/src/*.c
+)
+file(GLOB USBX_DEVICE_CLASS_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/ST/usbx/common/usbx_device_classes/src/*.c
+)
+file(GLOB USBX_STM32_DCD_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/ST/usbx/common/usbx_stm32_device_controllers/*.c
+)
+file(GLOB CAMERA_ISP_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/Camera_Middleware/ISP_Library/isp/Src/*.c
+)
+
+list(REMOVE_ITEM CAMERA_ISP_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/Camera_Middleware/ISP_Library/isp/Src/isp_conf_template.c
+)
+
+list(APPEND MX_Application_Src
+    ${USBX_CORE_SOURCES}
+    ${USBX_DEVICE_CLASS_SOURCES}
+    ${USBX_STM32_DCD_SOURCES}
+    ${CAMERA_ISP_SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/Camera_Middleware/cmw_camera.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/Camera_Middleware/cmw_utils.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/Camera_Middleware/sensors/cmw_imx335.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/Camera_Middleware/sensors/imx335/imx335.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Middlewares/Camera_Middleware/sensors/imx335/imx335_reg.c
 )
 
 # STM32 HAL/LL Drivers
 set(STM32_Drivers_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/system_stm32n6xx_s.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_exti.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_tim.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_tim_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_adc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_adc_ex.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_dma.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_dma_ex.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_rcc.c
@@ -46,6 +115,35 @@ set(STM32_Drivers_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_exti.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_rcc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_utils.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_i2c.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_i2c_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_mdf.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_sai.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_sai_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_sd.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_sd_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_sdmmc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_ucpd.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_gpio.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_dma.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_uart.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_uart_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_pcd.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_pcd_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_ll_usb.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_hcd.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_xspi.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_dcmipp.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_ltdc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_ltdc_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_ramcfg.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_rif.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_icache.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/BSP/STM32N6570-DK/stm32n6570_discovery.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_bus.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_xspi.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/BSP/Components/aps256xx/aps256xx.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/BSP/Components/mx66uw1g45g/mx66uw1g45g.c
 )
 
 # Drivers Midllewares

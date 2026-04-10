@@ -88,6 +88,10 @@ void Set_CLK_Sleep_Mode(void)
   // LP clock AHB4: None
   // LP clocks AHB5
   __HAL_RCC_XSPI1_CLK_SLEEP_ENABLE();
+  /*
+   * Keep XSPI2 sleep clock enabled as well: some board mappings place external
+   * flash in the 0x7000_0000 window used by generated AI blobs.
+   */
   __HAL_RCC_XSPI2_CLK_SLEEP_ENABLE();
   __HAL_RCC_CACHEAXI_CLK_SLEEP_ENABLE();
   __HAL_RCC_NPU_CLK_SLEEP_ENABLE();
@@ -157,10 +161,14 @@ void RISAF_Config(void)
   // Set_RISAF_Default(RISAF9_S);       /* VENC */
   
 
-#if (USE_EXTERNAL_RAM)
-  Set_RISAF_Default(RISAF11_S);         /* OCTOSPI1 0x9000 0000 */
-#endif
-  Set_RISAF_Default(RISAF12_S);         /* OCTOSPI2 0x7000 0000 */
+  /*
+   * Open both external XSPI address windows for AI runtime compatibility:
+   * - RISAF11: 0x9000_0000 window
+   * - RISAF12: 0x7000_0000 window
+   * This avoids hangs when generated networks are linked to either base.
+   */
+  Set_RISAF_Default(RISAF11_S);         /* OCTOSPI window around 0x9000_0000 */
+  Set_RISAF_Default(RISAF12_S);         /* OCTOSPI window around 0x7000_0000 */
   // Set_RISAF_Default(RISAF13_S);      /* OCTOSPI3 0x8000 0000 */
   
 }

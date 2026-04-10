@@ -1,0 +1,8 @@
+{
+  "Profiles": {
+    "custom": {
+      "memory_pool": "C:\\Users\\marce\\.stm32cubeaistudio\\workspace\\Robot_Pose\\.ai\\run\\run-6\\.ai\\memory_pool.mpool",
+      "options": "--native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --enable-epoch-controller --optimization 3 --Oauto --Oauto-kw --Oauto-cw --Oauto-stripe --Oauto-pipe --Oauto-O"
+    }
+  }
+}

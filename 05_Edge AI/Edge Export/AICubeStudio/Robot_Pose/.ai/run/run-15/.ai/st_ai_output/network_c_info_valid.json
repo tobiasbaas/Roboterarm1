@@ -1,0 +1,582 @@
+{
+  "aton_execution_time": [
+    {
+      "c_layer_name": "EpochBlock_1 -> 8",
+      "counters": [
+        210889,
+        788069440,
+        3270
+      ],
+      "cycles": 788283610,
+      "cycles_by_macc": 0,
+      "duration_ms": 985.3545125325521,
+      "percentage": 30.493113664039978
+    },
+    {
+      "c_layer_name": "EpochBlock_9",
+      "counters": [
+        14854,
+        2497659,
+        461817
+      ],
+      "cycles": 2974330,
+      "cycles_by_macc": 0,
+      "duration_ms": 3.717914958794912,
+      "percentage": 0.1150558524772803
+    },
+    {
+      "c_layer_name": "EpochBlock_10 -> 39",
+      "counters": [
+        2094,
+        1421998529,
+        622
+      ],
+      "cycles": 1422001236,
+      "cycles_by_macc": 0,
+      "duration_ms": 1777.5015462239583,
+      "percentage": 55.0071634093454
+    },
+    {
+      "c_layer_name": "EpochBlock_40 -> 99",
+      "counters": [
+        105308,
+        20462150,
+        1002
+      ],
+      "cycles": 20568460,
+      "cycles_by_macc": 0,
+      "duration_ms": 25.710575739542644,
+      "percentage": 0.7956481636023184
+    },
+    {
+      "c_layer_name": "EpochBlock_100",
+      "counters": [
+        6908,
+        25674,
+        28317
+      ],
+      "cycles": 60901,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.07612874917685986,
+      "percentage": 0.0023559059934527755
+    },
+    {
+      "c_layer_name": "EpochBlock_101",
+      "counters": [
+        6283,
+        48111,
+        38859
+      ],
+      "cycles": 93255,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.11657000208894411,
+      "percentage": 0.0036074146698527668
+    },
+    {
+      "c_layer_name": "EpochBlock_102",
+      "counters": [
+        2613,
+        25473,
+        23820
+      ],
+      "cycles": 51907,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.06488583299020927,
+      "percentage": 0.0020079789105253653
+    },
+    {
+      "c_layer_name": "EpochBlock_103",
+      "counters": [
+        8507,
+        86009,
+        622
+      ],
+      "cycles": 95138,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.11892291406790416,
+      "percentage": 0.0036802286789260137
+    },
+    {
+      "c_layer_name": "EpochBlock_104",
+      "counters": [
+        5257,
+        25518,
+        25210
+      ],
+      "cycles": 55985,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.06998291611671448,
+      "percentage": 0.002165714967096628
+    },
+    {
+      "c_layer_name": "EpochBlock_105",
+      "counters": [
+        1933,
+        55168,
+        607
+      ],
+      "cycles": 57708,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.07213541616996129,
+      "percentage": 0.0022323269610040886
+    },
+    {
+      "c_layer_name": "EpochBlock_106",
+      "counters": [
+        834,
+        267,
+        10977739
+      ],
+      "cycles": 10978841,
+      "cycles_by_macc": 0,
+      "duration_ms": 13.723551432291666,
+      "percentage": 0.42469365936490167
+    },
+    {
+      "c_layer_name": "EpochBlock_107",
+      "counters": [
+        1040,
+        267,
+        10653385
+      ],
+      "cycles": 10654693,
+      "cycles_by_macc": 0,
+      "duration_ms": 13.318366368611654,
+      "percentage": 0.41215466548541946
+    },
+    {
+      "c_layer_name": "EpochBlock_108 -> 111",
+      "counters": [
+        85923,
+        835025,
+        2320
+      ],
+      "cycles": 923269,
+      "cycles_by_macc": 0,
+      "duration_ms": 1.154086669286092,
+      "percentage": 0.035714755996037045
+    },
+    {
+      "c_layer_name": "EpochBlock_112",
+      "counters": [
+        834,
+        267,
+        8030952
+      ],
+      "cycles": 8032054,
+      "cycles_by_macc": 0,
+      "duration_ms": 10.040067672729492,
+      "percentage": 0.3107033264122589
+    },
+    {
+      "c_layer_name": "EpochBlock_113",
+      "counters": [
+        8149,
+        298332,
+        178004
+      ],
+      "cycles": 484485,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.6056083341439565,
+      "percentage": 0.018741360123756982
+    },
+    {
+      "c_layer_name": "EpochBlock_114",
+      "counters": [
+        3295,
+        1657,
+        1062
+      ],
+      "cycles": 6014,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.0075183332276841,
+      "percentage": 0.00023266488026392034
+    },
+    {
+      "c_layer_name": "EpochBlock_115",
+      "counters": [
+        7659,
+        286414,
+        178327
+      ],
+      "cycles": 472401,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.5905041446288426,
+      "percentage": 0.018273940771808404
+    },
+    {
+      "c_layer_name": "EpochBlock_116 -> 117",
+      "counters": [
+        82745,
+        287085,
+        622
+      ],
+      "cycles": 370452,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.4630662401517232,
+      "percentage": 0.014330204322740797
+    },
+    {
+      "c_layer_name": "EpochBlock_118",
+      "counters": [
+        1159,
+        267,
+        24337999
+      ],
+      "cycles": 24339426,
+      "cycles_by_macc": 0,
+      "duration_ms": 30.424282709757488,
+      "percentage": 0.9415201321106984
+    },
+    {
+      "c_layer_name": "EpochBlock_119",
+      "counters": [
+        1570,
+        264,
+        24551168
+      ],
+      "cycles": 24553000,
+      "cycles_by_macc": 0,
+      "duration_ms": 30.691251118977863,
+      "percentage": 0.9497818267023654
+    },
+    {
+      "c_layer_name": "EpochBlock_120 -> 128",
+      "counters": [
+        134024,
+        1834654,
+        2250
+      ],
+      "cycles": 1970929,
+      "cycles_by_macc": 0,
+      "duration_ms": 2.4636616706848145,
+      "percentage": 0.07624130645207643
+    },
+    {
+      "c_layer_name": "EpochBlock_129",
+      "counters": [
+        6002,
+        328883,
+        226622
+      ],
+      "cycles": 561508,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.701886663834254,
+      "percentage": 0.021720821843665805
+    },
+    {
+      "c_layer_name": "EpochBlock_130",
+      "counters": [
+        106594,
+        330182,
+        622
+      ],
+      "cycles": 437398,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.5467483401298523,
+      "percentage": 0.016919858862120957
+    },
+    {
+      "c_layer_name": "EpochBlock_131",
+      "counters": [
+        11254,
+        493715,
+        332569
+      ],
+      "cycles": 837540,
+      "cycles_by_macc": 0,
+      "duration_ms": 1.046926667292913,
+      "percentage": 0.032398546368480476
+    },
+    {
+      "c_layer_name": "EpochBlock_132 -> 142",
+      "counters": [
+        259711,
+        3990441,
+        622
+      ],
+      "cycles": 4250774,
+      "cycles_by_macc": 0,
+      "duration_ms": 5.313468297322591,
+      "percentage": 0.16443238517688133
+    },
+    {
+      "c_layer_name": "EpochBlock_143",
+      "counters": [
+        3581,
+        1012675,
+        422933
+      ],
+      "cycles": 1439190,
+      "cycles_by_macc": 0,
+      "duration_ms": 1.7989883025487263,
+      "percentage": 0.05567209983024705
+    },
+    {
+      "c_layer_name": "EpochBlock_144 -> 169",
+      "counters": [
+        157928,
+        109854236,
+        201563
+      ],
+      "cycles": 110213728,
+      "cycles_by_macc": 0,
+      "duration_ms": 137.76716105143228,
+      "percentage": 4.263389112935781
+    },
+    {
+      "c_layer_name": "EpochBlock_170",
+      "counters": [
+        7096,
+        394135,
+        173621
+      ],
+      "cycles": 574853,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.7185683250427246,
+      "percentage": 0.022237058167613316
+    },
+    {
+      "c_layer_name": "EpochBlock_171 -> 191",
+      "counters": [
+        86415,
+        15114149,
+        101615
+      ],
+      "cycles": 15302179,
+      "cycles_by_macc": 0,
+      "duration_ms": 19.127724329630535,
+      "percentage": 0.5919330197400178
+    },
+    {
+      "c_layer_name": "EpochBlock_192",
+      "counters": [
+        7583,
+        198496,
+        96396
+      ],
+      "cycles": 302474,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.3780949984987577,
+      "percentage": 0.011700655569532151
+    },
+    {
+      "c_layer_name": "EpochBlock_193 -> 215",
+      "counters": [
+        21724,
+        19572852,
+        854
+      ],
+      "cycles": 19595430,
+      "cycles_by_macc": 0,
+      "duration_ms": 24.494288126627605,
+      "percentage": 0.7580085161890663
+    },
+    {
+      "c_layer_name": "EpochBlock_216",
+      "counters": [
+        690,
+        267,
+        9553824
+      ],
+      "cycles": 9554781,
+      "cycles_by_macc": 0,
+      "duration_ms": 11.943477312723795,
+      "percentage": 0.3696068842316668
+    },
+    {
+      "c_layer_name": "EpochBlock_217 -> 219",
+      "counters": [
+        4674,
+        306936,
+        1754
+      ],
+      "cycles": 313363,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.3917049964269002,
+      "percentage": 0.012121835163791622
+    },
+    {
+      "c_layer_name": "EpochBlock_220",
+      "counters": [
+        4170,
+        34096543,
+        309589
+      ],
+      "cycles": 34410300,
+      "cycles_by_macc": 0,
+      "duration_ms": 43.0128770172596,
+      "percentage": 1.331091024826803
+    },
+    {
+      "c_layer_name": "EpochBlock_221 -> 222",
+      "counters": [
+        137392,
+        39374050,
+        622
+      ],
+      "cycles": 39512065,
+      "cycles_by_macc": 0,
+      "duration_ms": 49.390082041422524,
+      "percentage": 1.5284421661544914
+    },
+    {
+      "c_layer_name": "EpochBlock_223",
+      "counters": [
+        893,
+        270,
+        21261339
+      ],
+      "cycles": 21262503,
+      "cycles_by_macc": 0,
+      "duration_ms": 26.578129450480144,
+      "percentage": 0.8224957738591424
+    },
+    {
+      "c_layer_name": "EpochBlock_224 -> 225",
+      "counters": [
+        17115,
+        1106221,
+        2250
+      ],
+      "cycles": 1125586,
+      "cycles_by_macc": 0,
+      "duration_ms": 1.4069832960764568,
+      "percentage": 0.0435409804542278
+    },
+    {
+      "c_layer_name": "EpochBlock_226",
+      "counters": [
+        1040,
+        190,
+        1586573
+      ],
+      "cycles": 1587803,
+      "cycles_by_macc": 0,
+      "duration_ms": 1.9847545623779297,
+      "percentage": 0.0614208852712924
+    },
+    {
+      "c_layer_name": "EpochBlock_227 -> 228",
+      "counters": [
+        4915,
+        2160812,
+        1754
+      ],
+      "cycles": 2167481,
+      "cycles_by_macc": 0,
+      "duration_ms": 2.7093515396118164,
+      "percentage": 0.08384450814649871
+    },
+    {
+      "c_layer_name": "EpochBlock_229",
+      "counters": [
+        1609,
+        274,
+        130840
+      ],
+      "cycles": 132723,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.16590458154678345,
+      "percentage": 0.005134139234303177
+    },
+    {
+      "c_layer_name": "EpochBlock_230",
+      "counters": [
+        1040,
+        267,
+        292631
+      ],
+      "cycles": 293938,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.3674229085445404,
+      "percentage": 0.011370393468057221
+    },
+    {
+      "c_layer_name": "EpochBlock_231",
+      "counters": [
+        540,
+        267,
+        93589
+      ],
+      "cycles": 94397,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.11799625058968861,
+      "percentage": 0.0036515518378397375
+    },
+    {
+      "c_layer_name": "EpochBlock_232",
+      "counters": [
+        1290,
+        264,
+        106253
+      ],
+      "cycles": 107808,
+      "cycles_by_macc": 0,
+      "duration_ms": 0.1347604195276896,
+      "percentage": 0.004170341473861976
+    },
+    {
+      "c_layer_name": "EpochBlock_233 -> 250",
+      "counters": [
+        72715,
+        3939181,
+        2250
+      ],
+      "cycles": 4014147,
+      "cycles_by_macc": 0,
+      "duration_ms": 5.017683823903401,
+      "percentage": 0.155278938926508
+    }
+  ],
+  "environment": {
+    "device": "stm32 family - 0x486 - STM32N6xx @800/400MHz",
+    "generated_model": {
+      "generated_time": "2026-03-25T18:58:55+0100",
+      "name": "network"
+    },
+    "network_signature": "0x74bb1d9eebddb34c",
+    "test_name": "",
+    "tools": [
+      {
+        "arguments": "validate --model C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\roboterarm_pose_real_opt_v004_20260324_int8.onnx --batch-size 3 --mode target --st-neural-art custom@C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\AICubeStudio\\Robot_Pose\\.ai\\run\\run-15\\.ai\\profile-neural-art.json --name network --verbosity 1 --c-api st-ai --target stm32n6 --workspace C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\AICubeStudio\\Robot_Pose\\.ai\\run\\run-15\\.ai\\st_ai_ws --output C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\AICubeStudio\\Robot_Pose\\.ai\\run\\run-15\\.ai\\st_ai_output --memory-pool C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\AICubeStudio\\Robot_Pose\\.ai\\run\\run-15\\.ai\\mempools.json --desc serial:COM3:921600 --save-csv",
+        "environment": [
+          "STATS_TYPE=STM32CUBEAI-STUDIO"
+        ],
+        "input_model": {
+          "model_files": [
+            {
+              "name": "roboterarm_pose_real_opt_v004_20260324_int8.onnx",
+              "signature": "0x2ff4094699be0036593bdce7a7fd59df"
+            }
+          ],
+          "n_params": 2780547,
+          "name": "roboterarm_pose_real_opt_v004_20260324_int8",
+          "size": 11122188,
+          "type": "onnx"
+        },
+        "name": "ST.EdgeAI.Core",
+        "version": "3.0.0-20426 123672867"
+      }
+    ]
+  },
+  "json_schema_version": "2.0",
+  "validation": {
+    "val_error": 0.005514724645763636,
+    "val_error_desc": "x-cross (l2r) #1",
+    "val_metrics": [
+      {
+        "acc": "n.a.",
+        "cos": 0.9999855160713196,
+        "desc": "X-cross #1",
+        "l2r": 0.005514724645763636,
+        "mae": 0.5141725540161133,
+        "mean": -0.04983067139983177,
+        "nse": 0.9999407652269329,
+        "rmse": 1.6184263229370117,
+        "snr": 45.168232917785645,
+        "std": 1.6176602840423584
+      }
+    ]
+  }
+}

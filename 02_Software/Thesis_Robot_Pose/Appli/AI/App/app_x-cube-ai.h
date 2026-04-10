@@ -23,16 +23,41 @@ extern "C" {
   */
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
+#include <stddef.h>
 #include "stai.h"
 #include "ai_datatypes_defines.h"
 #include "ll_aton_runtime.h"
-#include "network.h"
+
+typedef enum
+{
+  APP_AI_MODEL_POSE = 0,
+  APP_AI_MODEL_SEGMENTATION = 1
+} AppAIModel_t;
 
 /* IO buffers ----------------------------------------------------------------*/
 
 void STM32CubeAI_Studio_AI_Init(void);
 void STM32CubeAI_Studio_AI_Process(void);
 int aiRun(void);
+
+void App_AI_SetModel(AppAIModel_t model);
+AppAIModel_t App_AI_GetModel(void);
+
+uint8_t *App_AI_GetInputBuffer(void);
+const uint8_t *App_AI_GetOutputBuffer(uint32_t output_index);
+
+size_t App_AI_GetInputSize(void);
+size_t App_AI_GetOutputSize(uint32_t output_index);
+uint32_t App_AI_GetOutputCount(void);
+
+uint32_t App_AI_GetRunCounter(void);
+int32_t App_AI_GetLastRunStatus(void);
+
+uint16_t *App_AI_GetDisplayFramebuffer(void);
+uint32_t App_AI_GetDisplayWidth(void);
+uint32_t App_AI_GetDisplayHeight(void);
+
+void App_AI_RenderActiveModelOverlay(void);
 
 extern uint8_t *buffer_in;
 extern uint8_t *buffer_out;

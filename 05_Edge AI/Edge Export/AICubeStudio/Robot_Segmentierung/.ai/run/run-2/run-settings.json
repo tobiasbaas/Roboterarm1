@@ -1,0 +1,25 @@
+{
+  "args": {
+    "model": "C:\\Dev\\AI\\Beachlor_Thesis_AI\\Edge Export\\roboterarm_real_opt_v004_20260324_int8.onnx",
+    "valinput": "",
+    "valoutput": "",
+    "batch-size": 3,
+    "mode": "target",
+    "st-neural-art": "default",
+    "atonnOptions": {
+      "native-float": true,
+      "cache-maintenance": true,
+      "Ocache-opt": true,
+      "enable-virtual-mem-pools": true,
+      "Os": true,
+      "Oauto-sched": true,
+      "enable-epoch-controller": true
+    },
+    "name": "network",
+    "verbosity": 1,
+    "c-api": "st-ai"
+  },
+  "mempools": [],
+  "automaticMempools": true,
+  "automaticFlash": true
+}

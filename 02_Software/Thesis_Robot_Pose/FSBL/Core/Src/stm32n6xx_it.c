@@ -20,10 +20,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32n6xx_it.h"
-#include "usbpd.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "cmw_camera.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,14 +55,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern PCD_HandleTypeDef hpcd_USB_OTG_HS1;
-extern XSPI_HandleTypeDef hxspi1;
 extern TIM_HandleTypeDef htim6;
-
-/* USER CODE BEGIN EV */
-extern DCMIPP_HandleTypeDef hdcmipp;
-extern LTDC_HandleTypeDef hltdc;
-/* USER CODE END EV */
 
 /******************************************************************************/
 /*           Cortex Processor Interruption and Exception Handlers          */
@@ -205,13 +196,7 @@ void TIM6_IRQHandler(void)
   */
 void XSPI1_IRQHandler(void)
 {
-  /* USER CODE BEGIN XSPI1_IRQn 0 */
-
-  /* USER CODE END XSPI1_IRQn 0 */
-  HAL_XSPI_IRQHandler(&hxspi1);
-  /* USER CODE BEGIN XSPI1_IRQn 1 */
-
-  /* USER CODE END XSPI1_IRQn 1 */
+  /* FSBL bootloader - no XSPI operations needed */
 }
 
 /**
@@ -219,14 +204,7 @@ void XSPI1_IRQHandler(void)
   */
 void UCPD1_IRQHandler(void)
 {
-  /* USER CODE BEGIN UCPD1_IRQn 0 */
-
-  /* USER CODE END UCPD1_IRQn 0 */
-  USBPD_PORT0_IRQHandler();
-
-  /* USER CODE BEGIN UCPD1_IRQn 1 */
-
-  /* USER CODE END UCPD1_IRQn 1 */
+  /* FSBL bootloader - no UCPD operations needed */
 }
 
 /**
@@ -234,13 +212,7 @@ void UCPD1_IRQHandler(void)
   */
 void USB1_OTG_HS_IRQHandler(void)
 {
-  /* USER CODE BEGIN USB1_OTG_HS_IRQn 0 */
-
-  /* USER CODE END USB1_OTG_HS_IRQn 0 */
-  HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS1);
-  /* USER CODE BEGIN USB1_OTG_HS_IRQn 1 */
-
-  /* USER CODE END USB1_OTG_HS_IRQn 1 */
+  /* FSBL bootloader - no USB operations needed */
 }
 
 /* USER CODE BEGIN 1 */
@@ -250,7 +222,7 @@ void USB1_OTG_HS_IRQHandler(void)
   */
 void DCMIPP_IRQHandler(void)
 {
-  HAL_DCMIPP_IRQHandler(CMW_CAMERA_GetDCMIPPHandle());
+  /* FSBL bootloader - no camera operations needed */
 }
 
 /**
@@ -258,7 +230,7 @@ void DCMIPP_IRQHandler(void)
   */
 void CSI_IRQHandler(void)
 {
-  HAL_DCMIPP_CSI_IRQHandler(CMW_CAMERA_GetDCMIPPHandle());
+  /* FSBL bootloader - no camera operations needed */
 }
 
 /**
@@ -266,7 +238,7 @@ void CSI_IRQHandler(void)
   */
 void LTDC_UP_IRQHandler(void)
 {
-  HAL_LTDC_IRQHandler(&hltdc);
+  /* FSBL bootloader - nno display operations needed */
 }
 
 /**
@@ -274,7 +246,7 @@ void LTDC_UP_IRQHandler(void)
   */
 void LTDC_UP_ERR_IRQHandler(void)
 {
-  HAL_LTDC_IRQHandler(&hltdc);
+  /* FSBL bootloader - no display operations needed */
 }
 
 /* USER CODE END 1 */

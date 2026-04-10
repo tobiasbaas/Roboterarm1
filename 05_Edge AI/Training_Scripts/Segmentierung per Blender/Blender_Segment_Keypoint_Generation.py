@@ -65,7 +65,7 @@ mask_dir = os.path.join(output_dir, "masks")
 pose_labels_dir = os.path.join(output_dir, "labels_pose")
 
 csv_path = os.path.join(output_dir, "joint_data.csv")
-num_images = 500
+num_images = 2000
 rotation_jitter = 0.5
 
 # Blender-Gelenke
