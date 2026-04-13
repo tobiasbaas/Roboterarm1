@@ -53,6 +53,7 @@ desktop.ini
 */Release/
 */Build/
 buid/
+.cache/
 
 # Generierte Projekt-Metadaten von Eclipse/CubeIDE
 .project

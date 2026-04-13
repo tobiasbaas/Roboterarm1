@@ -1,23 +1,3 @@
-"""
-Roboterarm - KI-Training
-==========================
-Training in zwei Modi:
-
-  [1] Virtuell trainieren   (Seg + Pose auf Blender-Daten)
-  [2] Echt trainieren       (Seg + Pose auf echten Kamerabildern)
-  [3] Validierung           (Metriken für bestes Modell)
-  [4] Export                (ONNX für Edge-Deployment)
-
-Datenaufbereitung:
-    Blender-Generierung → Blender_Segment_Keypoint_Generation.py
-    Pose-Dataset        → pose_dataset (images/labels train/val)
-    Seg-Dataset         → yolo_dataset (images/labels train/val)
-
-Aufruf:
-  python EdgeAI.py          → Menüauswahl
-  python EdgeAI.py 1        → Direkt Schritt 1
-"""
-
 import os
 import sys
 import shutil
@@ -28,7 +8,6 @@ import re
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
-
 from ultralytics import YOLO
 
 
@@ -158,7 +137,7 @@ BATCH_SIZE = 16
 VAL_SPLIT = 0.3
 SEED = 42
 PRUNE_RATIO = 0.20
-PRUNE_RECOVERY_EPOCHS = 10
+PRUNE_RECOVERY_EPOCHS = 20
 CALIBRATION_IMAGES = 64
 
 # ---------------------

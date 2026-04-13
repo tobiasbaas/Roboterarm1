@@ -88,16 +88,24 @@ Prioritaet bei der Modellwahl:
 - Segmentierung: `roboterarm_real` -> `roboterarm_seg`
 - Pose: `roboterarm_pose_real` -> `roboterarm_pose`
 
-### 3) Automatische Erkennung von Realbild-Pfaden
 
-`Umrisse_in_Polygone.py` sucht `Image_Capture_Python` automatisch in der Projektumgebung.
-Wenn mehrere Sessions vorhanden sind, wird automatisch der neueste Bilderordner bevorzugt.
+### 3) Automatische Erkennung und Nutzung neuer Realbild-Daten
 
-Optional kann alles explizit per Umgebungsvariable gesetzt werden:
+Das Trainingsskript `EdgeAI.py` verwendet beim Fine-Tuning auf echten Daten (Schritt 2) **automatisch alle Bilder aus allen Unterordnern von**
 
-- `IMAGE_CAPTURE_PYTHON_ROOT`
-- `IMAGE_CAPTURE_IMAGES_DIR`
-- `IMAGE_CAPTURE_LABELS_CSV`
+   C:/Dev/Image_Capture_Python/dataset/images
+
+für das Training. Es ist kein manuelles Kopieren der Bilder mehr nötig – neue Bildordner werden direkt erkannt und genutzt.
+
+**WICHTIG:**
+Damit das Training funktioniert, müssen die zugehörigen Label-Dateien (YOLO-Format, .txt) weiterhin wie bisher im Ordner
+
+   Training_Scripts/real_dataset/labels/all
+
+liegen und exakt den gleichen Dateinamen (ohne Endung) wie die Bilder haben. Die Logik für die Labels muss identisch zu der für die Bilder sein: Für jedes Bild in den Unterordnern von `dataset/images` wird die passende Label-Datei in `real_dataset/labels/all` gesucht. Fehlt ein Label, wird das Bild übersprungen.
+
+**Hinweis:**
+Wenn du die Label-Logik anpassen möchtest (z.B. Labels ebenfalls aus Unterordnern lesen), muss das Skript entsprechend erweitert werden!
 
 ### 4) Label Studio Export-Pfade (neu)
 
