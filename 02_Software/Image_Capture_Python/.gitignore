@@ -1,0 +1,9 @@
+# Image_Capture_Python  |  ergaenzt die .gitignore im Repo-Root
+
+# Aufgenommene Trainingsbilder und die zugehoerigen Labels
+dataset/
+*.png
+labels.csv
+
+.venv/
+__pycache__/

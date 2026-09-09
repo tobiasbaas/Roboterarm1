@@ -1,0 +1,37 @@
+# Beachlor_Thesis_AI  |  ergaenzt die .gitignore im Repo-Root
+
+# Python
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+
+# Vortrainierte Ultralytics-Gewichte (werden beim ersten Lauf geladen)
+yolo11n-seg.pt
+yolo11n-pose.pt
+*.pt
+
+# Trainingslaeufe, Modelle und Exporte
+Trained_Models/
+runs/
+Edge Export/
+
+# Datensaetze und Label-Zwischenstaende
+Training_Scripts/dataset/
+Training_Scripts/real_dataset/
+Training_Scripts/real_pose_dataset/
+Training_Scripts/real_yolo_dataset/
+Training_Scripts/label_studio_import/
+Training_Scripts/winkel_output/
+Training_Scripts/_pdf_pages/
+Training_Scripts/.ultralytics_tmp/
+Training_Scripts/Segmentierung per Blender/dataset/
+Training_Scripts/Segmentierung per Blender/yolo_dataset/
+Training_Scripts/Segmentierung per Blender/pose_dataset/
+Training_Scripts/Segmentierung per Blender/robot-arm/
+
+# Die Dataset-YAMLs bleiben, sie sind Konfiguration und keine Daten
+!Training_Scripts/*.yaml
+
+# Blender-Arbeitsdateien
+*.blend
+*.blend1

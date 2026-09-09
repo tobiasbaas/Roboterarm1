@@ -1,4 +1,0 @@
-C:/Dev/New_Image_Capture/New_Image_Capture/Appli/build/CMakeFiles/CDC_ACM_Appli.dir
-C:/Dev/New_Image_Capture/New_Image_Capture/Appli/build/CMakeFiles/STM32_Drivers.dir
-C:/Dev/New_Image_Capture/New_Image_Capture/Appli/build/CMakeFiles/edit_cache.dir
-C:/Dev/New_Image_Capture/New_Image_Capture/Appli/build/CMakeFiles/rebuild_cache.dir

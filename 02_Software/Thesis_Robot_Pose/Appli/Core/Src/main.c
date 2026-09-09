@@ -39,7 +39,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LCD_FB_ADDRESS        0x34000000U
+#define LCD_FB_ADDRESS        0x34400000U  /* AXISRAM3 — avoids overlap with .data/.bss at 0x34000000 */
 #define LCD_WIDTH             640
 #define LCD_HEIGHT            480
 #define LCD_BPP               2  /* RGB565 = 2 bytes per pixel */
@@ -103,7 +103,7 @@ HAL_StatusTypeDef MX_DCMIPP_ClockConfig(DCMIPP_HandleTypeDef *hdcmipp_ptr)
   RCC_PeriphCLKInitTypeDef RCC_PeriphCLKInitStruct = {0};
   HAL_StatusTypeDef ret;
 
-  /* DCMIPP clock: IC17 = PLL1 / 4 = 1200/4 = 300 MHz */
+  /* DCMIPP clock: IC17 = PLL1 / 4 = 800/4 = 200 MHz */
   RCC_PeriphCLKInitStruct.PeriphClockSelection = RCC_PERIPHCLK_DCMIPP;
   RCC_PeriphCLKInitStruct.DcmippClockSelection = RCC_DCMIPPCLKSOURCE_IC17;
   RCC_PeriphCLKInitStruct.ICSelection[RCC_IC17].ClockSelection = RCC_ICCLKSOURCE_PLL1;
@@ -111,7 +111,7 @@ HAL_StatusTypeDef MX_DCMIPP_ClockConfig(DCMIPP_HandleTypeDef *hdcmipp_ptr)
   ret = HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphCLKInitStruct);
   if (ret) return ret;
 
-  /* CSI PHY ref clock: IC18 = PLL1 / 60 = 1200/60 = 20 MHz */
+  /* CSI PHY ref clock: IC18 = PLL1 / 60 = 800/60 ≈ 13.3 MHz */
   RCC_PeriphCLKInitStruct.PeriphClockSelection = RCC_PERIPHCLK_CSI;
   RCC_PeriphCLKInitStruct.ICSelection[RCC_IC18].ClockSelection = RCC_ICCLKSOURCE_PLL1;
   RCC_PeriphCLKInitStruct.ICSelection[RCC_IC18].ClockDivider = 60;
@@ -139,8 +139,13 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-  /* MPU Configuration — mark USB / USBX pool region as non-cacheable
-     (must be done BEFORE enabling caches) */
+  /* MPU configuration must happen BEFORE enabling the I-Cache so that
+     XSPI2 (0x70000000) and AXISRAM (0x34000000) have the right memory
+     attributes when the cache starts line-filling instruction fetches.
+     The FSBL has already set up compatible regions for the jump; the
+     call to HAL_MPU_Disable() inside MPU_Config temporarily disables
+     the MPU before re-programming, which is fine because the default
+     memory map is executable for 0x60000000..0x9FFFFFFF (Normal WB). */
   MPU_Config();
 
   /* Enable I-Cache only.  D-Cache is intentionally DISABLED because the
@@ -148,7 +153,6 @@ int main(void)
      Enabling D-Cache introduced hard faults / data corruption on earlier
      attempts. */
   SCB_EnableICache();
-  /* SCB_EnableDCache();  — deliberately disabled, see above */
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -227,124 +231,75 @@ int main(void)
   */
 void SystemClock_Config(void)
 {
-  /* NOTE: The Appli executes from xSPI1 (0x70100400) in XiP mode.
-   * The FSBL has already configured PLL1 at 1200 MHz with CPU on IC1/2
-   * at 600 MHz — identical to what this function would set.
-   * Re-running the PLL config from XiP is UNSAFE: switching the CPU
-   * temporarily to HSI disrupts the xSPI1 kernel clock (which is
-   * PLL1-derived), causing an instruction-fetch HardFault.
-   * Solution: skip the reconfiguration, update SystemCoreClock from
-   * RCC registers so HAL_InitTick() gets the correct SysTick period. */
+  /* NOTE: The Appli executes from xSPI2 (0x70100400) in XiP mode.
+   * The FSBL has already configured PLL1 at 800 MHz (HSI×25/2) with
+   * CPU on IC1/2 (CPU = PLL1/2 = 400 MHz).  Re-running the full PLL1
+   * config is UNSAFE because switching the CPU temporarily to HSI
+   * disrupts the XSPI fetch clock.
+   *
+   * PLL2 (NPU) and PLL3 (AXISRAM3-6) are independent of PLL1/IC1/IC2
+   * and CAN be safely enabled here.  Without them the NPU runs at
+   * ~400 MHz instead of 1000 MHz and AXISRAM at ~400 instead of
+   * 900 MHz — a massive performance penalty.
+   */
+  RCC_OscInitTypeDef osc = {0};
+  RCC_ClkInitTypeDef clk = {0};
+
+  /* Keep PLL1 untouched — only add PLL2 + PLL3 */
+  osc.OscillatorType = RCC_OSCILLATORTYPE_NONE;   /* HSE already on */
+  osc.PLL1.PLLState  = RCC_PLL_NONE;              /* don't touch PLL1 */
+
+  /* PLL2 = HSI(64) × 125 / 8 = 1000 MHz  →  NPU clock via IC6 */
+  osc.PLL2.PLLState    = RCC_PLL_ON;
+  osc.PLL2.PLLSource   = RCC_PLLSOURCE_HSI;
+  osc.PLL2.PLLM        = 8;
+  osc.PLL2.PLLN        = 125;
+  osc.PLL2.PLLFractional = 0;
+  osc.PLL2.PLLP1       = 1;
+  osc.PLL2.PLLP2       = 1;
+
+  /* PLL3 = HSI(64) × 225 / 8 / 2 = 900 MHz  →  AXISRAM3-6 via IC11 */
+  osc.PLL3.PLLState    = RCC_PLL_ON;
+  osc.PLL3.PLLSource   = RCC_PLLSOURCE_HSI;
+  osc.PLL3.PLLM        = 8;
+  osc.PLL3.PLLN        = 225;
+  osc.PLL3.PLLFractional = 0;
+  osc.PLL3.PLLP1       = 1;
+  osc.PLL3.PLLP2       = 2;
+
+  osc.PLL4.PLLState = RCC_PLL_NONE;
+
+  if (HAL_RCC_OscConfig(&osc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* Switch IC6 (NPU) to PLL2 and IC11 (AXISRAM) to PLL3.
+   * IC1 (CPU) and IC2 (AXI/XSPI) must be RE-STATED with their current
+   * FSBL values, otherwise HAL_RCC_ClockConfig will reprogram them with
+   * divider=0 (uninitialised struct) and kill the XiP fetch clock. */
+  clk.ClockType      = RCC_CLOCKTYPE_CPUCLK | RCC_CLOCKTYPE_SYSCLK;
+  clk.CPUCLKSource   = RCC_CPUCLKSOURCE_IC1;
+  clk.SYSCLKSource   = RCC_SYSCLKSOURCE_IC2_IC6_IC11;
+
+  /* Keep IC1/IC2 on PLL1 with the FSBL's dividers — identical write, safe */
+  clk.IC1Selection.ClockSelection  = RCC_ICCLKSOURCE_PLL1;
+  clk.IC1Selection.ClockDivider    = 2;     /* PLL1 / 2 = CPU clock */
+  clk.IC2Selection.ClockSelection  = RCC_ICCLKSOURCE_PLL1;
+  clk.IC2Selection.ClockDivider    = 3;     /* PLL1 / 3 = SYSCLK/AXI */
+
+  /* Only IC6 and IC11 really change source */
+  clk.IC6Selection.ClockSelection  = RCC_ICCLKSOURCE_PLL2;
+  clk.IC6Selection.ClockDivider    = 1;     /* 1000 MHz for NPU */
+  clk.IC11Selection.ClockSelection = RCC_ICCLKSOURCE_PLL3;
+  clk.IC11Selection.ClockDivider   = 1;     /* 900 MHz for AXISRAM3-6 */
+
+  if (HAL_RCC_ClockConfig(&clk) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
   SystemCoreClockUpdate();
-  return;
-
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-
-  /** Configure the System Power Supply
-  */
-  if (HAL_PWREx_ConfigSupply(PWR_EXTERNAL_SOURCE_SUPPLY) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure the main internal regulator output voltage
-  */
-  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /* Enable HSI */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL1.PLLState = RCC_PLL_NONE;
-  RCC_OscInitStruct.PLL2.PLLState = RCC_PLL_NONE;
-  RCC_OscInitStruct.PLL3.PLLState = RCC_PLL_NONE;
-  RCC_OscInitStruct.PLL4.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /* Wait HSE stabilization time before its selection as PLL source. */
-  HAL_Delay(HSE_STARTUP_TIMEOUT);
-
-  /** Initializes TIMPRE when TIM is used as Systick Clock Source
-  */
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_TIM;
-  PeriphClkInitStruct.TIMPresSelection = RCC_TIMPRES_DIV1;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Get current CPU/System buses clocks configuration and if necessary switch
- to intermediate HSI clock to ensure target clock can be set
-  */
-  HAL_RCC_GetClockConfig(&RCC_ClkInitStruct);
-  if ((RCC_ClkInitStruct.CPUCLKSource == RCC_CPUCLKSOURCE_IC1) ||
-     (RCC_ClkInitStruct.SYSCLKSource == RCC_SYSCLKSOURCE_IC2_IC6_IC11))
-  {
-    RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_CPUCLK | RCC_CLOCKTYPE_SYSCLK);
-    RCC_ClkInitStruct.CPUCLKSource = RCC_CPUCLKSOURCE_HSI;
-    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct) != HAL_OK)
-    {
-      /* Initialization Error */
-      Error_Handler();
-    }
-  }
-
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL1.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL1.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL1.PLLM = 3;
-  RCC_OscInitStruct.PLL1.PLLN = 75;
-  RCC_OscInitStruct.PLL1.PLLFractional = 0;
-  RCC_OscInitStruct.PLL1.PLLP1 = 1;
-  RCC_OscInitStruct.PLL1.PLLP2 = 1;
-  RCC_OscInitStruct.PLL2.PLLState = RCC_PLL_NONE;
-  RCC_OscInitStruct.PLL3.PLLState = RCC_PLL_NONE;
-  RCC_OscInitStruct.PLL4.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_CPUCLK|RCC_CLOCKTYPE_HCLK
-                              |RCC_CLOCKTYPE_SYSCLK|RCC_CLOCKTYPE_PCLK1
-                              |RCC_CLOCKTYPE_PCLK2|RCC_CLOCKTYPE_PCLK5
-                              |RCC_CLOCKTYPE_PCLK4;
-  RCC_ClkInitStruct.CPUCLKSource = RCC_CPUCLKSOURCE_IC1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_IC2_IC6_IC11;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV1;
-  RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV1;
-  RCC_ClkInitStruct.APB5CLKDivider = RCC_APB5_DIV1;
-  RCC_ClkInitStruct.IC1Selection.ClockSelection = RCC_ICCLKSOURCE_PLL1;
-  RCC_ClkInitStruct.IC1Selection.ClockDivider = 2;
-  RCC_ClkInitStruct.IC2Selection.ClockSelection = RCC_ICCLKSOURCE_PLL1;
-  RCC_ClkInitStruct.IC2Selection.ClockDivider = 3;
-  RCC_ClkInitStruct.IC6Selection.ClockSelection = RCC_ICCLKSOURCE_PLL1;
-  RCC_ClkInitStruct.IC6Selection.ClockDivider = 3;
-  RCC_ClkInitStruct.IC11Selection.ClockSelection = RCC_ICCLKSOURCE_PLL1;
-  RCC_ClkInitStruct.IC11Selection.ClockDivider = 3;
-
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
 }
 
 
@@ -470,32 +425,7 @@ void MX_USB1_OTG_HS_PCD_Init(void)
   */
 static void MX_USB2_OTG_HS_HCD_Init(void)
 {
-
-  /* USER CODE BEGIN USB2_OTG_HS_Init 0 */
-return; // bypass configuration
-  /* USER CODE END USB2_OTG_HS_Init 0 */
-
-  /* USER CODE BEGIN USB2_OTG_HS_Init 1 */
-
-  /* USER CODE END USB2_OTG_HS_Init 1 */
-  hhcd_USB_OTG_HS2.Instance = USB2_OTG_HS;
-  hhcd_USB_OTG_HS2.Init.dev_endpoints = 9;
-  hhcd_USB_OTG_HS2.Init.Host_channels = 16;
-  hhcd_USB_OTG_HS2.Init.speed = HCD_SPEED_HIGH;
-  hhcd_USB_OTG_HS2.Init.dma_enable = DISABLE;
-  hhcd_USB_OTG_HS2.Init.phy_itface = USB_OTG_HS_EMBEDDED_PHY;
-  hhcd_USB_OTG_HS2.Init.Sof_enable = DISABLE;
-  hhcd_USB_OTG_HS2.Init.low_power_enable = DISABLE;
-  hhcd_USB_OTG_HS2.Init.vbus_sensing_enable = DISABLE;
-  hhcd_USB_OTG_HS2.Init.use_external_vbus = ENABLE;
-  if (HAL_HCD_Init(&hhcd_USB_OTG_HS2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USB2_OTG_HS_Init 2 */
-
-  /* USER CODE END USB2_OTG_HS_Init 2 */
-
+  /* USB2 HCD intentionally left uninitialised — not used in this build. */
 }
 
 /**
@@ -505,48 +435,7 @@ return; // bypass configuration
   */
 static void MX_XSPI1_Init(void)
 {
-
-  /* USER CODE BEGIN XSPI1_Init 0 */
-return; // bypass configuration
-  /* USER CODE END XSPI1_Init 0 */
-
-  XSPIM_CfgTypeDef sXspiManagerCfg = {0};
-
-  /* USER CODE BEGIN XSPI1_Init 1 */
-
-  /* USER CODE END XSPI1_Init 1 */
-  /* XSPI1 parameter configuration*/
-  hxspi1.Instance = XSPI1;
-  hxspi1.Init.FifoThresholdByte = 1;
-  hxspi1.Init.MemoryMode = HAL_XSPI_SINGLE_MEM;
-  hxspi1.Init.MemoryType = HAL_XSPI_MEMTYPE_MICRON;
-  hxspi1.Init.MemorySize = HAL_XSPI_SIZE_16B;
-  hxspi1.Init.ChipSelectHighTimeCycle = 1;
-  hxspi1.Init.FreeRunningClock = HAL_XSPI_FREERUNCLK_DISABLE;
-  hxspi1.Init.ClockMode = HAL_XSPI_CLOCK_MODE_0;
-  hxspi1.Init.WrapSize = HAL_XSPI_WRAP_NOT_SUPPORTED;
-  hxspi1.Init.ClockPrescaler = 0;
-  hxspi1.Init.SampleShifting = HAL_XSPI_SAMPLE_SHIFT_NONE;
-  hxspi1.Init.DelayHoldQuarterCycle = HAL_XSPI_DHQC_DISABLE;
-  hxspi1.Init.ChipSelectBoundary = HAL_XSPI_BONDARYOF_NONE;
-  hxspi1.Init.MaxTran = 0;
-  hxspi1.Init.Refresh = 0;
-  hxspi1.Init.MemorySelect = HAL_XSPI_CSSEL_NCS1;
-  if (HAL_XSPI_Init(&hxspi1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sXspiManagerCfg.nCSOverride = HAL_XSPI_CSSEL_OVR_NCS1;
-  sXspiManagerCfg.IOPort = HAL_XSPIM_IOPORT_1;
-  sXspiManagerCfg.Req2AckTime = 1;
-  if (HAL_XSPIM_Config(&hxspi1, &sXspiManagerCfg, HAL_XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN XSPI1_Init 2 */
-
-  /* USER CODE END XSPI1_Init 2 */
-
+  /* FSBL already configured XSPI1 (HyperRAM) in memory-mapped mode at 0x90000000. */
 }
 
 /**
@@ -556,48 +445,7 @@ return; // bypass configuration
   */
 static void MX_XSPI2_Init(void)
 {
-
-  /* USER CODE BEGIN XSPI2_Init 0 */
-return; // bypass configuration
-  /* USER CODE END XSPI2_Init 0 */
-
-  XSPIM_CfgTypeDef sXspiManagerCfg = {0};
-
-  /* USER CODE BEGIN XSPI2_Init 1 */
-
-  /* USER CODE END XSPI2_Init 1 */
-  /* XSPI2 parameter configuration*/
-  hxspi2.Instance = XSPI2;
-  hxspi2.Init.FifoThresholdByte = 1;
-  hxspi2.Init.MemoryMode = HAL_XSPI_SINGLE_MEM;
-  hxspi2.Init.MemoryType = HAL_XSPI_MEMTYPE_MICRON;
-  hxspi2.Init.MemorySize = HAL_XSPI_SIZE_16B;
-  hxspi2.Init.ChipSelectHighTimeCycle = 1;
-  hxspi2.Init.FreeRunningClock = HAL_XSPI_FREERUNCLK_DISABLE;
-  hxspi2.Init.ClockMode = HAL_XSPI_CLOCK_MODE_0;
-  hxspi2.Init.WrapSize = HAL_XSPI_WRAP_NOT_SUPPORTED;
-  hxspi2.Init.ClockPrescaler = 0;
-  hxspi2.Init.SampleShifting = HAL_XSPI_SAMPLE_SHIFT_NONE;
-  hxspi2.Init.DelayHoldQuarterCycle = HAL_XSPI_DHQC_DISABLE;
-  hxspi2.Init.ChipSelectBoundary = HAL_XSPI_BONDARYOF_NONE;
-  hxspi2.Init.MaxTran = 0;
-  hxspi2.Init.Refresh = 0;
-  hxspi2.Init.MemorySelect = HAL_XSPI_CSSEL_NCS1;
-  if (HAL_XSPI_Init(&hxspi2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sXspiManagerCfg.nCSOverride = HAL_XSPI_CSSEL_OVR_NCS1;
-  sXspiManagerCfg.IOPort = HAL_XSPIM_IOPORT_2;
-  sXspiManagerCfg.Req2AckTime = 1;
-  if (HAL_XSPIM_Config(&hxspi2, &sXspiManagerCfg, HAL_XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN XSPI2_Init 2 */
-
-  /* USER CODE END XSPI2_Init 2 */
-
+  /* FSBL already configured XSPI2 (NOR Flash) in memory-mapped XiP mode at 0x70000000. */
 }
 
 /**
@@ -890,47 +738,71 @@ void assert_failed(uint8_t *file, uint32_t line)
 #endif /* USE_FULL_ASSERT */
 
 /* ---------------------------------------------------------------------------
-   MPU_Config  –  Mark the .noncacheable linker section (USB PCD handle,
-   USBX byte pool, USBX application buffers) as Device / non-cacheable so
-   that D-Cache cannot create coherency issues with the USB controller.
-   Matching the official ST USBX examples (CDC_ACM, Video, Audio, …).
+   MPU_Config  –  Configure MPU regions BEFORE enabling the MPU:
+     Region 0 : XSPI2 NOR Flash   (0x70000000..0x7FFFFFFF) Normal WB, executable
+                – mandatory for XiP instruction fetch after FSBL hand-over.
+     Region 1 : XSPI1 HyperRAM    (0x90000000..0x9FFFFFFF) Normal WB, XN
+     Region 2 : AXISRAM           (0x34000000..0x345FFFFF) Normal WB
+                – covers .data/.bss (0x34000000..0x34200000) and the LCD
+                  framebuffer in AXISRAM3/4 at 0x34400000.
+     Region 3 : .noncacheable     (linker symbols)         Non-cacheable, XN
+                – USB PCD handle + USBX pools: D-Cache coherency safety.
    ------------------------------------------------------------------------ */
 static void MPU_Config(void)
 {
-  MPU_Region_InitTypeDef MPU_InitStruct   = {0};
-  MPU_Attributes_InitTypeDef MPU_AttrInit = {0};
+  MPU_Region_InitTypeDef     MPU_InitStruct = {0};
+  MPU_Attributes_InitTypeDef MPU_AttrInit   = {0};
 
-  /* Disable MPU before configuration */
   HAL_MPU_Disable();
 
-  /* --- Attribute 0 : Inner + Outer = Non-cacheable ---------------------- */
+  /* Attribute 0: Normal Write-Back Read/Write-Allocate (cached) */
   MPU_AttrInit.Number     = MPU_ATTRIBUTES_NUMBER0;
+  MPU_AttrInit.Attributes = INNER_OUTER(MPU_NON_TRANSIENT | MPU_WRITE_BACK | MPU_RW_ALLOCATE);
+  HAL_MPU_ConfigMemoryAttributes(&MPU_AttrInit);
+
+  /* Attribute 1: Non-cacheable */
+  MPU_AttrInit.Number     = MPU_ATTRIBUTES_NUMBER1;
   MPU_AttrInit.Attributes = INNER_OUTER(MPU_NOT_CACHEABLE);
   HAL_MPU_ConfigMemoryAttributes(&MPU_AttrInit);
 
-  /* --- Region 0 : non-cacheable area for USB (PCD + pools) -------------- *
-   * We use the linker symbols __snoncacheable / __enoncacheable.
-   * The region covers at least the .noncacheable output section.
-   * Base and Limit must be 32-byte aligned (ARMv8-M MPU requirement).     */
-  extern uint32_t __snoncacheable;
-  extern uint32_t __enoncacheable;
-
-  uint32_t base  = (uint32_t)&__snoncacheable & ~0x1FU;          /* align down */
-  uint32_t limit = ((uint32_t)&__enoncacheable + 0x1FU) & ~0x1FU; /* align up   */
-  /* Ensure at least 32 bytes (MPU minimum) */
-  if (limit <= base) limit = base + 32;
-
+  /* Region 0: XSPI2 NOR Flash — executable, cached (XiP) */
   MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
   MPU_InitStruct.Number           = MPU_REGION_NUMBER0;
-  MPU_InitStruct.BaseAddress      = base;
-  MPU_InitStruct.LimitAddress     = limit - 1;   /* inclusive */
+  MPU_InitStruct.BaseAddress      = 0x70000000UL;
+  MPU_InitStruct.LimitAddress     = 0x7FFFFFFFUL;
   MPU_InitStruct.AttributesIndex  = MPU_ATTRIBUTES_NUMBER0;
   MPU_InitStruct.AccessPermission = MPU_REGION_ALL_RW;
-  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
+  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
   MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
-
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
-  /* Enable MPU with default memory map for privileged accesses */
+  /* Region 1: XSPI1 HyperRAM — data only, cached */
+  MPU_InitStruct.Number           = MPU_REGION_NUMBER1;
+  MPU_InitStruct.BaseAddress      = 0x90000000UL;
+  MPU_InitStruct.LimitAddress     = 0x9FFFFFFFUL;
+  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /* Region 2: AXISRAM (covers .data/.bss and LCD framebuffer) — cached */
+  MPU_InitStruct.Number           = MPU_REGION_NUMBER2;
+  MPU_InitStruct.BaseAddress      = 0x34000000UL;
+  MPU_InitStruct.LimitAddress     = 0x345FFFFFUL;
+  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /* Region 3: .noncacheable section (USB PCD handle + USBX pools) */
+  extern uint32_t __snoncacheable;
+  extern uint32_t __enoncacheable;
+  uint32_t nc_base  = (uint32_t)&__snoncacheable & ~0x1FU;
+  uint32_t nc_limit = ((uint32_t)&__enoncacheable + 0x1FU) & ~0x1FU;
+  if (nc_limit <= nc_base) nc_limit = nc_base + 32U;
+
+  MPU_InitStruct.Number           = MPU_REGION_NUMBER3;
+  MPU_InitStruct.BaseAddress      = nc_base;
+  MPU_InitStruct.LimitAddress     = nc_limit - 1U;
+  MPU_InitStruct.AttributesIndex  = MPU_ATTRIBUTES_NUMBER1;
+  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
   HAL_MPU_Enable(MPU_HFNMI_PRIVDEF);
 }

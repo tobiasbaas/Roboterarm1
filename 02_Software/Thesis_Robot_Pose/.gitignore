@@ -1,3 +1,31 @@
-build
+# STM32-Firmware  |  ergaenzt die .gitignore im Repo-Root
+
+# CMake / Ninja Builds
+build/
+Appli/build/
+FSBL/build/
+*/build/
+.cache/
+compile_commands.json
+
+# Eclipse / CubeIDE Reste
+.metadata/
+.settings/
 mx.scratch
-!.settings
+
+# Signier- und Flash-Artefakte
+*-trusted.bin
+*-trusted.elf
+*-core.bin
+*-rom2.bin
+*-rom2.elf
+stlink_probe.txt
+jlink_probe.txt
+build_appli.log
+
+# Netzwerk-Exporte aus STM32Cube AI Studio
+*.zip
+
+# Der generierte Netzwerkcode unter Appli/AI/generated bleibt im Repo,
+# ohne ihn laesst sich die Firmware nicht bauen. Nur die Rohartefakte
+# des Konverters werden ausgeschlossen (siehe Root-.gitignore).

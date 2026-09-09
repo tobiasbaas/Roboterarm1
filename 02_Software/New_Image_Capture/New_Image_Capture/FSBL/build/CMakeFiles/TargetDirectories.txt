@@ -1,8 +1,0 @@
-C:/Dev/New_Image_Capture/New_Image_Capture/FSBL/build/CMakeFiles/CDC_ACM_FSBL.dir
-C:/Dev/New_Image_Capture/New_Image_Capture/FSBL/build/CMakeFiles/STM32_Drivers.dir
-C:/Dev/New_Image_Capture/New_Image_Capture/FSBL/build/CMakeFiles/usbx.dir
-C:/Dev/New_Image_Capture/New_Image_Capture/FSBL/build/CMakeFiles/STM32_USBPD_Library.dir
-C:/Dev/New_Image_Capture/New_Image_Capture/FSBL/build/CMakeFiles/threadx.dir
-C:/Dev/New_Image_Capture/New_Image_Capture/FSBL/build/CMakeFiles/Camera_Middleware.dir
-C:/Dev/New_Image_Capture/New_Image_Capture/FSBL/build/CMakeFiles/edit_cache.dir
-C:/Dev/New_Image_Capture/New_Image_Capture/FSBL/build/CMakeFiles/rebuild_cache.dir

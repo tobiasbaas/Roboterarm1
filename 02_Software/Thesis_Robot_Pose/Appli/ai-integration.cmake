@@ -30,6 +30,7 @@ set(AI_RUNTIME_SOURCES
     ${AI_NPU_DIR}/ll_aton_reloc_network.c
     ${AI_NPU_DIR}/ll_aton_rt_main.c
     ${AI_NPU_DIR}/ll_aton_runtime.c
+    ${AI_NPU_DIR}/ll_aton_osal_threadx.c
     ${AI_NPU_DIR}/ll_aton_util.c
     ${AI_NPU_DIR}/ll_sw_float.c
     ${AI_NPU_DIR}/ll_sw_integer.c
@@ -84,11 +85,12 @@ target_include_directories(stm32cubemx INTERFACE
 # Required runtime configuration for STM32N6 + ThreadX based LL_ATON integration.
 target_compile_definitions(stm32cubemx INTERFACE
     LL_ATON_PLATFORM=LL_ATON_PLAT_STM32N6
-    LL_ATON_OSAL=LL_ATON_OSAL_BARE_METAL
+    LL_ATON_OSAL=LL_ATON_OSAL_THREADX
     LL_ATON_RT_MODE=LL_ATON_RT_ASYNC
     LL_ATON_SW_FALLBACK=1
     USE_NPU_CACHE=1
     USE_THREADX_AI_RUNTIME
+    APP_HAS_PARALLEL_NETWORKS=0  
 )
 
 # Link ST AI runtime library.

@@ -1,2 +1,0 @@
-Generate Project
-Copying previous project files from C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Pose\.ai\run\run-15 to C:\Dev\AI\Beachlor_Thesis_AI\Edge Export\AICubeStudio\Robot_Pose\.ai\run\run-15\.ai\generate\backup

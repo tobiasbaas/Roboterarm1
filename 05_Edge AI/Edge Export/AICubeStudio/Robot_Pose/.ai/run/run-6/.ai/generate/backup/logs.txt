@@ -1,2 +1,0 @@
-Generate Project
-Copying previous project files from C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-6 to C:\Users\marce\.stm32cubeaistudio\workspace\Robot_Pose\.ai\run\run-6\.ai\generate\backup

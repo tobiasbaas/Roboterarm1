@@ -152,13 +152,13 @@ void SystemClock_Config(void)
     }
   }
 
-  /* Configure HSE + PLL1 for 600 MHz (IC1/2 = 600/1200) */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  /* Configure PLL1 from HSI for 800 MHz CPU (matching ST reference)
+   * PLL1 = HSI(64 MHz) × 25 / 2 = 800 MHz */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_NONE; /* HSI already on */
   RCC_OscInitStruct.PLL1.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL1.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL1.PLLM = 3;
-  RCC_OscInitStruct.PLL1.PLLN = 75;
+  RCC_OscInitStruct.PLL1.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL1.PLLM = 2;
+  RCC_OscInitStruct.PLL1.PLLN = 25;
   RCC_OscInitStruct.PLL1.PLLFractional = 0;
   RCC_OscInitStruct.PLL1.PLLP1 = 1;
   RCC_OscInitStruct.PLL1.PLLP2 = 1;
@@ -462,7 +462,6 @@ static void JumpToApplication(void)
   #define APP_VECTOR_ALT_ADDRESS  (APP_VECTOR_ADDRESS + 0x400UL)
   typedef void (*pFunction)(void);
   static pFunction JumpToApp;
-  uint32_t primask_bit;
   uint32_t app_vector = APP_VECTOR_ADDRESS;
   uint32_t app_msp_primary;
   uint32_t app_reset_primary;
@@ -504,10 +503,10 @@ static void JumpToApplication(void)
       ((g_fsbl_app_reset & 1UL) == 0UL))
   {
     g_fsbl_jump_stage = 0xE001U;
+    Error_Handler(); /* APPLI vector table is invalid — halt, do not jump */
   }
 
-
-  /* 1. Suspend SysTick - Appli will reconfigure it */
+  /* 1. Suspend SysTick — Appli will reconfigure it */
   HAL_SuspendTick();
   g_fsbl_jump_stage = 2U;
 
@@ -517,37 +516,42 @@ static void JumpToApplication(void)
     SCB_DisableICache();
   }
 
-  /* 3. Save and disable interrupts during context switch */
-  primask_bit = __get_PRIMASK();
+  /* 3. Disable the MPU so APPLI's SystemInit and startup run against the
+   *    default memory map; APPLI will call its own MPU_Config() early. */
+  HAL_MPU_Disable();
+
+  /* 4. Disable and clear all pending interrupts. Interrupts stay disabled
+   *    across the jump; APPLI's Reset_Handler and HAL_Init() will re-enable
+   *    them at the right time. */
   __disable_irq();
+  for (uint32_t i = 0U; i < 8U; i++)
+  {
+    NVIC->ICER[i] = 0xFFFFFFFFUL;
+    NVIC->ICPR[i] = 0xFFFFFFFFUL;
+  }
   g_fsbl_jump_stage = 3U;
 
-
-
-  /* 4. Set Vector Table Offset Register (VTOR) to application address */
+  /* 5. Point VTOR at the APPLI vector table. */
   SCB->VTOR = app_vector;
   g_fsbl_jump_stage = 4U;
 
-  /* 5. Read Reset_Handler from application vector table (offset +4) */
+  /* 6. Load the APPLI Reset_Handler into a local before we touch MSP —
+   *    after this point the compiler must not spill locals to the (old)
+   *    stack. */
   JumpToApp = (pFunction)g_fsbl_app_reset;
   g_fsbl_jump_stage = 5U;
 
-  /* 6. ARM v8-M (Cortex-M55): clear MSPLIM BEFORE changing MSP to avoid
-   *    spurious stack overflow faults with the old limit still active */
-  __set_MSPLIM(0x00000000);
-
-  /* 7. Set Main Stack Pointer (MSP) from application vector table (offset +0) */
+  /* 7. Cortex-M55: clear MSPLIM before changing MSP. */
+  __set_MSPLIM(0x00000000UL);
   __set_MSP(g_fsbl_app_msp);
   g_fsbl_jump_stage = 6U;
 
-  /* 8. Memory barriers to ensure all writes complete */
+  /* 8. Barriers: ensure SCB->VTOR and MSP writes are visible before jump. */
   __DSB();
   __ISB();
 
-  /* 9. Restore interrupt state (as per ST reference implementation) */
-  __set_PRIMASK(primask_bit);
-  g_fsbl_jump_stage = 7U;
-  /* 10. Jump to application Reset_Handler */
+  /* 9. Jump. APPLI Reset_Handler re-sets MSP/MSPLIM from its own vector
+   *    table and then calls SystemInit/main. Interrupts remain masked. */
   g_fsbl_jump_stage = 8U;
   JumpToApp();
   g_fsbl_jump_stage = 0xE002U;

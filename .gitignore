@@ -1,68 +1,135 @@
-# ------------------------------------
-# 1. Allgemeine Ignorierungen (OS/Git)
-# ------------------------------------
-# Dateien, die von Betriebssystemen generiert werden
+# =============================================================================
+#  .gitignore  |  Lokalisierung eines Roboterarms mittels Edge-KI
+#  Ziel: schlankes, oeffentliches Repo. Quellcode und Doku ja,
+#        Bilder, Trainingsdaten, Modelle und Build-Artefakte nein.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. Betriebssystem und Editoren
+# -----------------------------------------------------------------------------
 .DS_Store
 Thumbs.db
 desktop.ini
+*~
+*.swp
 
-# Git-Dateien (wird meistens nicht benötigt, da sie sich in .git/ befinden)
-# *.orig
+# VS Code Projektkonfiguration wird BEWUSST mitgeliefert
+# (launch.json, tasks.json, settings.json, c_cpp_properties.json)
+# Nur der lokale Zustand fliegt raus:
+.vscode/ipch/
+.vscode/*.db
 
-# 1. Große Datensätze ignorieren (KI/Training)
+# -----------------------------------------------------------------------------
+# 2. KI-Assistenten und Tool-Caches
+# -----------------------------------------------------------------------------
+.claude/
+**/.claude/
+.cursor/
+.aider*
+CLAUDE.md
+**/CLAUDE.md
+
+# -----------------------------------------------------------------------------
+# 3. Bilddateien (keine Bilder im Repo)
+# -----------------------------------------------------------------------------
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.gif
+*.tif
+*.tiff
+*.webp
+*.ppm
+*.pgm
+*.raw
+*.exr
+*.psd
+*.svg
+
+# Ausnahme: Logos, die KiCad zum Rendern der Schaltplaene braucht
+!03_Hardware/**/HKA_Logo*.png
+!03_Hardware/**/*Logo*/*.png
+
+# -----------------------------------------------------------------------------
+# 4. KI: Trainingsdaten
+# -----------------------------------------------------------------------------
 **/dataset/
-**/pose_dataset/
-**/robot_arm/
+**/datasets/
 **/yolo_dataset/
+**/pose_dataset/
 **/real_dataset/
 **/real_pose_dataset/
 **/real_yolo_dataset/
+**/robot-arm/
+**/robot_arm/
+**/label_studio_import/
+**/winkel_output/
+**/labels_backup*/
+**/labels_before*/
+**/_pdf_pages/
+**/.ultralytics_tmp/
+labels.csv
+**/labels.csv
+
+# -----------------------------------------------------------------------------
+# 5. KI: Modelle, Trainingslaeufe und Exporte
+# -----------------------------------------------------------------------------
+**/Trained_Models/
 **/runs/
+Edge Export/
+**/Edge Export/
 
-# Temporäre Dateien für deine Ausarbeitung (Anpassbar)
-# ----------------------------------------------------
-03_Hardware/**
-!03_Hardware/STM32N6_Thesis_Board/
-!03_Hardware/STM32N6_Thesis_Board/**/*
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.h5
+*.hdf5
+*.pb
+*.npz
+*.ckpt
+*.safetensors
+model_weights/
+checkpoints/
+tensorboard_logs/
 
-02_Software/Image_Capture_Python/dataset/
-05_Edge AI/Training_Scripts/
+# Hinweis: der von STM32Cube AI Studio generierte C-Code unter
+# 02_Software/Thesis_Robot_Pose/Appli/AI/generated/ bleibt im Repo,
+# weil die Firmware sonst nicht baubar ist. Nur die schweren
+# Roh-Artefakte daraus werden ausgeschlossen:
+**/AI/generated/*.onnx
+**/AI/generated/*.raw
+**/AI/generated/*_Q.json
+**/AI/generated/*_c_info_generate.json
+**/AI/generated/network_generate_report.txt
 
-!05_Edge AI/
-!05_Edge AI/**
+# -----------------------------------------------------------------------------
+# 6. Python
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.pyd
+*.egg-info/
+.venv/
+venv/
+env/
+.env
+.ipynb_checkpoints/
 
-# Kapitel 5: diese Ordner weiterhin ignorieren
-05_Edge AI/Training_Scripts/Segmentierung per Blender/dataset/
-05_Edge AI/Training_Scripts/Segmentierung per Blender/pose_dataset/
-05_Edge AI/Training_Scripts/Segmentierung per Blender/robot_arm/
-05_Edge AI/Training_Scripts/Segmentierung per Blender/yolo_dataset/
-05_Edge AI/Training_Scripts/label_studio_import/
-05_Edge AI/Training_Scripts/real_dataset/
-05_Edge AI/Training_Scripts/real_pose_dataset/
-05_Edge AI/Training_Scripts/real_yolo_dataset/
-05_Edge AI/Trained_Models/
-05_Edge AI/runs/
-
-
-
-# -----------------------------------------------------
-# 2. STM32CubeIDE / Eclipse C/C++ (Embedded Code)
-# -----------------------------------------------------
-# Alle Ordner, die Build-Artefakte enthalten
-*/Debug/
-*/Release/
-*/Build/
-buid/
+# -----------------------------------------------------------------------------
+# 7. Embedded: Build-Artefakte
+# -----------------------------------------------------------------------------
+build/
+Build/
+Debug/
+Release/
 .cache/
+compile_commands.json
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
 
-# Generierte Projekt-Metadaten von Eclipse/CubeIDE
-.project
-.cproject
-.settings/
-.launch
-.metadata/
-
-# Ignoriert spezifische Compiler-Outputs
 *.elf
 *.bin
 *.hex
@@ -70,88 +137,84 @@ buid/
 *.o
 *.d
 *.su
+*.a
+*.lib
 *.list
 *.cyclo
-*.mk
-*.lib
-*.a
+*.stldr
 
-
-# -----------------------------------------------------
-# Ergänzungen für STM32CubeIDE / Eclipse
-# -----------------------------------------------------
-
-# MX-spezifische Dateien (Konfigurationstool)
-# Die .ioc Datei MUSST du behalten, aber Logfiles können weg
+# Probe- und Logdateien der Flash-Skripte
+stlink_probe.txt
+jlink_probe.txt
+build_appli.log
 *.log
 *.history
 
-# Falls du mit dem TouchGFX Designer arbeitest (N6 hat oft Displays)
+# -----------------------------------------------------------------------------
+# 8. Eclipse / STM32CubeIDE Reste
+# -----------------------------------------------------------------------------
+.metadata/
+**/.metadata/
+.project
+.cproject
+.launch
+*.pdom
+mx.scratch
+
+# Die .ioc bleibt im Repo, sie ist die Projektquelle fuer CubeMX.
+
+# -----------------------------------------------------------------------------
+# 9. TouchGFX
+# -----------------------------------------------------------------------------
 **/TouchGFX/build/
 **/TouchGFX/generated/
 
-# STM32CubeIDE Metadata (Index-Dateien)
-.metadata/
-*.pdom
-
-# ------------------------------------
-# 3. KiCad (Hardware-Entwicklung)
-# ------------------------------------
-# Backup- und Autosave-Dateien
+# -----------------------------------------------------------------------------
+# 10. KiCad und Altium
+# -----------------------------------------------------------------------------
+*-backups/
+**/backups/
 *.bak
 *-bak
-*.sch-bak
 *.kicad_sch-bak
-*.pcb-bak
 *.kicad_pcb-bak
-*~
-
-# Auto-generierte Dateien (können jederzeit neu erzeugt werden)
-# Standard-Plot- und Gerber-Dateien
-gerbers/
-*.gbr
-*.drl
-*.xln
-*.pdf # Wenn Plot-Dateien als PDF exportiert werden
-
-# BOM (Stückliste)
-*.xml
-*.csv
-
-# KICAD spezifische Backup-Dateien und Logfiles
+*.kicad_prl
 fp-info-cache
 *.dcm.tmp
 *.net.tmp
 *.drc.rpt
-kicad_3dshapes/
+*.erc.rpt
+gerbers/
+*.gbr
+*.gbrjob
+*.drl
+*.xln
 
-# Hardware-Backups und große Archive
+# Altium Zwischenstaende
+*.SchDocPreview
+*.PcbDocPreview
+History/
+Project\ Logs*/
+
+# Referenzdesign MB1940 von ST. Nicht Teil der eigenen Arbeit und
+# frei bei ST verfuegbar, daher nicht im Repo.
+03_Hardware/Nucleo_PCB_FIles/
+
+# -----------------------------------------------------------------------------
+# 11. Archive und Grossdateien
+# -----------------------------------------------------------------------------
 *.zip
 *.7z
 *.rar
+*.tar
+*.tar.gz
+*.xls
+*.xlsx
 
-# ------------------------------------
-# 5. Keras / TensorFlow / Python-Entwicklung
-# ------------------------------------
-# Python Virtual Environments (sehr wichtig!)
-venv/
-.venv/
-env/
-.env/
-
-# Bytecode und Cache-Dateien
-__pycache__/
-*.pyc
-*.pyd
-*.idx
-
-# Generierte Modelle, Checkpoints und Logs
-*.h5
-*.hdf5
-*.tflite
-model_weights/
-checkpoints/
-tensorboard_logs/
-
-# Jupyter Notebook Checkpoints (optional, aber oft nützlich)
-.ipynb_checkpoints/
+# -----------------------------------------------------------------------------
+# 12. Lokale Geheimnisse
+# -----------------------------------------------------------------------------
+*.key
+*.pem
+secrets.*
+.env.local

@@ -336,10 +336,20 @@ if "%PROGRAMMER%"=="STLINK" (
         if not "!ROM2_SIZE!"=="0" (
             set FLASH_CMD=!FLASH_CMD! -d "%APPLI_DIR%\%APPLI_ROM2_BIN%" %APPLI_ROM2_FLASH_ADDR%
         ) else (
-            echo WARNING: ROM2 binary exists but is empty, skipping ROM2 flash.
+            echo.
+            echo !!! CRITICAL WARNING: ROM2 binary is empty — ROM2 will NOT be flashed.
+            echo !!! The APPLI linker places .rodata at %APPLI_ROM2_FLASH_ADDR%. If that
+            echo !!! region is not programmed the APPLI will HardFault on the first
+            echo !!! const/string access (very early in main).
+            echo.
         )
     ) else (
-        echo WARNING: ROM2 binary not found, skipping ROM2 flash.
+        echo.
+        echo !!! CRITICAL WARNING: ROM2 binary not found — ROM2 will NOT be flashed.
+        echo !!! The APPLI linker places .rodata at %APPLI_ROM2_FLASH_ADDR%. If that
+        echo !!! region is not programmed the APPLI will HardFault on the first
+        echo !!! const/string access (very early in main).
+        echo.
     )
 
     call !FLASH_CMD!

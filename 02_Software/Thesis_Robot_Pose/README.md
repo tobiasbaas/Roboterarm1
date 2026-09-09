@@ -4,7 +4,26 @@ Technische Dokumentation fuer den aktuellen Integrationsstand von STM32Cube AI S
 
 ## 1. Status (aktuell)
 
-### 1.0 Wichtigste Änderung (März 2026) — Dual-xSPI (OctaSPI) Aktiviert ✅
+### 1.0 Critical Fix: APPLI Startup Bugs behoben (April 2026) ✅
+
+**Zusammenfassung der drei Bugs und Fixes:**
+
+| # | Bug | Symptom | Fix | Status |
+|---|-----|---------|-----|--------|
+| 1 | HAL_Delay hängt vor ThreadX Start | LED-Blink steckt in Endlosschleife bei HAL_Delay(200) | ThreadX SysTick_Handler mit HAL_IncTick erweitern | ✅ Fixed |
+| 2 | FSBL Sanity-Check fallthrough | Ungültige Vektoren führen zum Jump zu Müll-Adressen | Error_Handler() nach sanity check einfügen | ✅ Fixed |
+| 3 | LCD Framebuffer überschreibt .data/.bss | Globale Variablen corrupted vor ThreadX/AI init | LCD_FB_ADDRESS von 0x34000000 zu 0x34400000 verschieben | ✅ Fixed |
+
+**Betroffene Dateien:**
+- `Appli/Core/Src/tx_initialize_low_level.S` — Zeile ~631: `BL HAL_IncTick` vor `BL _tx_timer_interrupt`
+- `FSBL/Core/Src/main.c` — Zeile ~507: `Error_Handler();` nach `g_fsbl_jump_stage = 0xE001U;`
+- `Appli/Core/Src/main.c` — Zeile 42: `#define LCD_FB_ADDRESS 0x34400000U` (statt 0x34000000U)
+
+**Details:** Siehe Abschnitt 1.3 unten.
+
+---
+
+### 1.0a Wichtigste Änderung (März 2026) — Dual-xSPI (OctaSPI) Aktiviert ✅
 
 **Problem behoben:** Das Projekt wurde auf Dual-xSPI umgestellt, um die 5,88 MB großen Modelle (Pose + Segmentation) optimal zu verteilen:
 
@@ -121,6 +140,112 @@ IC3 ist ein dedizierter PLL-Divider — kein Kalibrierungsvorgang, BUSY bleibt n
 **Hinweis:** XSPI1 (HyperRAM) bleibt auf HCLK — der Boot ROM konfiguriert XSPI1 nicht, daher tritt der Kalibrierungseffekt dort nicht auf.
 
 **Betroffene Datei:** `FSBL/Core/Src/stm32n6xx_hal_msp.c` — `HAL_XSPI_MspInit()`, XSPI2-Zweig
+
+---
+
+### 1.3 Appli Startup Fixes (April 2026) ✅
+
+#### Fix 1 — HAL_Delay hängt mit ThreadX SysTick_Handler
+
+**Problem:** Mit `USE_THREADX_AI_RUNTIME` definiert, wird `stm32n6xx_it.c`s `SysTick_Handler` (der `HAL_IncTick()` aufruft) durch `#ifndef USE_THREADX_AI_RUNTIME` ausgeschlossen. Stattdessen gewinnt `tx_initialize_low_level.S`s ThreadX `SysTick_Handler` die Link-Auflösung. Dieser ThreadX-Handler ruft nur `_tx_timer_interrupt` auf, **nicht** `HAL_IncTick()`. Resultat: `uwTick` bleibt bei 0. Im LED-Blink-Test (Zeile 174-179 von `Appli/Core/Src/main.c`) schlägt `HAL_Delay(200)` sofort fehl:
+```c
+for (uint32_t i = 0; i < 4; i++) {
+  HAL_GPIO_TogglePin(GPIOO, GPIO_PIN_1);
+  HAL_Delay(200);  // ← ckeckt: (0 - 0) >= 200 ? Nein → Endlosschleife!
+}
+```
+
+Dies geschieht **vor** `MX_ThreadX_Init()`, daher ist ThreadX noch nicht initialisiert. Appli sieht aus wie nie gestartet.
+
+**Lösung:** `BL HAL_IncTick` vor `BL _tx_timer_interrupt` in `tx_initialize_low_level.S` hinzufügen (beide ARMCC und GCC Abschnitte):
+```asm
+BL      HAL_IncTick                         // Keep HAL tick alive
+BL      _tx_timer_interrupt
+```
+
+**Betroffene Datei:** `Appli/Core/Src/tx_initialize_low_level.S` — SysTick_Handler (beide Abschnitte)
+
+---
+
+#### Fix 2 — FSBL JumpToApplication Sanity Check fehlt Error_Handler()
+
+**Problem:** Die Sanity Check (Zeile 502-507 in `FSBL/Core/Src/main.c`) detectiert ungültige Vektor-Tabelle-Werte (siehe unten) und setzt `g_fsbl_jump_stage = 0xE001U`, aber es folgt **kein `return`** oder `Error_Handler()` — fällt durch in Jump mit Müll-Adressen.
+
+```c
+if ((g_fsbl_app_msp < 0x34000000UL) || (g_fsbl_app_msp > 0x34200000UL) ||
+    (g_fsbl_app_reset < 0x70000001UL) || (g_fsbl_app_reset > 0x70400001UL) ||
+    ((g_fsbl_app_reset & 1UL) == 0UL)) {
+  g_fsbl_jump_stage = 0xE001U;
+  // ← KEINE RETURN! BUG
+}
+```
+
+**Lösung:** `Error_Handler()` Aufruf hinzufügen:
+```c
+g_fsbl_jump_stage = 0xE001U;
+Error_Handler(); /* APPLI vector table is invalid — halt, do not jump */
+```
+
+**Betroffene Datei:** `FSBL/Core/Src/main.c` — `JumpToApplication()`, Zeile ~507
+
+---
+
+#### Fix 3 — LCD Framebuffer überschreibt .data/.bss Globals
+
+**Problem:** `LCD_FB_ADDRESS` war auf `0x34000000U` definiert — die gleiche Adresse wie `.data` im Linker-Skript. Der Framebuffer-Fill (Zeile 199-202 von `Appli/Core/Src/main.c`) schreibt `640×480×2 = 614,400 Byte`:
+```c
+uint16_t *fb = (uint16_t *)LCD_FB_ADDRESS;
+for (uint32_t i = 0; i < LCD_WIDTH * LCD_HEIGHT; i++)
+  fb[i] = 0x001F; /* Blue */
+```
+
+Dies überschreibt alle globalen Variablen (`.data` = 808 Byte, `.bss` folgt direkt nach). ThreadX und AI runtime state sind corrupted, bevor sie initialisiert sind.
+
+**Lösung:** `LCD_FB_ADDRESS` nach `0x34400000U` (AXISRAM3) verschieben:
+```c
+#define LCD_FB_ADDRESS        0x34400000U  /* AXISRAM3 — avoids overlap with .data/.bss at 0x34000000 */
+```
+
+AXISRAM3 ist bereits aktiviert durch `HAL_RAMCFG_EnableAXISRAM(&hramcfg_SRAM3)` (Zeile 194) und `MX_LTDC_Init` benutzt `LCD_FB_ADDRESS` direkt für `pLayerCfg.FBStartAdress`, also ist kein weiterer Change nötig.
+
+**Betroffene Datei:** `Appli/Core/Src/main.c` — `#define LCD_FB_ADDRESS`
+
+---
+
+#### Sanity Check Debugging
+
+Falls der Code weiterhin bei der Sanity Check stehen bleibt (und `Error_Handler()` auslöst), liegt ein ungültiger Vektor-Tabelle vor. Die Check prüft:
+
+| Bedingung | Sollte sein | Wenn fehl | Ursache |
+|-----------|------------|-----------|---------|
+| `g_fsbl_app_msp` | `[0x34000000, 0x34200000]` | MSP außerhalb RAM | .isr_vector[0] nicht gelesen |
+| `g_fsbl_app_reset` | `[0x70000001, 0x70400001]` | Reset-Handler außerhalb XiP | .isr_vector[1] nicht gelesen |
+| `g_fsbl_app_reset & 1` | `!= 0` (Thumb-Bit) | Reset-Handler ist ARM32, nicht Thumb | Linker-Fehler |
+
+**Debugging-Schritte:**
+1. **ELF-Vektor-Tabelle prüfen:**
+   ```bash
+   arm-none-eabi-objdump -h build/Appli/CDC_ACM_Appli.elf | grep -A5 isr_vector
+   arm-none-eabi-readelf -x .isr_vector build/Appli/CDC_ACM_Appli.elf
+   ```
+   Sollte zeigen:
+   - Offset 0: MSP = 0x34200000 oder etwas näher 0x34000000
+   - Offset 4: Reset_Handler = 0x70xxxxxx mit Thumb-Bit (ungerade Adresse)
+
+2. **Nach dem Flash — Laufzeit-Debugging:**
+   FSBL setzt `g_fsbl_app_msp` und `g_fsbl_app_reset` auf Werte aus der geflashten Binärdatei (nicht dem ELF). Mit einem Debugger oder Terminalausgabe vor dem Jump prüfen:
+   ```c
+   // In JumpToApplication(), vor dem Jump
+   printf("app_msp = 0x%08lX (expect [0x34000000..0x34200000])\n", app_msp_primary);
+   printf("app_reset = 0x%08lX (expect [0x70000001..0x70400001], Thumb=%d)\n", 
+          app_reset_primary, app_reset_primary & 1);
+   ```
+
+3. **Häufige Fehler:**
+   - Flash wurde nicht programmiert → alle Bytes sind 0xFF → Vector-Tabelle ungültig
+   - Signing-Tool hat Header versatz falsch berechnet → Payload startet nicht bei 0x70100400
+   - Linker-Skript platziert .isr_vector nicht richtig in ROM
+   - Endianness-Fehler (sollte nicht vorkommen, aber: MSP/Reset als uint32_t lesen, nicht als bytes)
 
 ---
 

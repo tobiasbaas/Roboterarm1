@@ -40,7 +40,7 @@ wird geregelt über den Scheduler.
 #define CMD_THREAD_PRIORITY       12
 
 //Initialisierung des verbauten LCD-Displays
-#define LCD_FB_ADDRESS            0x34000000U
+#define LCD_FB_ADDRESS            0x34400000U  /* AXISRAM3 — avoids .data/.bss at 0x34000000 */
 #define LCD_WIDTH                 640
 #define LCD_HEIGHT                480
 #define LCD_BPP                   2
@@ -72,7 +72,7 @@ wird geregelt über den Scheduler.
 #define AI_MODEL_SWITCH_DEBOUNCE_TICKS 200
 
 //Edge AI Display Definierungen
-#define APP_AI_DISPLAY_FB_ADDR    0x34000000U
+#define APP_AI_DISPLAY_FB_ADDR    0x34400000U  /* AXISRAM3 — avoids .data/.bss at 0x34000000 */
 #define APP_AI_DISPLAY_WIDTH      640
 #define APP_AI_DISPLAY_HEIGHT     480
 /* USER CODE END PD */

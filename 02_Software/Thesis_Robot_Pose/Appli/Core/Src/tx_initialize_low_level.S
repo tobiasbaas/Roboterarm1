@@ -211,6 +211,7 @@ SysTick_Handler:
 #if (defined(TX_ENABLE_EXECUTION_CHANGE_NOTIFY) || defined(TX_EXECUTION_PROFILE_ENABLE))
     BL      _tx_execution_isr_enter             // Call the ISR enter function
 #endif
+    BL      HAL_IncTick                         // Keep HAL tick alive (needed by HAL_Delay before ThreadX starts)
     BL      _tx_timer_interrupt
 #if (defined(TX_ENABLE_EXECUTION_CHANGE_NOTIFY) || defined(TX_EXECUTION_PROFILE_ENABLE))
     BL      _tx_execution_isr_exit              // Call the ISR exit function
@@ -627,6 +628,7 @@ SysTick_Handler:
 #if (defined(TX_ENABLE_EXECUTION_CHANGE_NOTIFY) || defined(TX_EXECUTION_PROFILE_ENABLE))
     BL      _tx_execution_isr_enter             // Call the ISR enter function
 #endif
+    BL      HAL_IncTick                         // Keep HAL tick alive (needed by HAL_Delay before ThreadX starts)
     BL      _tx_timer_interrupt
 #if (defined(TX_ENABLE_EXECUTION_CHANGE_NOTIFY) || defined(TX_EXECUTION_PROFILE_ENABLE))
     BL      _tx_execution_isr_exit              // Call the ISR exit function
