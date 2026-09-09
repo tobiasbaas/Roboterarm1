@@ -25,6 +25,7 @@ desktop.ini
 .claude/
 **/.claude/
 .cursor/
+Claude outputs/
 .aider*
 CLAUDE.md
 **/CLAUDE.md
