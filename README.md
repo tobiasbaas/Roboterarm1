@@ -105,7 +105,7 @@ conda activate Euer_Env_Name
 ```
 
 ```bash
-pip install pyserial numpy pillow ultralytics onnx onnxruntime opencv-python
+pip install ultralytics==8.4.146 torch==2.14.0 onnx==1.22.0 onnxruntime==1.29.0 opencv-python==5.0.0.93 numpy==2.4.6 pillow==12.3.0 pandas==3.0.5 matplotlib==3.11.1 pyserial==3.5 notebook==7.6.2 label-studio==1.23.0
 ```
 
 Zusätzlich benötigt ihr für die Inbetriebnahme des STM32N6 Boards die folgende Software 
