@@ -1,740 +1,683 @@
-# Thesis_Robot_Pose
+# Thesis_Robot_Pose: Firmware mit Edge-KI auf dem STM32N6570-DK
 
-Technische Dokumentation fuer den aktuellen Integrationsstand von STM32Cube AI Studio Code in das CMake-Projekt auf STM32N6570-DK.
+Diese Firmware nimmt mit der Bordkamera ein Live-Bild auf, lässt darauf ein
+YOLO-Modell auf der NPU des STM32N6 rechnen und zeichnet das Ergebnis direkt in den
+Framebuffer des Displays. Alles läuft auf dem Mikrocontroller, ohne PC.
 
-## 1. Status (aktuell)
-
-### 1.0 Critical Fix: APPLI Startup Bugs behoben (April 2026) ✅
-
-**Zusammenfassung der drei Bugs und Fixes:**
-
-| # | Bug | Symptom | Fix | Status |
-|---|-----|---------|-----|--------|
-| 1 | HAL_Delay hängt vor ThreadX Start | LED-Blink steckt in Endlosschleife bei HAL_Delay(200) | ThreadX SysTick_Handler mit HAL_IncTick erweitern | ✅ Fixed |
-| 2 | FSBL Sanity-Check fallthrough | Ungültige Vektoren führen zum Jump zu Müll-Adressen | Error_Handler() nach sanity check einfügen | ✅ Fixed |
-| 3 | LCD Framebuffer überschreibt .data/.bss | Globale Variablen corrupted vor ThreadX/AI init | LCD_FB_ADDRESS von 0x34000000 zu 0x34400000 verschieben | ✅ Fixed |
-
-**Betroffene Dateien:**
-- `Appli/Core/Src/tx_initialize_low_level.S` — Zeile ~631: `BL HAL_IncTick` vor `BL _tx_timer_interrupt`
-- `FSBL/Core/Src/main.c` — Zeile ~507: `Error_Handler();` nach `g_fsbl_jump_stage = 0xE001U;`
-- `Appli/Core/Src/main.c` — Zeile 42: `#define LCD_FB_ADDRESS 0x34400000U` (statt 0x34000000U)
-
-**Details:** Siehe Abschnitt 1.3 unten.
+Zwei Modelle sind gleichzeitig eingebunden und lassen sich per Tastendruck umschalten:
+**Pose** (Keypoints des Roboterarms) und **Segmentierung** (Masken der fünf Armsektionen).
 
 ---
 
-### 1.0a Wichtigste Änderung (März 2026) — Dual-xSPI (OctaSPI) Aktiviert ✅
+## Inhalt
 
-**Problem behoben:** Das Projekt wurde auf Dual-xSPI umgestellt, um die 5,88 MB großen Modelle (Pose + Segmentation) optimal zu verteilen:
-
-| Aspekt | Alt | Neu | Status |
-|--------|-----|-----|--------|
-| Linker-Skript | `STM32N657XX_ROMxspi1.ld` | `STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld` | ✅ |
-| Flash-Layout | 1 xSPI (2047K) | 2 xSPI: ROM (511K) + ROM2 (2047K) | ✅ |
-| ROM Auslastung | 84,46% | **27,84%** | ✅ FIXED |
-| ROM2 Auslastung | - | **46,76%** | ✅ NEW |
-| OctaSPI | ❌ Nicht genutzt | ✅ Vollständig genutzt | ✅ |
-
-**Memory Layout nach Fix:**
-- Appli Code (.text) → xSPI1/ROM (511K, 27,84% used)
-- Modellgewichte (.rodata) → xSPI2/ROM2 (2047K, 46,76% used)
-- Platz für Wachstum vorhanden: ~1100K in ROM2
-
-Die folgenden Punkte sind umgesetzt und erfolgreich gebaut:
-
-1. Import des von STM32Cube AI Studio erzeugten Netzwerk-Codes (run-13 Export).
-2. Import der ST AI Runtime und NPU Low-Level Runtime.
-3. Umstellung der Appli-Linkerstrategie auf externes **Dual-xSPI** mit getrennten ROM-Baenken.
-4. Nicht-blockierende AI-Ausfuehrung in eigenem ThreadX-Thread.
-5. Build von CDC_ACM_Appli ist erfolgreich.
-6. Zwei AI-Modelle (Pose + Segmentierung) sind parallel eingebunden und zur Laufzeit umschaltbar.
-
-Aktuelle Memory-Auslastung (nach Linker-Fix):
-
-- ROM: 27.84% (145.7 KB / 511 KB)
-- ROM2: 46.76% (980.1 KB / 2047 KB)
-- RAM: 0.53% (11.2 KB / 2048 KB)
-- EXTRAM: 0.00%
-
-### 1.1 FSBL JumpToApplication Fix (März 2026) ✅
-
-**Problem behoben:** Die `JumpToApplication()`-Funktion in der FSBL war nach Standard-Cortex-M-Muster implementiert, hatte aber drei kritische Fehler für den STM32N6 (Cortex-M55 / ARM v8.1-M):
-
-| Problem | Alt | Neu | Begründung |
-|---------|-----|-----|------------|
-| `HAL_RCC_DeInit()` vor Jump | Ja | **Entfernt** | Riskiert Verlust des xSPI2 Memory-Mapped-Modus — Appli liegt bei 0x70100400 in XSPI2 |
-| `HAL_DeInit()` vor Jump | Ja | **Entfernt** | Unnötig; Appli macht eigenes Init in `SystemClock_Config()` |
-| `__set_MSPLIM(0)` | Fehlend | **Hinzugefügt** | Cortex-M55 (v8.1-M) Pflicht: altes MSPLIM vor `__set_MSP()` löschen, sonst sofortiger Stack-Overflow-Fault |
-| I-Cache deaktivieren | Fehlend | **Hinzugefügt** | Appli soll mit sauberem Cache-Zustand starten |
-| SysTick | `CTRL/LOAD/VAL = 0` hart | `HAL_SuspendTick()` | ST-Standard, saubereres Suspend |
-
-**Technischer Hintergrund:** Die FSBL läuft aus AXISRAM2 (0x34180400), nicht aus XSPI2. `HAL_RCC_DeInit()` hätte den XSPI2-Peripheral-Clock zurücksetzen können — danach wäre der CPU-Fetch von 0x70100400 mit einem HardFault gescheitert. Die Appli konfiguriert Clocks vollständig in ihrer eigenen `SystemClock_Config()` neu.
-
-**Betroffene Datei:** `FSBL/Core/Src/main.c` — Funktion `JumpToApplication()` (Zeile ~205)
+1. [Was man sieht, wenn es läuft](#1-was-man-sieht-wenn-es-läuft)
+2. [Schnellstart: bauen, signieren, flashen](#2-schnellstart-bauen-signieren-flashen)
+3. [Das Grundprinzip: zwei Programme, nicht eins](#3-das-grundprinzip-zwei-programme-nicht-eins)
+4. [Speicherlayout](#4-speicherlayout)
+5. [Laufzeitarchitektur: die drei Threads](#5-laufzeitarchitektur-die-drei-threads)
+6. [Der KI-Teil im Detail](#6-der-ki-teil-im-detail)
+7. [Bedienung am Board](#7-bedienung-am-board)
+8. [USB-CDC-Protokoll](#8-usb-cdc-protokoll)
+9. [Dateiübersicht](#9-dateiübersicht)
+10. [Ein neues Modell einbinden](#10-ein-neues-modell-einbinden)
+11. [Warum der Code an einigen Stellen ungewöhnlich aussieht](#11-warum-der-code-an-einigen-stellen-ungewöhnlich-aussieht)
+12. [Troubleshooting](#12-troubleshooting)
+13. [Offene Punkte](#13-offene-punkte)
 
 ---
 
-### 1.2 FSBL XSPI-Initialisierung (XiP-Vorbereitung für den Sprung) — April 2026 ✅
+## 1. Was man sieht, wenn es läuft
 
-Damit der Sprung zur Appli gelingt, muss die FSBL XSPI2 (NOR Flash, 0x70000000) und XSPI1 (HyperRAM, 0x90000000) korrekt in den Memory-Mapped-Modus versetzen. Dabei waren vier kritische Probleme zu lösen:
+Nach dem Einschalten zeigt das Display das Live-Bild der Kamera in 640 x 480. Darüber
+liegt die Ausgabe des aktiven Modells:
 
-#### Fix 1 — uwTick bleibt 0 (HAL_Delay/Timeout kaputt)
+* **Pose-Modus:** die erkannten Keypoints als farbige Punkte
+* **Segmentierungs-Modus:** die erkannten Masken als halbtransparente Farbflächen
 
-**Problem:** `HAL_TIM_PeriodElapsedCallback` war nicht überschrieben. HAL rief den leeren weak-Handler auf → `uwTick` wurde nie inkrementiert → alle HAL-Timeouts schlugen nach 0ms fehl.
+Links oben sitzt ein kleiner Statusmarker. Blau bedeutet Pose, Grün bedeutet
+Segmentierung. Ein rot blinkendes Feld daneben zeigt, dass gerade eine Inferenz läuft.
+Zusätzlich blinkt LED1 (grün) bei jeder Inferenz, LED2 (rot) leuchtet im
+Segmentierungs-Modus.
 
-**Lösung:** Starke Überschreibung in `FSBL/Core/Src/main.c`:
-```c
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  if (htim->Instance == TIM6) { HAL_IncTick(); }
-}
-```
+Der Taster **USER1 (B2)** schaltet zwischen den beiden Modellen um.
 
-**Betroffene Datei:** `FSBL/Core/Src/main.c`
-
----
-
-#### Fix 2 — XSPIM (IO-Manager) nicht konfiguriert
-
-**Problem:** CubeMX generiert `MX_XSPI_NOR_Init()` und `MX_XSPI_RAM_Init()` ohne `HAL_XSPIM_Config()`-Aufruf. Der XSPI IO-Manager (XSPIM) routet beide XSPI-Controller auf die GPIO-Ports. Ohne XSPIM-Konfiguration: keine Memory-Mapped-Kommunikation.
-
-**Lösung:** Starke Überschreibungen in `FSBL/Core/Src/main.c` — beide Funktionen rufen zusätzlich `HAL_XSPIM_Config()` mit den Board-spezifischen Port-Zuweisungen auf:
-- XSPI2 (NOR Flash): `IOPort = HAL_XSPIM_IOPORT_2` (GPION), `nCSOverride = NCS1`
-- XSPI1 (HyperRAM): `IOPort = HAL_XSPIM_IOPORT_1` (GPIOP/GPIOO), `nCSOverride = NCS1`
-
-**Betroffene Datei:** `FSBL/Core/Src/main.c` — `MX_XSPI_NOR_Init()` und `MX_XSPI_RAM_Init()`
+Hardware: STM32N6570-DK mit Kamera IMX335 und Display RK050HR18.
 
 ---
 
-#### Fix 3 — Boot ROM lässt XSPI2 in DOPI Memory-Mapped-Modus (BUSY=1 permanent)
+## 2. Schnellstart: bauen, signieren, flashen
 
-**Problem:** Der Boot ROM konfiguriert XSPI2 in den OPI DTR Memory-Mapped-Modus zum Lesen des FSBL-Images. Im Memory-Mapped-Modus ist BUSY auf dem STM32N6 **permanent 1**. `HAL_XSPI_Init()` wartet auf BUSY=0 → 5-Sekunden-Timeout. Das BSP versucht dann, mit dem Flash in SPI-Modus zu kommunizieren — der Flash ist aber noch in DOPI → kein Antwort → hängt in `HAL_Receive`.
+### Voraussetzungen
 
-**Lösung:** Neue Funktion `FSBL_NOR_PreReset()` in `FSBL/Core/Src/main.c`, die **vor** `BSP_XSPI_NOR_Init()` aufgerufen wird:
-1. XSPI2 per RCC zwangsweise zurücksetzen (`FORCE_RESET` + `RELEAHSE_RESET`) → löscht BUSY und alle Register
-2. XSPI2 minimal initialisieren (`HAL_XSPI_Init` + `HAL_XSPIM_Config`)
-3. OPI DTR Reset Enable (0x6699) + Reset Memory (0x9966) an den Flash senden
-4. 15 ms warten (tRST des MX66UW1G45G)
+| Werkzeug | Wofür |
+|----------|-------|
+| VS Code mit der STM32-Erweiterung | Build-Integration, Debugger |
+| STM32CubeCLT | `arm-none-eabi-gcc`, `objcopy`, GDB-Server, CMake, Ninja, SVD-Dateien |
+| STM32CubeProgrammer | `STM32_SigningTool_CLI.exe` und der External Loader |
+| STM32CubeMX (optional) | nur wenn die `.ioc` geändert wird |
 
-Der Flash ist danach wieder im SPI-Modus. `BSP_XSPI_NOR_Init()` kann dann normal mit dem Flash kommunizieren.
+STM32CubeIDE wird **nicht** gebraucht. Der Pfad zur CubeIDE in `sign_binaries.bat` ist
+nur ein Fallback für den Fall, dass kein CMake-Build-Ordner gefunden wird.
 
-**Betroffene Datei:** `FSBL/Core/Src/main.c` — neue Funktion `FSBL_NOR_PreReset()`, aufgerufen am Anfang von `FSBL_XSPI_Init()`
+### Board vorbereiten
 
----
+BOOT0 und BOOT1 auf **Low** setzen. Das ist der Flash-Mode und die bevorzugte
+Betriebsart.
 
-#### Fix 4 — XSPI2-Taktquelle HCLK löst langen Kalibrierungsvorgang aus
+### Der eine Befehl
 
-**Problem:** CubeMX setzt `RCC_XSPI2CLKSOURCE_HCLK` für XSPI2. Auf dem STM32N6 löst die **erste** Konfiguration von XSPI2 auf die HCLK-Quelle einen internen Clock-Kalibrierungsvorgang aus, der BUSY **erneut** für >5 Sekunden auf 1 hält — auch nach dem RCC-Reset aus Fix 3. Ergebnis: `FSBL_NOR_PreReset()`s `HAL_XSPI_Init()` lief in den Timeout, gab `HAL_TIMEOUT` zurück, die Funktion returnierte früh → OPI DTR Reset wurde **nie gesendet** → BSP schlug weiter fehl.
-
-**Lösung:** In `FSBL/Core/Src/stm32n6xx_hal_msp.c` XSPI2-Taktquelle auf IC3 = PLL1/6 = 200 MHz umgestellt (wie beide ST-Referenzprojekte VENC_USB und FSBL_Modes XIP):
-
-```c
-PeriphClkInitStruct.PeriphClockSelection        = RCC_PERIPHCLK_XSPI2;
-PeriphClkInitStruct.Xspi2ClockSelection         = RCC_XSPI2CLKSOURCE_IC3;
-PeriphClkInitStruct.ICSelection[RCC_IC3].ClockSelection = RCC_ICCLKSOURCE_PLL1;
-PeriphClkInitStruct.ICSelection[RCC_IC3].ClockDivider   = 6;  /* 1200 MHz / 6 = 200 MHz */
-```
-
-IC3 ist ein dedizierter PLL-Divider — kein Kalibrierungsvorgang, BUSY bleibt nach dem RCC-Reset auf 0. `HAL_XSPI_Init()` kehrt sofort zurück, `FSBL_NOR_PreReset()` sendet den Reset erfolgreich.
-
-**Hinweis:** XSPI1 (HyperRAM) bleibt auf HCLK — der Boot ROM konfiguriert XSPI1 nicht, daher tritt der Kalibrierungseffekt dort nicht auf.
-
-**Betroffene Datei:** `FSBL/Core/Src/stm32n6xx_hal_msp.c` — `HAL_XSPI_MspInit()`, XSPI2-Zweig
-
----
-
-### 1.3 Appli Startup Fixes (April 2026) ✅
-
-#### Fix 1 — HAL_Delay hängt mit ThreadX SysTick_Handler
-
-**Problem:** Mit `USE_THREADX_AI_RUNTIME` definiert, wird `stm32n6xx_it.c`s `SysTick_Handler` (der `HAL_IncTick()` aufruft) durch `#ifndef USE_THREADX_AI_RUNTIME` ausgeschlossen. Stattdessen gewinnt `tx_initialize_low_level.S`s ThreadX `SysTick_Handler` die Link-Auflösung. Dieser ThreadX-Handler ruft nur `_tx_timer_interrupt` auf, **nicht** `HAL_IncTick()`. Resultat: `uwTick` bleibt bei 0. Im LED-Blink-Test (Zeile 174-179 von `Appli/Core/Src/main.c`) schlägt `HAL_Delay(200)` sofort fehl:
-```c
-for (uint32_t i = 0; i < 4; i++) {
-  HAL_GPIO_TogglePin(GPIOO, GPIO_PIN_1);
-  HAL_Delay(200);  // ← ckeckt: (0 - 0) >= 200 ? Nein → Endlosschleife!
-}
-```
-
-Dies geschieht **vor** `MX_ThreadX_Init()`, daher ist ThreadX noch nicht initialisiert. Appli sieht aus wie nie gestartet.
-
-**Lösung:** `BL HAL_IncTick` vor `BL _tx_timer_interrupt` in `tx_initialize_low_level.S` hinzufügen (beide ARMCC und GCC Abschnitte):
-```asm
-BL      HAL_IncTick                         // Keep HAL tick alive
-BL      _tx_timer_interrupt
-```
-
-**Betroffene Datei:** `Appli/Core/Src/tx_initialize_low_level.S` — SysTick_Handler (beide Abschnitte)
-
----
-
-#### Fix 2 — FSBL JumpToApplication Sanity Check fehlt Error_Handler()
-
-**Problem:** Die Sanity Check (Zeile 502-507 in `FSBL/Core/Src/main.c`) detectiert ungültige Vektor-Tabelle-Werte (siehe unten) und setzt `g_fsbl_jump_stage = 0xE001U`, aber es folgt **kein `return`** oder `Error_Handler()` — fällt durch in Jump mit Müll-Adressen.
-
-```c
-if ((g_fsbl_app_msp < 0x34000000UL) || (g_fsbl_app_msp > 0x34200000UL) ||
-    (g_fsbl_app_reset < 0x70000001UL) || (g_fsbl_app_reset > 0x70400001UL) ||
-    ((g_fsbl_app_reset & 1UL) == 0UL)) {
-  g_fsbl_jump_stage = 0xE001U;
-  // ← KEINE RETURN! BUG
-}
-```
-
-**Lösung:** `Error_Handler()` Aufruf hinzufügen:
-```c
-g_fsbl_jump_stage = 0xE001U;
-Error_Handler(); /* APPLI vector table is invalid — halt, do not jump */
-```
-
-**Betroffene Datei:** `FSBL/Core/Src/main.c` — `JumpToApplication()`, Zeile ~507
-
----
-
-#### Fix 3 — LCD Framebuffer überschreibt .data/.bss Globals
-
-**Problem:** `LCD_FB_ADDRESS` war auf `0x34000000U` definiert — die gleiche Adresse wie `.data` im Linker-Skript. Der Framebuffer-Fill (Zeile 199-202 von `Appli/Core/Src/main.c`) schreibt `640×480×2 = 614,400 Byte`:
-```c
-uint16_t *fb = (uint16_t *)LCD_FB_ADDRESS;
-for (uint32_t i = 0; i < LCD_WIDTH * LCD_HEIGHT; i++)
-  fb[i] = 0x001F; /* Blue */
-```
-
-Dies überschreibt alle globalen Variablen (`.data` = 808 Byte, `.bss` folgt direkt nach). ThreadX und AI runtime state sind corrupted, bevor sie initialisiert sind.
-
-**Lösung:** `LCD_FB_ADDRESS` nach `0x34400000U` (AXISRAM3) verschieben:
-```c
-#define LCD_FB_ADDRESS        0x34400000U  /* AXISRAM3 — avoids overlap with .data/.bss at 0x34000000 */
-```
-
-AXISRAM3 ist bereits aktiviert durch `HAL_RAMCFG_EnableAXISRAM(&hramcfg_SRAM3)` (Zeile 194) und `MX_LTDC_Init` benutzt `LCD_FB_ADDRESS` direkt für `pLayerCfg.FBStartAdress`, also ist kein weiterer Change nötig.
-
-**Betroffene Datei:** `Appli/Core/Src/main.c` — `#define LCD_FB_ADDRESS`
-
----
-
-#### Sanity Check Debugging
-
-Falls der Code weiterhin bei der Sanity Check stehen bleibt (und `Error_Handler()` auslöst), liegt ein ungültiger Vektor-Tabelle vor. Die Check prüft:
-
-| Bedingung | Sollte sein | Wenn fehl | Ursache |
-|-----------|------------|-----------|---------|
-| `g_fsbl_app_msp` | `[0x34000000, 0x34200000]` | MSP außerhalb RAM | .isr_vector[0] nicht gelesen |
-| `g_fsbl_app_reset` | `[0x70000001, 0x70400001]` | Reset-Handler außerhalb XiP | .isr_vector[1] nicht gelesen |
-| `g_fsbl_app_reset & 1` | `!= 0` (Thumb-Bit) | Reset-Handler ist ARM32, nicht Thumb | Linker-Fehler |
-
-**Debugging-Schritte:**
-1. **ELF-Vektor-Tabelle prüfen:**
-   ```bash
-   arm-none-eabi-objdump -h build/Appli/CDC_ACM_Appli.elf | grep -A5 isr_vector
-   arm-none-eabi-readelf -x .isr_vector build/Appli/CDC_ACM_Appli.elf
-   ```
-   Sollte zeigen:
-   - Offset 0: MSP = 0x34200000 oder etwas näher 0x34000000
-   - Offset 4: Reset_Handler = 0x70xxxxxx mit Thumb-Bit (ungerade Adresse)
-
-2. **Nach dem Flash — Laufzeit-Debugging:**
-   FSBL setzt `g_fsbl_app_msp` und `g_fsbl_app_reset` auf Werte aus der geflashten Binärdatei (nicht dem ELF). Mit einem Debugger oder Terminalausgabe vor dem Jump prüfen:
-   ```c
-   // In JumpToApplication(), vor dem Jump
-   printf("app_msp = 0x%08lX (expect [0x34000000..0x34200000])\n", app_msp_primary);
-   printf("app_reset = 0x%08lX (expect [0x70000001..0x70400001], Thumb=%d)\n", 
-          app_reset_primary, app_reset_primary & 1);
-   ```
-
-3. **Häufige Fehler:**
-   - Flash wurde nicht programmiert → alle Bytes sind 0xFF → Vector-Tabelle ungültig
-   - Signing-Tool hat Header versatz falsch berechnet → Payload startet nicht bei 0x70100400
-   - Linker-Skript platziert .isr_vector nicht richtig in ROM
-   - Endianness-Fehler (sollte nicht vorkommen, aber: MSP/Reset als uint32_t lesen, nicht als bytes)
-
----
-
-## 2. Wichtigste Aenderungen
-
-### 2.1 AI Code-Import
-
-Aus dem Exportordner wurden folgende Bereiche eingebunden:
-
-- Appli/AI/App: Integrations- und Init-Code
-- Appli/AI/generated: Netzwerkcode (network.c, Header, Blob-Dateien)
-- Middlewares/ST/AI: ST AI Runtime, NPU Runtime, statische Runtime-Library
-
-### 2.2 Build-Integration
-
-Die AI-Integration ist bewusst getrennt von CubeMX-Dateien:
-
-- Appli/CMakeLists.txt bindet zusaetzlich ai-integration.cmake ein.
-- Appli/ai-integration.cmake verwaltet:
-  - AI Quellen
-  - Include-Pfade
-  - Compile-Defines fuer LL_ATON
-  - Link zur NetworkRuntime1100_CM55_GCC.a
-  - ThreadX Quellen fuer den Appli-Kontext
-
-### 2.3 FSBL XSPI-Init-Kette — Übersicht aller Änderungen
-
-Die vollständige Init-Kette in `FSBL_XSPI_Init()` (aufgerufen aus FSBL `main()`):
-
-```
-SystemInit()
-  └─ RCC-Reset von XSPI2 + XSPIM (system_stm32n6xx_fsbl.c, bereits korrekt)
-
-FSBL_XSPI_Init()
-  ├─ FSBL_NOR_PreReset()            [NEU]
-  │    ├─ __HAL_RCC_XSPI2_FORCE_RESET / RELEASE_RESET
-  │    ├─ HAL_XSPI_Init (hpre, ClkPrescaler=3 → 37.5 MHz)
-  │    ├─ HAL_XSPIM_Config (IOPort=2, NCS1)
-  │    ├─ HAL_XSPI_Command: 0x6699 (OPI DTR Reset Enable)
-  │    ├─ HAL_XSPI_Command: 0x9966 (OPI DTR Reset Memory)
-  │    └─ HAL_Delay(15)             [Flash: tRST max. 15 ms]
-  │
-  ├─ BSP_XSPI_NOR_Init(OPI_STR)    [Flash jetzt in SPI → BSP kann kommunizieren]
-  ├─ BSP_XSPI_NOR_EnableMemoryMappedMode()
-  ├─ BSP_XSPI_RAM_Init()
-  └─ BSP_XSPI_RAM_EnableMemoryMappedMode()
-
-MX_XSPI_NOR_Init() [starke Überschreibung, NEU]
-  └─ HAL_XSPIM_Config für XSPI2 (GPION, IOPort_2, NCS1)
-
-MX_XSPI_RAM_Init() [starke Überschreibung, NEU]
-  └─ HAL_XSPIM_Config für XSPI1 (GPIOP/O, IOPort_1, NCS1)
-```
-
-**stm32n6xx_hal_msp.c — XSPI2 Clock [GEÄNDERT]:**
-- Alt: `RCC_XSPI2CLKSOURCE_HCLK` → löst langen Kalibrierungsvorgang aus (BUSY=1 für >5 s)
-- Neu: `RCC_XSPI2CLKSOURCE_IC3`, IC3 = PLL1/6 = 200 MHz → kein Kalibrierungsvorgang
-
----
-
-### 2.4 FSBL JumpToApplication — Korrekte Implementierung für STM32N6
-
-Der Jump von FSBL zur Appli erfordert auf dem Cortex-M55 (ARM v8.1-M) eine spezifische Sequenz:
-
-```c
-/* 1. SysTick suspendieren */
-HAL_SuspendTick();
-
-/* 2. I-Cache deaktivieren (Appli konfiguriert Cache neu) */
-SCB_DisableICache();
-
-/* 3. Interrupts sperren */
-primask_bit = __get_PRIMASK();
-__disable_irq();
-
-/* 4. VTOR auf Appli-Adresse */
-SCB->VTOR = APP_START_ADDRESS;  // 0x70100400
-
-/* 5. Reset_Handler aus Vektor-Tabelle lesen */
-JumpToApp = (pFunction)(*(__IO uint32_t *)(APP_START_ADDRESS + 4U));
-
-/* 6. MSPLIM löschen VOR MSP-Änderung (ARM v8.1-M Pflicht!) */
-__set_MSPLIM(0x00000000);
-
-/* 7. MSP aus Appli-Vektor-Tabelle */
-__set_MSP(*(__IO uint32_t *)APP_START_ADDRESS);
-
-/* 8. Memory Barriers */
-__DSB(); __ISB();
-
-/* 9. Interrupts freigeben und springen */
-__set_PRIMASK(primask_bit);
-JumpToApp();
-```
-
-**Wichtig:** `HAL_RCC_DeInit()` darf **nicht** vor dem Jump aufgerufen werden, da die Appli aus XSPI2 ausgeführt wird und der Memory-Mapped-Modus erhalten bleiben muss.
-
-### 2.5 Linker / externes Memory
-
-Aufgrund ROM-Ueberlauf wurde Appli auf ein duales externes ROM-Layout umgestellt:
-
-- Linker-Skript: STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld
-- Code (.text) bleibt in ROM
-- grosse Konstanten (.rodata) liegen in ROM2
-
-Damit passt die Gesamtauslastung wieder in den verfuegbaren Addressraum.
-
-Fuer den Dual-Model-Betrieb wurde ROM2 im Linker auf 2047K erweitert
-(`STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld`), damit beide Netzwerke gleichzeitig
-gelinkt werden koennen.
-
-## 3. Laufzeitarchitektur (Appli)
-
-### 3.1 Main-Ablauf
-
-Main initialisiert AI und startet dann den ThreadX Kernel:
-
-1. HAL Init und Basis-Peripherie
-2. STM32CubeAI_Studio_AI_Init
-3. MX_ThreadX_Init (tx_kernel_enter)
-
-Der alte blockierende Polling-Ansatz im Main-Loop wird nicht mehr genutzt.
-
-### 3.2 ThreadX AI Thread
-
-In Appli/Core/Src/app_threadx.c laeuft ein eigener AI-Thread:
-
-- zyklischer Aufruf (1 Tick Sleep)
-- Input vorbereiten
-- aiRun aufrufen
-- Output verarbeiten
-
-Die Integration ist ueber weak Hooks vorbereitet:
-
-- App_AI_PrepareInput(uint8_t* input_buffer, size_t input_size)
-- App_AI_OnResult(const uint8_t* output_buffer, size_t output_size)
-- App_AI_OnOutputs(const uint8_t* const* outputs, const size_t* output_sizes, uint32_t output_count)
-- App_AI_GetRequestedModel(void) fuer die Laufzeitwahl zwischen Pose und Segmentierung
-
-Zusatz zur Modellauswahl:
-
-- `App_AI_SetModel(APP_AI_MODEL_POSE)` und `App_AI_SetModel(APP_AI_MODEL_SEGMENTATION)` schalten das aktive Modell.
-- Der AI-Thread liest in jedem Zyklus `App_AI_GetRequestedModel()` und setzt das aktive Modell entsprechend.
-- Ohne Override bleibt standardmaessig Pose aktiv.
-- Neu: Auf STM32N6570-DK toggelt ein Druck auf USER1 (B2) im Runtime-Betrieb zwischen Pose und Segmentierung (mit Entprellung im ThreadX-Loop).
-
-Standard-Overlay (bereits integriert):
-
-- Bei Segmentierung wird bevorzugt ein YOLOv8-Instance-Segmentation-Overlay aus zwei Modellausgaengen gezeichnet (Detections + Mask-Prototypes, inklusive einfacher NMS).
-- Falls nur ein Segmentierungs-Output verfuegbar ist, wird auf den Map-Overlay-Fallback gewechselt.
-- Bei Pose wird zuerst ein YOLOv8-Pose-Output erkannt und gezeichnet; falls das Format nicht passt, bleibt der Heatmap-Keypoint-Fallback aktiv.
-- Standard-Framebuffer: `0x34000000`, Standard-Aufloesung: `800x480` (STM32N6570-DK; ueber weak Funktionen anpassbar).
-- Zusaetzlicher Statusmarker links oben: Blau = Pose, Gruen = Segmentierung; rotes Blinkfeld = laufende Inferenz.
-- Sicherheits-Hinweis: Standardmaessig ist kein Display-Framebuffer gesetzt (`App_AI_GetDisplayFramebuffer()` liefert NULL), damit keine AI-FlexMEM-Adressen ueberschrieben werden.
-- Fuer sichtbare Overlays muss `App_AI_GetDisplayFramebuffer()` projektspezifisch auf den echten LTDC/Display-Buffer ueberschrieben werden.
-
-Sichtbare Runtime-Diagnose (neu):
-
-- LED1 (Gruen) blinkt bei jeder Inferenz.
-- LED2 (Rot) zeigt aktives Modell: aus = Pose, an = Segmentierung.
-
-Diese Hooks sind der vorgesehene Punkt fuer Kamera-Preprocessing und LTDC-Overlay-Ausgabe.
-
-## 4. Kamera/LTDC/ThreadX-Schutz
-
-Wichtiges Ziel war, bestehende Laufzeitpfade nicht zu blockieren:
-
-1. AI Prozess ist nicht-blockierend.
-2. ISR-Konflikte wurden fuer ThreadX-Runtime abgefangen (SVC/PendSV/SysTick Guards).
-3. Kamera/LTDC-spezifische Verarbeitung ist nicht hart verdrahtet im AI-Code, sondern ueber Hooks vorgesehen.
-
-Hinweis: Die konkrete Pose-Visualisierung auf dem Display ist erst dann aktiv, wenn App_AI_OnResult mit deiner Overlay-Logik befuellt ist.
-
-## 5. Relevante Dateien
-
-**FSBL (Sprung-relevante Dateien):**
-- FSBL/Core/Src/main.c — `JumpToApplication()`, `FSBL_NOR_PreReset()`, `FSBL_XSPI_Init()`, `MX_XSPI_NOR_Init()` (stark), `MX_XSPI_RAM_Init()` (stark), `HAL_TIM_PeriodElapsedCallback()`
-- FSBL/Core/Src/stm32n6xx_hal_msp.c — `HAL_XSPI_MspInit()`: XSPI2 Taktquelle IC3=PLL1/6=200MHz
-- FSBL/Core/Src/system_stm32n6xx_fsbl.c — `SystemInit()`: RCC-Reset von XSPI2+XSPIM
-
-**Appli:**
-- Appli/CMakeLists.txt
-- Appli/ai-integration.cmake
-- Appli/STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld
-- Appli/AI/App/app_x-cube-ai.c
-- Appli/AI/App/app_x-cube-ai.h
-- Appli/AI/App/network_pose_wrap.c
-- Appli/AI/App/network_seg_wrap.c
-- Appli/AI/models/pose/generated/*
-- Appli/AI/models/seg/generated/*
-- Appli/Core/Src/main.c
-- Appli/Core/Src/app_threadx.c
-- Appli/Core/Src/tx_initialize_low_level.S
-- Appli/Core/Src/stm32n6xx_it.c
-
-## 6. Build
-
-Getesteter Build-Target:
-
-- CDC_ACM_Appli
-
-### 6.0 Dual-xSPI Memory Layout (FIXED)
-
-**WICHTIG:** Das Projekt wurde auf ein Dual-xSPI-Layout migriert, um beide AI-Modelle optimal zu unterstützen.
-
-**Alte Konfiguration (fehlerhaft):**
-- Linker-Skript: `STM32N657XX_ROMxspi1.ld`
-- ROM: 2047K (single xSPI1)
-- Modelle: 5,88 MB (2,70 MB Pose + 3,18 MB Segmentation)
-- ROM-Auslastung: **84,46%** ❌ (nur auf xSPI1)
-
-**Neue Konfiguration (korrekt):**
-- Linker-Skript: `STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld`
-- Code (ROM): 511K auf xSPI1 (OctaSPI)
-- Models/Constants (ROM2): 2047K auf xSPI2 (OctaSPI)
-- ROM Auslastung: **27,84%** ✅
-- ROM2 Auslastung: **46,76%** ✅
-- **Nur OctaSPI wird verwendet** (keine HexaSPI)
-
-**Memory Distribution nach Build:**
-```
-Memory region         Used Size  Region Size  %age Used
-         ROM:      145668 B       511 KB     27.84%
-        ROM2:      980120 B      2047 KB     46,76%
-         RAM:       11208 B         2 MB      0.53%
-      EXTRAM:           0 B        64 MB      0.00%
-```
-
-Ergebnis:
-
-- Build erfolgreich
-- Warning vorhanden: LOAD segment with RWX permissions
-  - diese Warning kommt vom aktuellen Linker-Layout und ist fuer den funktionalen Build nicht blockierend
-
-## 6.1 Flash-Layout und Ladevorgang (optimiert für Dual-Model mit OctaSPI)
-
-**ÄNDERUNG ab März 2026:** Das Projekt verwendet jetzt Dual-xSPI (OctaSPI) für optionale Modellplatzierung.
-
-Im aktuellen Stand werden drei Programmabschnitte in den externen Flash geschrieben:
-
-1. FSBL signiertes Image → 0x70000000 (xSPI1)
-2. APPLI signiertes Image (Code + ROM2 Daten) → 0x70100000 (xSPI1 für Code, xSPI2 für ROM2)
-3. APPLI ROM2 Daten (falls separate Programmierung nötig) → 0x90200400 (xSPI2 optional)
-
-### Adress-Mapping
-
-**xSPI1 (OctaSPI Interface 1) — 0x70000000–0x71FFFFFF:**
-- FSBL: 0x70000000
-- APPLI Core (Code): 0x70100000
-
-**xSPI2 (OctaSPI Interface 2) — 0x90000000–0x91FFFFFF:**
-- APPLI ROM2 (Modellgewichte): 0x90200400
-
-### Warum Dual-xSPI?
-
-Die Appli nutzt zwei ROM-Bereiche (ROM und ROM2), die auf unterschiedliche xSPI-Interfaces gemappt sind:
-
-**ROM (xSPI1, 511K):**
-- Linker-Skript Bereich für `.text`, `.ARM`, `.init_array`, etc.
-- Beinhaltet: Application Code, Runtime, ThreadX
-
-**ROM2 (xSPI2, 2047K):**
-- Linker-Skript Bereich für `.rodata`
-- Beinhaltet: **Netzwerk-Gewichte** (beide AI-Modelle), statische Konstanten
-- Automatic Platzierung: Alle `static const` Daten (incl. `network_ecblobs.h` Blobs) landen hier
-
-### Warum kein separates Binary für ROM2?
-
-Im Gegensatz zur alten Konfiguration müssen die Modellgewichte **nicht als separates Hex-File programmiert** werden. Die `network_ecblobs.h` Blobs werden als `static const uint64_t` Arrays definiert und landen mit dem Linker-Skript automatisch in der `.rodata` Section, die nach ROM2 (xSPI2) geht.
-
-**Technischer Ablauf im Skript**
-
-Das Skript in sign_binaries.bat führt diese Schritte aus:
-
-1. FSBL .bin signieren zu CDC_ACM_FSBL-trusted.bin.
-2. APPLI aus CDC_ACM_Appli.elf aufteilen:
-  - CDC_ACM_Appli-core.bin (enthält alle Code + Daten, die der Linker in ROM und ROM2 platziert)
-  - Falls nötig: Separate ROM2-Extraktion (für Laufzeitdynamik)
-3. APPLI signieren zu CDC_ACM_Appli-trusted.bin.
-4. Mit STM32_Programmer_CLI programmieren:
-  - FSBL-trusted nach 0x70000000
-  - APPLI-trusted nach 0x70100000
-  - (ROM2 wird teil von APPLI-trusted oder separat nach 0x90200400, falls implementiert)
-
-**Verwendete Optionen für robustes Flashing**
-
-- Connect mode: Under Reset
-- Reset mode: Hardware reset
-- reduzierte SWD-Frequenz (4 MHz angefordert)
-
-### Ausfuehren
-
-Empfohlen im Projektwurzelordner:
-
-```bat
-cube-cmake --build C:/Dev/Thesis_Robot_Pose/build/Debug --target flash --
-```
-
-Alternativ direkt:
+Alles Weitere erledigt ein einziges Skript: bauen, signieren, flashen, zurücksetzen.
 
 ```bat
 sign_binaries.bat
 ```
 
-### Erfolgskriterium im Log
+Was dabei nacheinander passiert:
 
-Der Upload gilt als erfolgreich, wenn fuer alle programmierten Files jeweils File download complete gemeldet wird.
+```
+1. cmake --preset Debug  +  cmake --build --preset Debug
+2. objcopy: ELF zu BIN, für FSBL und Appli
+3. Appli aufteilen:  -core.bin (ohne .rodata)  und  -rom2.bin (nur .rodata)
+4. FSBL-BIN und Appli-Core-BIN signieren
+5. signierte BINs zurück zu ELF wandeln, für den Debugger
+6. Programmer erkennen (ST-Link, sonst J-Link)
+7. drei Images in den externen Flash schreiben
+8. Reset
+```
 
-Hinweis:
+### Der Signier-Befehl im Klartext
 
-- Ein optionaler MCU-Reset am Ende kann fehlschlagen, ohne den Programmiervorgang ungueltig zu machen.
-- Falls die Anwendung nicht automatisch startet, RESET-Taste am Board druecken.
-
-### Migration von altem Linker-Skript
-
-Falls `sign_binaries.bat` aktualisiert werden muss für explizite ROM2-Extraktion:
+Der STM32N6 führt nur signierte Images aus. Der Aufruf lautet:
 
 ```bat
-REM === Extract ROM2 from ELF only (new dual-xSPI mode) ===
-REM The Linker now automatically places .rodata in ROM2 (xSPI2 @ 0x90200400)
-REM If needed for validation, extract with:
-arm-none-eabi-objcopy -S --change-section-address .rodata=0x90200400 ^
-  CDC_ACM_Appli.elf CDC_ACM_Appli-rom2.bin
+STM32_SigningTool_CLI.exe -bin <name>.bin -nk -of 0x80000000 -t fsbl -o <name>-trusted.bin -align -hv 2.3 -dump <name>-trusted.bin
 ```
 
-Dies ist **optional** — der Standard ist, APPLI komplett programmieren zu lassen.
+Wichtig zu wissen: **auch die Appli wird mit `-t fsbl` signiert.** Das ist kein
+Tippfehler, der Bootloader-Typ bezieht sich hier auf das Header-Format, nicht auf die
+Rolle im System. Das Ergebnis der Signierung steht ganz **oben** in der Ausgabe des
+Tools, nicht am Ende.
 
-## 7. Was als naechstes zu tun ist
+### Debuggen aus VS Code
 
-1. App_AI_PrepareInput mit realem Kamera-Frame (RGB565 -> Modellinput) implementieren.
-2. App_AI_OnResult mit Pose-Decoding und LTDC-Overlay aktualisieren.
-3. End-to-End Test auf Target (Kamera live, Pose-Punkte sichtbar, USB/ThreadX stabil).
-4. Optional: Resultatuebergabe an USB CDC um Status/Pose-Werte abzufragen.
+Die Konfiguration steht in `.vscode/launch.json` und nutzt den Debug-Typ
+`stlinkgdbtarget`. Zwei Dinge sind daran STM32N6-spezifisch:
 
-## 8. Hinweise fuer Regeneration
+* `runEntry: "BOOT_Application"` statt eines normalen Reset-Vektors
+* `imagesAndSymbols` trennt Symboldatei und geflashtes Image, weil das geflashte
+  Image signiert ist und deshalb nicht mehr mit der ELF-Symboltabelle übereinstimmt
+* `serverExtLoader` verweist auf `MX66UW1G45G_STM32N6570-DK.stldr`, den External
+  Loader für den NOR-Flash
 
-1. CubeMX-generierte Dateien moeglichst unveraendert lassen.
-2. Benutzerlogik in separaten Dateien halten (z. B. ai-integration.cmake, app_threadx.c).
-3. Nach Linker- oder Memory-Aenderungen immer Full Rebuild durchfuehren.
+---
 
-## 9. Vorherige Projektdoku (ergaenzt, nicht entfernt)
+## 3. Das Grundprinzip: zwei Programme, nicht eins
 
-Die folgenden Inhalte stammen aus der vorherigen README-Version und bleiben hier als Referenz erhalten.
+Der STM32N6 hat **keinen internen Flash**. Der gesamte Code liegt in einem externen
+NOR-Flash (MX66UW1G45G) und muss von dort erst zugänglich gemacht werden. Deshalb
+besteht das Projekt aus zwei getrennten Programmen.
 
-### 9.1 Ziel des Projekts (vorheriger Stand)
+```mermaid
+flowchart LR
+    ROM["Boot ROM<br/>(im Chip, unveraenderlich)"]
+    FSBL["FSBL<br/>laeuft aus AXISRAM2<br/>0x34180400"]
+    APPLI["Appli<br/>laeuft aus dem NOR-Flash<br/>0x70100400"]
 
-Das Projekt bildet eine Edge-AI Pipeline auf dem STM32N6 ab:
-
-1. Kameraaufnahme ueber IMX335 + CMW + DCMIPP
-2. Live-Ausgabe auf LCD (LTDC, RGB565)
-3. Kontinuierliche Bildverarbeitung fuer KI-Inferenz
-4. USB CDC bleibt als Steuer- und Diagnosekanal aktiv
-5. Ausfuehrung und Datenhaltung mit externen Speichern (OctoFlash / HyperRAM je nach Mapping)
-
-Der vorher dokumentierte Laufzeitfokus:
-
-- Kein Freeze der Kamera fuer CAPTURE
-- Kein aktiver Bildtransfer ueber CDC
-- USB bleibt enumerierbar und fuer einfache Kommandos nutzbar
-
-### 9.2 Projektstruktur (vorher dokumentiert)
-
-```text
-Thesis_Robot_Pose/
-|- CMakeLists.txt
-|- CMakePresets.json
-|- sign_binaries.bat
-|- FSBL/
-|  |- Core/
-|  |- USBX/
-|  |- AZURE_RTOS/
-|  |- STM32N657XX_AXISRAM2_fsbl.ld
-|  |- CMakeLists.txt
-|  |- mx-generated.cmake
-|- Appli/
-|  |- Core/
-|  |- STM32N657XX_ROMxspi2.ld
-|  |- CMakeLists.txt
-|  |- mx-generated.cmake
-|- Drivers/
-|- Middlewares/
-`- Secure_nsclib/
+    ROM -->|"laedt signiertes<br/>FSBL-Image"| FSBL
+    FSBL -->|"XSPI memory-mapped<br/>schalten, dann springen"| APPLI
 ```
 
-### 9.3 FSBL vs Appli (vorheriger Fokus)
+**FSBL** steht für First Stage Bootloader. Er ist klein, läuft aus dem internen RAM
+und hat genau eine Aufgabe: die beiden XSPI-Schnittstellen in den Memory-Mapped-Modus
+versetzen, damit die CPU Befehle direkt aus dem externen Flash holen kann
+(Execute in Place). Danach springt er in die Appli.
 
-- FSBL (First Stage Boot Loader):
-  - Initialisiert Low-Level-Plattform, RTOS-Stack, Kamera, Display, USB und OctoFlash-Memory-Mapped Modus.
-  - Enthaelt die produktive Laufzeitlogik fuer Kamera/USB/ThreadX.
+**Appli** ist die eigentliche Anwendung: Kamera, Display, USB, ThreadX und die KI.
 
-- Appli:
-  - Secure Application Teil.
-  - Linker war in der alten Doku auf externes XSPI2-ROM beschrieben.
+Diese Trennung erklärt auch, warum das Flash-Skript zwei getrennte Builds signiert und
+in unterschiedliche Adressen schreibt.
 
-### 9.4 Laufzeitarchitektur (vorherige Beschreibung)
+### Was der FSBL genau tut
 
-Im FSBL wurden zwei wesentliche Threads beschrieben:
+```
+SystemInit()
+  └─ RCC-Reset von XSPI2 und XSPIM
 
-1. camera_thread
-  - Initialisiert IMX335, CMW und DCMIPP Pipe1
-  - Startet kontinuierlichen Kamera-Stream auf den LCD-Framebuffer
-  - Fuehrt pro Zyklus den KI-Hook aus (Integrationspunkt)
+FSBL_XSPI_Init()
+  ├─ FSBL_NOR_PreReset()
+  │    ├─ XSPI2 per RCC zwangsweise zuruecksetzen
+  │    ├─ HAL_XSPI_Init  (Prescaler 3, also 37,5 MHz)
+  │    ├─ HAL_XSPIM_Config (IO-Port 2, NCS1)
+  │    ├─ Kommando 0x6699  (OPI DTR Reset Enable)
+  │    ├─ Kommando 0x9966  (OPI DTR Reset Memory)
+  │    └─ 15 ms warten     (tRST des Flash-Bausteins)
+  │
+  ├─ BSP_XSPI_NOR_Init(OPI_STR)
+  ├─ BSP_XSPI_NOR_EnableMemoryMappedMode()
+  ├─ BSP_XSPI_RAM_Init()
+  └─ BSP_XSPI_RAM_EnableMemoryMappedMode()
 
-2. cmd_thread
-  - Wartet auf USB CDC Enumeration
-  - Beantwortet einfache Kommandos (z. B. PING, STATUS)
-  - Sendet keine Binardaten/Bilder
+JumpToApplication()
+  ├─ Sanity Check der Vektortabelle
+  ├─ __set_MSPLIM(0), I-Cache aus, HAL_SuspendTick()
+  └─ Sprung nach 0x70100400
+```
 
-Kamera (vorher dokumentiert):
+`FSBL_NOR_PreReset()` ist der interessanteste Teil und wird in Abschnitt 11 erklärt.
 
-- Sensor: IMX335
-- Sensorziel: 2592x1944
-- Ausgabe: 640x480 RGB565
-- Pipeline: CMW + DCMIPP Pipe1
-- Modus: kontinuierlich (kein Suspend/Freeze fuer Capture)
+---
 
-Display (vorher dokumentiert):
+## 4. Speicherlayout
 
-- Panel: RK050HR18 (640x480)
-- LTDC Layer 0 mit RGB565
-- Framebuffer bei 0x34000000 (AXISRAM1)
+Der Linker teilt die Appli in zwei ROM-Bereiche auf. Der Grund ist Platz: die beiden
+KI-Modelle bringen zusammen rund 5,9 MB an Gewichten mit, die nicht in einen einzelnen
+511-KB-Bereich passen.
 
-USB CDC (vorher dokumentiert):
+| Bereich | Größe | Inhalt | Flash-Adresse |
+|---------|-------|--------|---------------|
+| FSBL | klein | Bootloader | `0x70000000` |
+| ROM | 511 KB, ca. 28 % belegt | `.text`, Anwendungscode, Runtime, ThreadX | `0x70100000` |
+| ROM2 | 2047 KB, ca. 47 % belegt | `.rodata`, **Modellgewichte** beider Netze | `0x70200400` |
+| RAM | 2048 KB, ca. 0,5 % belegt | `.data`, `.bss`, Stacks | AXISRAM |
 
-- USBX Device + CDC ACM aktiv
-- Steuer- und Diagnoseinterface
-- Kein kontinuierlicher Bildversand im damaligen Build
+Linker-Skript: `Appli/STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld`
 
-### 9.5 Speicherlayout und KI-Bezug (vorher dokumentiert)
+Die Gewichte müssen **nicht** separat als Hex-Datei programmiert werden. Sie sind in
+`network_ecblobs.h` als `static const uint64_t`-Arrays definiert, landen dadurch
+automatisch in `.rodata` und damit in ROM2. Das Flash-Skript extrahiert diesen
+Abschnitt mit `objcopy -j .rodata` in ein eigenes Binary und schreibt es an die
+passende Adresse.
 
-Warum Framebuffer auf 0x34000000:
+> **Achtung, häufige Fehlerquelle:** Wird ROM2 nicht mitgeflasht, stürzt die Appli
+> beim allerersten Zugriff auf eine Konstante oder einen String ab, also sehr früh in
+> `main()`. Das Flash-Skript prüft deshalb, ob das ROM2-Binary existiert und nicht
+> leer ist, und warnt sonst deutlich.
 
-- Der Framebuffer wurde aus einem NPU-relevanten Bereich herausgelegt, damit KI-Aktivierungen und Kameraframe sich nicht ueberlagern.
+Zusätzlich liegen im internen RAM:
 
-OctoFlash Nutzung (vorher dokumentiert):
+| Adresse | Inhalt |
+|---------|--------|
+| `0x34400000` | LCD-Framebuffer, 640 x 480 x 2 Byte RGB565, in AXISRAM3 |
+| `0x34000000` | wird vom generierten KI-Code als Flex-Memory genutzt, **nicht** für eigene Puffer verwenden |
 
-- FSBL/Boot-Image Bereich ab 0x70000000
-- Appli-Image Bereich ab 0x70100000
-- Reservierter Bereich fuer KI-Gewichte ab 0x71000000
+---
 
-Im FSBL-Linker war dafuer eine Sektion vorgesehen:
+## 5. Laufzeitarchitektur: die drei Threads
 
-- .nn_weights in Region OCTOFLASH
-
-### 9.6 Build-, Sign- und Flash-Hinweise (vorher dokumentiert)
-
-Toolchain:
-
-- GNU Arm Embedded (arm-none-eabi)
-- CMake + Ninja (STM32Cube Umgebung)
-
-Sign/Flash:
-
-- sign_binaries.bat signiert typischerweise FSBL und Appli
-- Dokumentierte Zieladressen:
-  - FSBL -> 0x70000000
-  - APPLI -> 0x70100000
-
-Hinweis aus der vorherigen Doku:
-
-- Fuer KI-Gewichte in .nn_weights ist ggf. ein separater Programmierschritt nach 0x71000000 erforderlich.
-
-### 9.7 Historische Integrationshinweise (weiterhin nuetzlich)
-
-Der alte Integrationspunkt war im camera_thread (FSBL):
-
-1. Preprocessing gemaess Modellinput
-2. AI Inferenzaufruf
-3. Postprocessing (Klassen, Boxes, Pose Keypoints)
-
-Beispiel fuer Gewichtssektion:
+### Der Weg durch main()
 
 ```c
-__attribute__((section(".nn_weights")))
-const unsigned char network_weights[] = { ... };
+MPU_Config();                    // muss VOR dem I-Cache kommen
+SCB_EnableICache();              // nur I-Cache, D-Cache bleibt bewusst aus
+HAL_Init();
+SystemClock_Config();
+__HAL_RCC_AXISRAM3_MEM_CLK_ENABLE();   // Takt für den Framebuffer
+MX_GPIO_Init();
+// ... GPDMA1, USART1, USB2, XSPI1, XSPI2, DCMIPP, LTDC, RAMCFG
+SystemIsolation_Config();
+STM32CubeAI_Studio_AI_Init();    // NPU und beide Netze initialisieren
+MX_ThreadX_Init();               // tx_kernel_enter, kehrt nie zurueck
 ```
 
-### 9.8 Hinweise und naechste Schritte aus der alten Doku
+Zwei Details lohnen die Erklärung:
 
-Bekannte Hinweise:
+**Die MPU wird vor dem I-Cache konfiguriert.** Der Cache beginnt sofort, Befehlszeilen
+aus dem XSPI-Bereich zu holen. Stimmen die Speicherattribute zu diesem Zeitpunkt
+nicht, holt er sie mit den falschen Eigenschaften.
 
-1. D-Cache war bewusst deaktiviert (DMA/Kamera/USB Kohaerenz und Stabilitaet).
-2. Nach CubeMX-Regeneration sollten USER CODE Bloecke geprueft werden.
-3. Nach Linker-/Adressaenderungen Full Rebuild und Flash-Test.
-4. KI-Integration zuerst mit kleinem Testinput und UART/CDC Debug validieren.
+**Der D-Cache bleibt absichtlich aus.** Kamera und DMA schreiben direkt in den
+Framebuffer, ohne Cache-Maintenance. Mit aktiviertem D-Cache gab es Hard Faults und
+korrupte Bilddaten. In `app_config.h` steht zwar `USE_MCU_DCACHE 1`, aber `main.c`
+aktiviert nur `SCB_EnableICache()`.
 
-Historisch vorgeschlagene naechste Schritte:
+### Die drei Threads
 
-1. AI Studio C-Code in den Kamera-Hook integrieren.
-2. Pre/Postprocessing fuer das konkrete Modell fixieren.
-3. Gewichts-Blob nach 0x71000000 programmieren und Starttest auf Target ausfuehren.
-4. Optional USB-Kommandos fuer Ergebnisabfrage erweitern.
+Nach `tx_kernel_enter()` übernimmt der ThreadX-Scheduler. Bei ThreadX gilt: **kleinere
+Zahl bedeutet höhere Priorität.**
+
+| Thread | Priorität | Stack | Aufgabe |
+|--------|-----------|-------|---------|
+| AI Thread | 10 (höchste) | 4 KB | Inferenz und Overlay |
+| CMD Thread | 12 | 4 KB | USB-CDC-Kommandos, Bildtransfer |
+| Camera Thread | 15 (niedrigste) | 8 KB | Kamera-Pipeline bedienen |
+
+Alle drei laufen als Endlosschleife mit `tx_thread_sleep(1)` am Ende, geben also nach
+jedem Durchlauf einen Tick ab. Dadurch blockiert keiner die anderen.
+
+```mermaid
+flowchart TB
+    subgraph HW["Hardware"]
+        CAM["Kamera IMX335<br/>2592 x 1944, 30 fps"]
+        DCMIPP["DCMIPP<br/>Crop + Skalierung"]
+        FB["Framebuffer 0x34400000<br/>640 x 480 RGB565"]
+        LTDC["LTDC"]
+        LCD["Display RK050HR18"]
+        NPU["NPU"]
+    end
+
+    subgraph THREADS["ThreadX"]
+        TCAM["Camera Thread (15)<br/>CMW_CAMERA_Run()"]
+        TAI["AI Thread (10)<br/>Inferenz + Overlay"]
+        TCMD["CMD Thread (12)<br/>USB CDC"]
+    end
+
+    CAM --> DCMIPP --> FB
+    FB --> LTDC --> LCD
+    TCAM -.->|"bedient"| DCMIPP
+    FB -->|"liest als<br/>Modelleingang"| TAI
+    TAI -->|"rechnet auf"| NPU
+    TAI -->|"zeichnet Overlay<br/>zurueck"| FB
+    FB -->|"CAPTURE"| TCMD
+
+    style HW fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style THREADS fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+```
+
+Der Framebuffer ist der zentrale Treffpunkt: die Kamera schreibt hinein, der LTDC
+zeigt ihn an, der AI-Thread liest daraus seinen Eingang und zeichnet sein Ergebnis in
+denselben Puffer zurück.
+
+### Camera Thread
+
+```
+CMW_CAMERA_GetSensorName()
+CMW_CAMERA_Init()               2592 x 1944, 30 fps, gespiegelt
+HAL_DCMIPP_SetIPPlugConfig()    Burst 128 Byte, Page 256 Byte, Client 5
+CMW_CAMERA_SetPipeConfig()      PIPE1 zu 640 x 480 RGB565, Aspect-Ratio-Crop
+CMW_CAMERA_Start(PIPE1, LCD_FB_ADDRESS, CONTINUOUS)
+
+200 Ticks ISP-Warmup            Belichtung und Weissabgleich einschwingen lassen
+while(1) { CMW_CAMERA_Run(); tx_thread_sleep(1); }
+```
+
+Der ISP braucht die Aufwärmphase, sonst sind die ersten Bilder über- oder
+unterbelichtet. Nach dem Warmup läuft die Kamera dauerhaft weiter, damit die KI
+kontinuierlich ein aktuelles Bild bekommt.
+
+### AI Thread
+
+Der Kern des Ganzen, und bewusst kurz gehalten:
+
+```c
+for (;;)
+{
+  App_AI_SetModel(App_AI_GetRequestedModel());   // Taster auswerten
+
+  if (App_AI_PrepareInput(App_AI_GetInputBuffer(),
+                          App_AI_GetInputSize()) == 0)
+  {
+    if (aiRun() == 0)
+      App_AI_RenderActiveModelOverlay();          // ins Display zeichnen
+
+    App_AI_OnOutputs(outputs, sizes, count);      // Hooks fuer eigene Logik
+    App_AI_OnResult(outputs[0], sizes[0]);
+  }
+  tx_thread_sleep(1);
+}
+```
+
+### Die Erweiterungspunkte (weak Hooks)
+
+Der KI-Code kennt weder Kamera noch Display. Die Verbindung entsteht über Funktionen,
+die als `__weak` deklariert sind und projektspezifisch überschrieben werden. Das ist
+der vorgesehene Ort für eigene Erweiterungen.
+
+| Hook | Aufgabe | Standardverhalten |
+|------|---------|-------------------|
+| `App_AI_PrepareInput()` | Modelleingang füllen | liest den Framebuffer, siehe unten |
+| `App_AI_OnResult()` | ein Ergebnis verarbeiten | leer |
+| `App_AI_OnOutputs()` | alle Ausgänge verarbeiten | leer |
+| `App_AI_GetRequestedModel()` | gewünschtes Modell melden | fragt den Taster ab |
+| `App_AI_GetDisplayFramebuffer()` | Ziel für das Overlay | `NULL` im KI-Modul, in `app_threadx.c` auf `0x34400000` überschrieben |
+
+Dass der Framebuffer-Hook im KI-Modul standardmäßig `NULL` liefert, ist eine
+Sicherheitsmaßnahme: `0x34000000` wird häufig vom generierten Flex-Memory belegt, und
+ein falsch gesetzter Framebuffer würde dort die KI-Puffer überschreiben.
+
+**Die Standard-Implementierung von `App_AI_PrepareInput()`** rechnet den Framebuffer in
+den Modelleingang um: RGB565 zu RGB888, Nearest-Neighbor-Skalierung auf die Kantenlänge,
+die sich aus der Puffergröße ergibt (`input_size / 3`, davon die Wurzel). Passt die
+Größe nicht zu einem Quadrat, füllt sie ersatzweise ein laufendes Testmuster ein.
+So bleibt sichtbare Aktivität erhalten, auch wenn die Kamera noch nicht liefert.
+
+---
+
+## 6. Der KI-Teil im Detail
+
+Zuständig ist `Appli/AI/App/app_x-cube-ai.c`, mit rund 1000 Zeilen die inhaltlich
+dichteste Datei des Projekts.
+
+### Zwei Modelle nebeneinander
+
+```c
+LL_ATON_DECLARE_NAMED_NN_INSTANCE_AND_INTERFACE(pose)
+LL_ATON_DECLARE_NAMED_NN_INSTANCE_AND_INTERFACE(seg)
+```
+
+Beide Netze sind fest einkompiliert und liegen gleichzeitig im Flash. Umgeschaltet
+wird nicht das Programm, sondern nur ein Zeiger auf den passenden Kontext:
+
+```c
+typedef struct {
+  NN_Instance_TypeDef *instance;   // das Netz selbst
+  uint8_t *input;                  // Eingangspuffer
+  uint8_t *outputs[2];             // Ausgangspuffer
+  size_t   input_size;
+  size_t   output_sizes[2];
+  uint32_t output_count;           // Pose: 1, Segmentierung: 2
+} AppAIModelCtx_t;
+```
+
+`aiInit()` initialisiert die Runtime, beide Netze und beide Kontexte. Die Puffer-Adressen
+holt es sich zur Laufzeit vom Runtime über `LL_ATON_Input_Buffers_Info()` und
+`LL_ATON_Output_Buffers_Info()`, sie sind also nirgends hart verdrahtet.
+
+`App_AI_SetModel()` setzt lediglich `g_active_model` und aktualisiert die
+Puffer-Zeiger. Der Wechsel kostet damit praktisch nichts.
+
+### Wie eine Inferenz abläuft
+
+Die NPU arbeitet ein Netz nicht in einem Rutsch ab, sondern in sogenannten
+Epoch-Blöcken. `aiRun()` treibt diese Schleife:
+
+```c
+LL_ATON_RT_Reset_Network(ctx->instance);
+do {
+  ret = LL_ATON_RT_RunEpochBlock(ctx->instance);
+  if (ret == LL_ATON_RT_WFE) {
+      tx_thread_sleep(1);      // unter ThreadX: Tick abgeben statt WFE
+      if (++wfe_guard > 4000) return -2;
+  }
+  if (++guard > 2000000) return -1;
+} while (ret != LL_ATON_RT_DONE);
+```
+
+`WFE` heißt Wait For Event: die NPU rechnet, die CPU hat nichts zu tun. In einem
+Bare-Metal-Programm würde hier `LL_ATON_OSAL_WFE()` stehen und die CPU schlafen legen.
+Unter ThreadX wäre das gefährlich, denn bleibt der NPU-Interrupt aus, hängt der Thread
+für immer. Deshalb wird stattdessen ein Tick abgegeben und gepollt, mit zwei Zählern
+als Notbremse:
+
+| Rückgabewert | Bedeutung |
+|--------------|-----------|
+| `0` | Inferenz erfolgreich |
+| `-1` | Gesamt-Guard ausgelöst, 2.000.000 Durchläufe |
+| `-2` | WFE-Guard ausgelöst, 4000 Ticks ohne Fortschritt, meist ein fehlender NPU-Interrupt |
+
+Abfragen lässt sich der letzte Status über `App_AI_GetLastRunStatus()`, die Anzahl der
+gelaufenen Inferenzen über `App_AI_GetRunCounter()`.
+
+### Postprocessing auf dem Mikrocontroller
+
+Das Modell liefert rohe int8-Tensoren. Die Umwandlung in Boxen, Masken und Keypoints
+passiert vollständig auf dem STM32.
+
+**Die Formaterkennung ist adaptiv.** `App_AI_InferYoloSegParams()` bekommt nur die
+beiden Puffergrößen und rät daraus die Geometrie: es probiert Masken-Kantenlängen aus
+der Liste 160, 128, 96, 80, 64, 48, 40, 32 durch und prüft, ob die Maskengröße glatt
+aufgeht. Danach testet es Box-Anzahlen aus 8400, 5376, 25200, 1344, 1008, 768 gegen
+die Detektionsgröße und leitet die Klassenzahl aus dem Rest ab. Das klingt nach einem
+Hack, hat aber einen praktischen Vorteil: exportiert man ein Modell mit anderer
+Eingangsgröße neu, muss im Firmware-Code nichts angepasst werden.
+
+**Danach die übliche YOLO-Kette:**
+
+```
+DecodeYoloSegDetections()   Boxen mit Konfidenz oberhalb der Schwelle sammeln
+                            Schwelle: conf_threshold_raw = 40 (int8, roh)
+NmsDetections()             Ueberlappende Boxen per IoU zusammenfassen
+DrawYoloSegOverlay()        Maskenprototypen mit den Koeffizienten verrechnen
+                            und halbtransparent in den Framebuffer mischen
+```
+
+Die Farbmischung übernimmt `App_AI_ColorBlend565()`, das direkt im RGB565-Format
+rechnet, ohne Umweg über RGB888.
+
+**Bei Pose** versucht `App_AI_DrawPoseKeypointsYolo()` zuerst, den Ausgang als
+YOLO-Pose-Tensor zu lesen. Passt das Format nicht, greift
+`App_AI_DrawPoseKeypointsHeatmap()` als Rückfallebene, die den Ausgang als Heatmap
+interpretiert und deren Maxima als Keypoints zeichnet.
+
+### NPU-Initialisierung
+
+In `npu_init.c` passieren vier Dinge, bevor überhaupt ein Netz laufen kann:
+
+| Funktion | Aufgabe |
+|----------|---------|
+| `NPU_Config()` | NPU-Takt einschalten, Force- und Release-Reset, optional NPU-Cache |
+| `RISAF_Config()` | die Speicher-Firewall so öffnen, dass die NPU auf die Puffer zugreifen darf |
+| `Set_CLK_Sleep_Mode()` | Taktverhalten im Schlafmodus festlegen |
+| `aiPreInitialize()` | Sammelaufruf, wird vor `aiInit()` ausgeführt |
+
+RISAF ist der Speicherschutz des STM32N6. Ohne passende Konfiguration darf die NPU
+nicht auf die Puffer im RAM zugreifen und die Inferenz schlägt fehl.
+
+In `app_config.h` steht `USE_OVERDRIVE 1`. Das bedeutet CPU mit 800 MHz und NPU mit
+1 GHz. Ohne Overdrive wären es 600 MHz und 800 MHz.
+
+---
+
+## 7. Bedienung am Board
+
+| Element | Funktion |
+|---------|----------|
+| Taster USER1 (B2) | schaltet zwischen Pose und Segmentierung um, entprellt über 200 Ticks |
+| LED1 grün | blinkt bei jeder Inferenz |
+| LED2 rot | aus = Pose, an = Segmentierung |
+| Statusmarker links oben | blau = Pose, grün = Segmentierung |
+| rotes Blinkfeld daneben | Inferenz läuft |
+| RESET | Neustart, falls die Anwendung nach dem Flashen nicht selbst startet |
+
+Debug-Ausgaben laufen über **USART1** und erscheinen auf dem virtuellen COM-Port des
+ST-Link. Das ist ein anderer Port als der USB-CDC-Port der Appli. Die Hilfsfunktionen
+dafür heißen `dbg()` und `dbg_val()` in `app_threadx.c`.
+
+---
+
+## 8. USB-CDC-Protokoll
+
+Der CMD-Thread meldet sich als virtueller COM-Port und wartet auf Textkommandos. Über
+diesen Weg holt das Python-Skript `capture_image.py` seine Trainingsbilder.
+
+| Kommando | Antwort |
+|----------|---------|
+| `PING` | `PONG` |
+| `TEST` | mehrere Test-Transfers |
+| `CAPTURE` | ein komplettes Bild |
+
+Nach der Enumeration sendet das Board dreimal `READY` als Lebenszeichen.
+
+**Bildübertragung:**
+
+```
+Header:   "IMG:" (4 Byte)  +  Payload-Länge (4 Byte)
+Payload:  640 * 480 * 2 = 768000 Byte, RGB565 roh
+```
+
+Puffergrößen: 64 Byte für Empfang, 8192 Byte für Senden, passend zu
+`UX_SLAVE_REQUEST_DATA_MAX_LENGTH`. Ein Transfer bricht nach 10 Sekunden ab,
+fehlgeschlagene Blöcke werden bis zu fünfmal wiederholt.
+
+---
+
+## 9. Dateiübersicht
+
+### Wo die Anwendungslogik liegt
+
+| Datei | Inhalt |
+|-------|--------|
+| `Appli/Core/Src/main.c` | Peripherie-Initialisierung, Takt, MPU, LTDC, DCMIPP |
+| `Appli/Core/Src/app_threadx.c` | die drei Threads, Hook-Implementierungen, USB-Protokoll |
+| `Appli/AI/App/app_x-cube-ai.c` | Modellverwaltung, Inferenzschleife, Postprocessing, Overlay |
+| `Appli/AI/App/app_x-cube-ai.h` | die öffentliche Schnittstelle des KI-Moduls |
+| `Appli/AI/App/npu_init.c` | NPU-Takt, RISAF, Cache |
+| `Appli/AI/App/app_config.h` | Cache- und Overdrive-Schalter |
+
+### Was generiert ist und nicht von Hand geändert werden sollte
+
+| Ort | Inhalt |
+|-----|--------|
+| `Appli/AI/generated/` | Netzwerkcode aus STM32Cube AI Studio |
+| `Appli/AI/models/pose/`, `.../seg/` | die beiden Modell-Exporte |
+| `Middlewares/ST/AI/` | ST AI Runtime und NPU Low-Level-Runtime |
+| `Drivers/` | HAL und BSP |
+
+### Bootkette und Build
+
+| Datei | Inhalt |
+|-------|--------|
+| `FSBL/Core/Src/main.c` | `JumpToApplication()`, `FSBL_NOR_PreReset()`, `FSBL_XSPI_Init()` |
+| `FSBL/Core/Src/stm32n6xx_hal_msp.c` | XSPI2-Taktquelle |
+| `Appli/Core/Src/tx_initialize_low_level.S` | ThreadX-Startup und SysTick-Handler |
+| `Appli/STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld` | Linker-Skript mit ROM und ROM2 |
+| `CMakeLists.txt`, `CMakePresets.json`, `mx-generated.cmake` | Build |
+| `Appli/ai-integration.cmake` | KI-Quellen, Include-Pfade, LL_ATON-Defines, Runtime-Library |
+| `sign_binaries.bat` | bauen, signieren, flashen |
+
+Die KI-Integration ist bewusst von den CubeMX-generierten CMake-Dateien getrennt.
+Läuft der Code-Generator erneut, überschreibt er `mx-generated.cmake`, aber nicht
+`ai-integration.cmake`.
+
+---
+
+## 10. Ein neues Modell einbinden
+
+1. Modell mit `EdgeAI.py 4 --quantize` als INT8-ONNX exportieren
+2. Kalibrierdaten mit `npzConverter.py` erzeugen, `--imgsz` muss zur Eingangsgröße
+   des Modells passen
+3. In STM32Cube AI Studio importieren und Netzwerkcode generieren lassen
+4. Den generierten Code nach `Appli/AI/models/<pose|seg>/generated/` übernehmen
+5. Falls sich die Anzahl der Ausgänge geändert hat, in `aiInit()` den zweiten
+   Parameter von `App_AI_InitModelCtx()` anpassen. Aktuell: Pose hat einen Ausgang,
+   Segmentierung hat zwei.
+6. Neu bauen und flashen
+
+Ändert sich nur die Eingangsgröße oder die Anzahl der Boxen, muss am Code
+nichts angepasst werden. Die Formaterkennung aus Abschnitt 6 fängt das ab, und
+`App_AI_PrepareInput()` liest die Eingangsgröße zur Laufzeit aus.
+
+Nach jeder Änderung an den Gewichten unbedingt prüfen, ob ROM2 mitgeflasht wurde. Das
+Skript gibt am Ende die tatsächlich programmierten Dateien aus.
+
+---
+
+## 11. Warum der Code an einigen Stellen ungewöhnlich aussieht
+
+Die Inbetriebnahme des STM32N6 hat mehrere Fallstricke, die im Code sichtbare Spuren
+hinterlassen haben. Wer diese Stellen "aufräumt", bekommt ein Board, das nicht mehr
+bootet. Deshalb hier die Begründungen.
+
+### Der Flash antwortet nach dem Boot ROM nicht
+
+Der Boot ROM konfiguriert XSPI2 in den OPI-DTR-Memory-Mapped-Modus, um das FSBL-Image
+zu lesen, und lässt ihn so stehen. Im Memory-Mapped-Modus ist das BUSY-Bit auf dem
+STM32N6 **dauerhaft gesetzt**. `HAL_XSPI_Init()` wartet darauf, dass es fällt, und
+läuft in einen 5-Sekunden-Timeout. Anschließend versucht das BSP, im SPI-Modus mit dem
+Flash zu reden, der aber noch in DOPI steht und deshalb nicht antwortet.
+
+Lösung ist `FSBL_NOR_PreReset()`: XSPI2 per RCC hart zurücksetzen, minimal
+initialisieren, dann die Reset-Sequenz 0x6699 und 0x9966 an den Flash schicken und
+15 Millisekunden warten. Danach ist der Flash wieder im SPI-Modus.
+
+### Der Reset allein reichte nicht
+
+CubeMX setzt für XSPI2 die Taktquelle HCLK. Bei der ersten Konfiguration darauf
+startet der STM32N6 eine interne Taktkalibrierung, die BUSY erneut für über
+5 Sekunden hält, auch nach dem RCC-Reset. Folge: `HAL_XSPI_Init()` in
+`FSBL_NOR_PreReset()` lief in den Timeout, die Funktion kehrte vorzeitig zurück, und
+die Reset-Sequenz wurde nie gesendet.
+
+Deshalb steht in `stm32n6xx_hal_msp.c` jetzt IC3 als Quelle, also PLL1 geteilt durch 6
+und damit 200 MHz. IC3 ist ein dedizierter Teiler ohne Kalibrierungsvorgang. XSPI1
+bleibt auf HCLK, weil der Boot ROM ihn nicht anfasst.
+
+### Der IO-Manager fehlte
+
+CubeMX erzeugt `MX_XSPI_NOR_Init()` und `MX_XSPI_RAM_Init()` ohne Aufruf von
+`HAL_XSPIM_Config()`. Der XSPI-IO-Manager routet die beiden Controller auf die
+GPIO-Ports. Ohne ihn gibt es keine Memory-Mapped-Kommunikation. Beide Funktionen sind
+deshalb im FSBL stark überschrieben.
+
+### uwTick blieb null, gleich zweimal
+
+Im **FSBL** war `HAL_TIM_PeriodElapsedCallback()` nicht überschrieben, HAL rief den
+leeren Weak-Handler auf, `uwTick` wurde nie hochgezählt und alle HAL-Timeouts schlugen
+sofort fehl.
+
+In der **Appli** trat dasselbe Problem aus einem anderen Grund auf: mit definiertem
+`USE_THREADX_AI_RUNTIME` wird der `SysTick_Handler` aus `stm32n6xx_it.c` per `#ifndef`
+ausgeschlossen, und stattdessen gewinnt der ThreadX-Handler aus
+`tx_initialize_low_level.S` die Link-Auflösung. Der ruft aber nur
+`_tx_timer_interrupt()` auf, nicht `HAL_IncTick()`. Ergebnis: der LED-Blink-Test in
+`main()` hing in `HAL_Delay(200)` fest, und das noch vor `MX_ThreadX_Init()`, also
+bevor ThreadX überhaupt lief. Von außen sah es aus, als würde die Appli gar nicht
+starten.
+
+Der Fix steht in der Assembler-Datei, in beiden Abschnitten (ARMCC und GCC):
+
+```asm
+BL      HAL_IncTick
+BL      _tx_timer_interrupt
+```
+
+### Der Sprung in die Appli
+
+`JumpToApplication()` folgte ursprünglich dem Standard-Cortex-M-Muster, das auf dem
+STM32N6 an drei Stellen falsch ist:
+
+| Problem | Warum |
+|---------|-------|
+| `HAL_RCC_DeInit()` vor dem Sprung | hätte den XSPI2-Takt zurücksetzen können, und die Appli liegt bei `0x70100400` genau dort. Der nächste Befehlsabruf wäre ein HardFault gewesen |
+| `HAL_DeInit()` vor dem Sprung | unnötig, die Appli initialisiert in `SystemClock_Config()` ohnehin alles neu |
+| fehlendes `__set_MSPLIM(0)` | auf dem Cortex-M55 (ARM v8.1-M) Pflicht. Wird das alte Stack-Limit nicht gelöscht, gibt es beim `__set_MSP()` sofort einen Stack-Overflow-Fault |
+
+Dazu kam ein Sanity Check, der ungültige Vektoren zwar erkannte und
+`g_fsbl_jump_stage = 0xE001` setzte, danach aber mangels `Error_Handler()` einfach
+weiterlief und zu einer Zufallsadresse sprang.
+
+### Der Framebuffer lag im Weg
+
+`LCD_FB_ADDRESS` stand ursprünglich auf `0x34000000`. Dort liegen aber `.data` und
+`.bss`. Das Füllen des Framebuffers mit der Testfarbe hat damit sämtliche globalen
+Variablen überschrieben, noch bevor ThreadX oder die KI initialisiert waren. Die
+Adresse liegt jetzt auf `0x34400000` in AXISRAM3.
+
+---
+
+## 12. Troubleshooting
+
+| Symptom | Ursache und Abhilfe |
+|---------|---------------------|
+| Board startet nach dem Flashen nicht | RESET drücken. Der automatische Reset am Ende des Skripts darf fehlschlagen, ohne dass das Programmieren ungültig ist |
+| HardFault sehr früh in `main()` | ROM2 wurde nicht geflasht. Ausgabe des Flash-Skripts prüfen, dort steht eine ausdrückliche Warnung |
+| Display bleibt schwarz | AXISRAM3-Takt nicht aktiviert, oder `LCD_FB_ADDRESS` in `main.c` und `app_threadx.c` stimmen nicht überein. Beide Dateien definieren die Adresse getrennt |
+| Bild steht, aber kein Overlay | `App_AI_GetDisplayFramebuffer()` liefert `NULL`. Die Überschreibung in `app_threadx.c` muss aktiv sein |
+| `aiRun()` liefert dauerhaft `-2` | NPU-Interrupt kommt nicht an. RISAF-Konfiguration und NPU-Takt in `npu_init.c` prüfen |
+| Overlay zeichnet Unsinn | Die Formaterkennung hat die Tensorgeometrie falsch geraten. Ausgangsgrößen des Modells gegen `App_AI_InferYoloSegParams()` prüfen |
+| Flash-Skript findet keinen Programmer | Nur der ST-Link-Zweig ist funktionsfähig, siehe Abschnitt 13 |
+| Signierung schlägt fehl | Pfad `CUBE_PROGRAMMER_PATH` im Skript prüfen. Das Ergebnis steht oben in der Ausgabe, nicht unten |
+| Debugger zeigt `??@<hex> Unknown Source` | In `launch.json` im stlink-Abschnitt `"serverApID": "1"` ergänzen |
+| Bilder über USB kommen unvollständig | `XFER_TIMEOUT_SEC` erhöhen, anderes USB-Kabel probieren |
+
+---
+
+## 13. Offene Punkte
+
+**`launch.json` ist inkonsistent.** Bei der Appli zeigt `imageFileName` korrekt auf
+`Appli-trusted.elf`, beim FSBL dagegen auf `CDC_ACM_FSBL.elf` statt auf das signierte
+`FSBL-trusted.elf`, das das Skript eigens erzeugt.
+
+**Die Framebuffer-Adresse ist doppelt definiert.** Sowohl `main.c` als auch
+`app_threadx.c` legen `LCD_FB_ADDRESS` und die Auflösung eigenständig fest. Ändert man
+nur eine Stelle, laufen Kamera und Overlay auf verschiedene Puffer. Gehört in einen
+gemeinsamen Header.
+
+**Die Winkelberechnung fehlt noch auf dem Board.** Das Modell liefert Keypoints, das
+Display zeigt sie an, aber die Umrechnung in Gelenkwinkel passiert bisher nur auf dem
+PC in `Umrisse_in_Polygone.py`. Der vorgesehene Ort dafür ist `App_AI_OnResult()`.
+
+**Der D-Cache ist deaktiviert.** Das kostet Leistung. Wer ihn einschalten will, muss
+für Kamera- und DMA-Puffer sauberes Cache-Maintenance ergänzen.
+
+---
