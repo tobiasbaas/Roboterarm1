@@ -1,8 +1,33 @@
 # New_Image_Capture: STM32-Firmware zur Aufnahme der Trainingsbilder
 
 Das ist die Firmware, die ihr braucht, wenn ihr den Datensatz für das KI-Training
-aufnehmen wollt. Wenn ihr stattdessen die KI direkt auf dem Board laufen lassen wollt,
+aufnehmen wollt. Falls die KI direkt auf dem Board geflasht werden soll,
 ist `02_Software/Thesis_Robot_Pose` das richtige Projekt.
+
+## Inhalt
+
+- [New\_Image\_Capture: STM32-Firmware zur Aufnahme der Trainingsbilder](#new_image_capture-stm32-firmware-zur-aufnahme-der-trainingsbilder)
+  - [Inhalt](#inhalt)
+  - [1. Was diese Firmware macht](#1-was-diese-firmware-macht)
+  - [2. Projektstruktur](#2-projektstruktur)
+  - [3. Schnellstart](#3-schnellstart)
+    - [3.1 Voraussetzungen](#31-voraussetzungen)
+    - [3.2 Bauen, signieren und flashen](#32-bauen-signieren-und-flashen)
+    - [3.3 Verbindung testen](#33-verbindung-testen)
+  - [4. Aufbau der Firmware](#4-aufbau-der-firmware)
+    - [4.1 Der Weg durch main()](#41-der-weg-durch-main)
+    - [4.2 Die beiden Threads](#42-die-beiden-threads)
+    - [4.3 Ablauf einer Bildaufnahme](#43-ablauf-einer-bildaufnahme)
+  - [5. Die Komponenten im Detail](#5-die-komponenten-im-detail)
+    - [5.1 USB CDC](#51-usb-cdc)
+    - [5.2 Kamera](#52-kamera)
+    - [5.3 Display](#53-display)
+    - [5.4 Speicher, MPU und Sicherheit](#54-speicher-mpu-und-sicherheit)
+    - [5.5 Abgeschaltete Peripherie](#55-abgeschaltete-peripherie)
+  - [6. Wichtige Konstanten](#6-wichtige-konstanten)
+  - [7. Troubleshooting](#7-troubleshooting)
+
+---
 
 ## 1. Was diese Firmware macht
 
@@ -66,8 +91,7 @@ New_Image_Capture/
 ```
 
 > [!IMPORTANT]
-> Die gesamte produktive Logik liegt im **FSBL**, nicht in der Appli. Wer hier nach
-> Code sucht, sucht ihn im falschen Ordner, wenn er in `Appli/` schaut.
+> Die gesamte produktive Logik liegt im **FSBL**, nicht in der Appli. 
 
 ---
 
@@ -84,8 +108,7 @@ New_Image_Capture/
 
 
 > [!IMPORTANT]
-> Setzt vor dem Flashen **BOOT0 und BOOT1 auf Low**. Das ist der Flash-Mode und die
-> bevorzugte Betriebsart.
+> Setzt vor dem Flashen **BOOT0 und BOOT1 auf Low**. Das ist der Flash-Mode.
 
 ### 3.2 Bauen, signieren und flashen
 
@@ -122,9 +145,7 @@ Zum Testen reicht ein beliebiges Terminalprogramm auf dem COM-Port:
 | `TEST` | `TEST_A_OK`, `TEST_B_OK`, 60 mal `X`, `TEST_DONE` |
 | `CAPTURE` | `IMG:` + 4 Byte Länge + 768000 Byte Bilddaten |
 
-Wenn `PING` und `TEST` funktionieren, stimmt die USB-Strecke. `CAPTURE` schickt
-Binärdaten, die im Terminal als Zeichensalat erscheinen, das ist normal. Für den
-richtigen Ablauf nehmt `capture_image.py` aus `02_Software/Image_Capture_Python`.
+Wenn `PING` und `TEST` funktionieren, stimmt die USB-Strecke.
 
 ---
 
@@ -286,8 +307,7 @@ Kamera nicht auf den Framebuffer zugreifen und das Display bleibt schwarz.
 ### 5.4 Speicher, MPU und Sicherheit
 
 **MPU.** Für die USB-Strukturen legt `MPU_Config()` einen nicht cachebaren Bereich an.
-Die Grenzen kommen aus Linker-Symbolen (`__snoncacheable` und `__enoncacheable`), sind
-also nicht hart verdrahtet.
+Die Grenzen kommen aus Linker-Symbolen (`__snoncacheable` und `__enoncacheable`).
 
 **RIF.** `SystemIsolation_Config()` setzt die Sicherheitsattribute für die Bus-Master,
 die tatsächlich zugreifen dürfen: DCMIPP, LTDC und die GPDMA-Kanäle für UCPD. Ohne das
