@@ -1,6 +1,6 @@
 # Konzeption und Realisierung eines Edge-KI-Systems zur visuellen Posenschätzung eines Roboterarms
 
-Herzlich willkommen zum Repo des Robotersarmes der Arbeitsgruppe. Bitte achtet es handelt sich hierbei 
+Herzlich willkommen zum Repo des Robotersarmes der Arbeitsgruppe. Bitte beachtet, dass es sich hierbei handelt 
 um eine Erweiterung bereits vorhandener Infrastruktur. Für mehr Infos siehe das bisherige Github Repo:
 - (https://github.com/mama1120/rpi_ros_can_module.git)
 
@@ -60,8 +60,8 @@ Nullposition ist dabei die Grundvoraussetzung.
 .
 ├── 02_Software/
 │   ├── Beachlor_Thesis_AI/     # KI-Pipeline (Training, Datenaufbereitung, Export)
-│   ├── Image_Capture_Python/   # Host-Skripte: Robotersteuerung + Bildaufnahme
-│   ├── New_Image_Capture/      # STM32-Firmware: nur Kamera, LCD, USB CDC
+│   ├── Image_Capture_Python/   # Host-Skripte: Trainingsdatenaufnahme (nur zusammen mit STM)
+│   ├── New_Image_Capture/      # STM32-Firmware: Trainingsdatenaufnahme (Echte Bilder)
 │   └── Thesis_Robot_Pose/      # STM32-Firmware: zusätzlich KI-Inferenz auf der NPU
 ├── 03_Hardware/
 │   ├── STM32N6_Thesis_Board/   # Eigenes KiCad-Board (STM32N657X0H3Q)
@@ -133,6 +133,8 @@ Damit werden gestartet:
 * CAN-Bus
 * ROS2 inklusive aktiver UDP-Bridge
   
+Nachdem alles initialisiert hat, kann der Roboter bereits gesteuert werden über RViz. Für mehr Infos zum 
+starten von RViz, schaut im oben verlinkten GitHub Repo nach.<br>
 
 Optional, um die CAN-Nachrichten live mitzulesen (zweites Terminal, erst nach dem
 Start des Roboters):

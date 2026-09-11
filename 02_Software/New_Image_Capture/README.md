@@ -1,302 +1,357 @@
-# New_Image_Capture
-
-Ausfuehrliche technische Dokumentation zur Implementierung und Konfiguration der verwendeten Hardware-Komponenten im Projekt.
-
-Schwerpunkt dieser Dokumentation:
-- USB CDC (USBX Device)
-- Kamera (IMX335 ueber CMW + DCMIPP)
-- Display (LTDC auf RK050HR18, 640x480)
-- ThreadX-Ausfuehrungsmodell
-
-## 1. Projektueberblick
-
-Das Projekt ist ein STM32N6570-DK-basiertes Embedded-System mit Live-Kamerapipeline auf das LCD und USB-CDC-Ausgabe von Einzelbildern.
-
-Wichtige Beobachtung zur Projektstruktur:
-- Die produktive Logik liegt im FSBL-Projektteil.
-- Dort sind Kamera, Display, USBX/CDC und ThreadX vollstaendig implementiert.
-
-Kernidee des Systems:
-1. Kamera liefert Daten in DCMIPP.
-2. DCMIPP skaliert/croppt auf 640x480 RGB565.
-3. Framebuffer liegt in AXISRAM und wird direkt vom LTDC angezeigt.
-4. Bei USB-Befehl CAPTURE wird ein eingefrorener Frame ueber CDC an den Host gestreamt.
-
-## 2. Architektur der drei Hauptkomponenten
-
-## 2.1 USB CDC
-
-USB wird als USBX Device Stack mit CDC ACM Klasse betrieben.
-
-Relevante Implementierungsdateien:
-- FSBL/USBX/App/app_usbx.c
-- FSBL/USBX/App/app_usbx_device.c
-- FSBL/USBX/App/ux_device_cdc_acm.c
-- FSBL/USBX/App/ux_device_descriptors.c
-- FSBL/USBX/App/ux_device_descriptors.h
-- FSBL/Core/Src/main.c
-- FSBL/Core/Src/stm32n6xx_hal_msp.c
-- FSBL/Core/Src/stm32n6xx_it.c
-
-### USB Device-Stack und Klassenregistrierung
-
-In app_usbx.c wird USBX initialisiert:
-- USBX-Memory wird aus einem separaten Byte-Pool reserviert.
-- Danach startet MX_USBX_Device_Init().
-
-In app_usbx_device.c:
-- Device-Framework (HS/FS + String + Language) wird aufgebaut.
-- CDC ACM Klasse wird am Device-Stack registriert.
-- Eine USBX-App-Threadinstanz startet die Device-Hardware.
-
-CDC-Activation Callback:
-- In ux_device_cdc_acm.c wird ein globaler Zeiger gesetzt:
-  - g_cdc_acm != NULL bedeutet: Host ist enumeriert und CDC aktiv.
-
-### USB Endpunkte und Paketgroessen
-
-Aus den Descriptoren:
-- Interrupt IN CMD EP: 0x81 (8 Byte)
-- Bulk IN Daten EP: 0x82 (HS: 512 Byte)
-- Bulk OUT Daten EP: 0x03 (HS: 512 Byte)
-
-FIFO-Konfiguration (USB OTG HS) in app_usbx_device.c:
-- RxFIFO: 0x200 Words
-- TxFIFO0 (EP0): 0x10 Words
-- TxFIFO1 (CMD): EP-MPS/4
-- TxFIFO2 (Bulk IN): 0x100 Words
-
-### USB Hardware-Initialisierung
-
-In main.c (MX_USB1_OTG_HS_PCD_Init):
-- USB1_OTG_HS Device, High-Speed, Embedded PHY
-- DMA explizit deaktiviert
-- VBUS sensing deaktiviert
-
-In stm32n6xx_hal_msp.c:
-- USB OTG HS Clock aus HSE direct
-- USB PHY Clock aus HSE direct
-- VDDUSB und PHY-Reset-Sequenz nach ST-Muster
-- IRQ: USB1_OTG_HS_IRQn aktiviert (Prio 7)
-
-### CDC-Befehlsprotokoll im Laufzeitbetrieb
-
-In app_threadx.c (cmd_thread):
-- Initial nach Enumeration: 3x READY
-- Unterstuetzte Befehle:
-  - PING -> PONG
-  - TEST -> mehrere Test-Transfers
-  - CAPTURE -> Bildtransfer
-
-CAPTURE-Protokoll:
-1. Header mit 8 Byte senden:
-   - Magic: IMG:
-   - 4 Byte Payloadlaenge little-endian
-2. Danach rohes RGB565-Framebuffer als Binardaten senden.
-
-Wichtige Details:
-- TX Chunk-Groesse: 8192 Byte
-- Retry-Mechanik bei Schreibfehlern
-- Gesamter Transfer hat Timeout-Fenster
-- Nach Header/Binardaten wird bewusst kein Text auf CDC ausgegeben, um den Binardatenstrom nicht zu desynchronisieren.
+# New_Image_Capture: STM32-Firmware zur Aufnahme der Trainingsbilder
+
+Das ist die Firmware, die ihr braucht, wenn ihr den Datensatz für das KI-Training
+aufnehmen wollt. Wenn ihr stattdessen die KI direkt auf dem Board laufen lassen wollt,
+ist `02_Software/Thesis_Robot_Pose` das richtige Projekt.
+
+## 1. Was diese Firmware macht
+
+Das Board sitzt zwischen Kamera und Laptop. Es hält immer ein aktuelles Bild bereit und
+gibt es heraus, sobald das Python-Skript danach fragt.
+
+```
+   ┌────────────────────────┐
+   │  Laptop (Windows)      │
+   │  capture_image.py      │
+   └───────────┬────────────┘
+               │  USB CDC (virtueller COM-Port)
+               │  Kommandos: PING / TEST / CAPTURE
+               │  Antwort:   "IMG:" + 768000 Byte RGB565
+               ▼
+   ┌────────────────────────────────────────────┐
+   │  STM32N6570-DK                             │
+   │                                            │
+   │  Kamera IMX335 ──► DCMIPP ──► Framebuffer  │
+   │                               0x34200000   │
+   │                                    │       │
+   │                                    ▼       │
+   │                                  LTDC      │
+   │                                    │       │
+   │                                    ▼       │
+   │                          Display RK050HR18 │
+   └────────────────────────────────────────────┘
+```
+
+**Warum dieser Aufbau?**
+
+Der Framebuffer ist der zentrale Treffpunkt. Die Kamera schreibt über die
+DCMIPP-Pipeline direkt hinein, der LTDC liest ihn permanent aus und zeigt ihn an, und
+bei einem `CAPTURE` wird genau derselbe Speicherbereich über USB verschickt. 
+
+>[!IMPORTANT]
+>Damit das Bild während des Versendens nicht mittendrin überschrieben wird, friert die
+>Firmware die Kamera-Pipeline vor dem Transfer ein. 
+---
+
+## 2. Projektstruktur
+
+```
+New_Image_Capture/
+├── FSBL/                             # Kompletter STM32N6-Code
+│   ├── Core/
+│   │   ├── Src/main.c                # Peripherie, Takt, MPU, LTDC, DCMIPP-Clock
+│   │   ├── Src/app_threadx.c         # die beiden Threads, USB-Protokoll
+│   │   ├── Src/stm32n6xx_hal_msp.c
+│   │   └── Inc/                      # Konfigurationsheader für Kamera, ISP, HAL
+│   ├── USBX/App/                     # USB-Device-Stack, CDC-ACM-Klasse, Deskriptoren
+│   ├── USBPD/                        # USB Power Delivery
+│   ├── AZURE_RTOS/App/               # ThreadX- und USBX-Speicherpools
+│   └── STM32N657XX_AXISRAM2_fsbl.ld  # Linker-Skript
+├── Appli/                            # Nicht benutzt, ist leer
+├── Drivers/                          # HAL und BSP, generiert
+├── Middlewares/                      # ThreadX, USBX, Camera Middleware
+├── New_Image_Capture.ioc             # CubeMX-Projektdatei
+├── sign_binaries.bat                 # bauen, signieren, flashen
+└── README.md                         # diese Datei
+```
+
+> [!IMPORTANT]
+> Die gesamte produktive Logik liegt im **FSBL**, nicht in der Appli. Wer hier nach
+> Code sucht, sucht ihn im falschen Ordner, wenn er in `Appli/` schaut.
+
+---
+
+## 3. Schnellstart
+
+### 3.1 Voraussetzungen
+
+**Hardware**
+
+| Komponente | Anmerkung |
+|---|---|
+| STM32N6570-DK | mit Kamera IMX335 und Display RK050HR18 |
+| USB-Kabel | für die Datenverbindung zum Laptop |
+
+
+> [!IMPORTANT]
+> Setzt vor dem Flashen **BOOT0 und BOOT1 auf Low**. Das ist der Flash-Mode und die
+> bevorzugte Betriebsart.
+
+### 3.2 Bauen, signieren und flashen
+
+Ein Skript erledigt alles nacheinander:
+
+```bat
+sign_binaries.bat
+```
+
+Alternativ kann über das VsCode Terminal im richtien Projektordner der folgende Command ausgeführt werden: 
+
+```bat
+cmake --build build/Debug --target flash
+```
+
+Was dabei passiert:
+
+1. CMake baut das Ziel `CDC_ACM_FSBL`
+2. `objcopy` erzeugt aus der `.elf` eine `.bin`
+3. Das Signing Tool macht daraus `CDC_ACM_FSBL-trusted.bin`
+4. Der Programmer löscht den externen Flash und schreibt das Image
+5. Reset
+   
+### 3.3 Verbindung testen
 
-## 2.2 Kamera (IMX335 + CMW + DCMIPP)
+Steckt das Board per USB an den Laptop. Es meldet sich als virtueller COM-Port und
+sendet nach der Enumeration dreimal `READY`.
 
-Relevante Implementierungsdateien:
-- FSBL/Core/Src/app_threadx.c
-- FSBL/Core/Src/main.c
-- FSBL/Core/Src/stm32n6xx_hal_msp.c
-- FSBL/Core/Inc/cmw_camera_conf.h
-- FSBL/Core/Inc/imx335_isp_param_conf.h
-- FSBL/Core/Inc/isp_conf.h
-- Middlewares/Camera_Middleware/*
-
-### Sensor- und Pipelineparameter
-
-In app_threadx.c:
-- Sensor-Sollgroesse: 2592x1944
-- Zielausgabe: 640x480
-- Ausgabeformat: RGB565
-- Kamera-FPS Sollwert: 30
-
-Ablauf im camera_thread:
-1. Sensorname ermitteln.
-2. Kamera via CMW_CAMERA_Init() initialisieren.
-3. DCMIPP IPPlug konfigurieren.
-4. Pipe-Konfiguration setzen (PIPE1, RGB565, Crop-Modus).
-5. Kamera kontinuierlich starten auf den LCD-Framebuffer.
-6. ISP Warmup-Zeit abwarten.
-7. Pipe suspendieren (Frame Freeze).
-8. Dauerhaft CMW_CAMERA_Run() im Loop.
-
-### DCMIPP/CSI Clockkonfiguration
+Zum Testen reicht ein beliebiges Terminalprogramm auf dem COM-Port:
 
-In main.c (MX_DCMIPP_ClockConfig):
-- DCMIPP Clock ueber IC17 von PLL1 mit Teiler 4 (300 MHz)
-- CSI PHY Ref Clock ueber IC18 von PLL1 mit Teiler 60 (20 MHz)
+| Ihr sendet | Board antwortet |
+|---|---|
+| `PING` | `PONG` |
+| `TEST` | `TEST_A_OK`, `TEST_B_OK`, 60 mal `X`, `TEST_DONE` |
+| `CAPTURE` | `IMG:` + 4 Byte Länge + 768000 Byte Bilddaten |
 
-In stm32n6xx_hal_msp.c:
-- DCMIPP und CSI Clocks aktiviert
-- DCMIPP_IRQn und CSI_IRQn aktiviert (Prio 7)
+Wenn `PING` und `TEST` funktionieren, stimmt die USB-Strecke. `CAPTURE` schickt
+Binärdaten, die im Terminal als Zeichensalat erscheinen, das ist normal. Für den
+richtigen Ablauf nehmt `capture_image.py` aus `02_Software/Image_Capture_Python`.
 
-### ISP-Konfiguration
+---
+
+## 4. Aufbau der Firmware
 
-Die Kamera-ISP-Parameter werden ueber Konfigurationsheader und CMW-Middleware bereitgestellt (u. a. AWB/AEC/Demosaicing-Parameter fuer IMX335).
+### 4.1 Der Weg durch main()
 
-## 2.3 Display (LTDC + RK050HR18)
+```c
+MPU_Config();                  // muss VOR dem I-Cache kommen
+SCB_EnableICache();            // nur I-Cache, D-Cache bleibt bewusst aus
+HAL_Init();
+SystemClock_Config();
+__HAL_RCC_AXISRAM3_MEM_CLK_ENABLE();   // Takt für den Framebuffer
+MX_GPIO_Init();
+// ... GPDMA1, USART1, DCMIPP, LTDC, RAMCFG, USB
+SystemIsolation_Config();
+MX_ThreadX_Init();             // tx_kernel_enter, kehrt nie zurück
+```
+
+### 4.2 Die beiden Threads
+
+Nach `tx_kernel_enter()` übernimmt der ThreadX-Scheduler. Bei ThreadX gilt: **kleinere
+Zahl bedeutet höhere Priorität.**
+
+| Thread | Priorität | Stack | Aufgabe |
+|---|---|---|---|
+| `cmd_thread` | 12 (höher) | 4 KB | wartet auf USB-Befehle, sendet Bilder |
+| `camera_thread` | 15 | 8 KB | bedient die Kamera-Pipeline |
 
-Relevante Implementierungsdateien:
-- FSBL/Core/Src/main.c
-- FSBL/Core/Src/stm32n6xx_hal_msp.c
-- FSBL/Core/Inc/main.h
-- FSBL/Core/Inc/stm32n6570_discovery_conf.h
-- Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_lcd.*
+Dazu kommt ein dritter Thread aus dem USBX-Stack, der den USB-Device-Start übernimmt.
+Den legt ihr nicht selbst an, er kommt aus der Middleware.
 
-### Framebuffer und Pixelformat
+### 4.3 Ablauf einer Bildaufnahme
 
-In main.c:
-- Framebuffer-Adresse: 0x34200000
-- Aufloesung: 640x480
-- Farbraum: RGB565 (2 Byte/Pixel)
-- Framebuffer-Groesse: 640 * 480 * 2 = 614400 Byte
+Das ist der wichtigste Teil der Firmware. Wenn der Laptop `CAPTURE` schickt, passiert
+Folgendes:
 
-AXISRAM3/4 wird frueh aktiviert, damit LTDC und Kamera auf den Framebuffer zugreifen koennen.
+```
+1. Kamera wieder anlaufen lassen   CMW_CAMERA_Resume(DCMIPP_PIPE1)
+2. 50 Ticks warten                 damit der ISP sich einschwingt
+3. Kamera einfrieren               CMW_CAMERA_Suspend(DCMIPP_PIPE1)
+4. Header senden                   "IMG:" + 4 Byte Payload-Länge
+5. Framebuffer in Blöcken senden   je 8192 Byte, bis 768000 erreicht sind
+6. Kamera bleibt eingefroren       bis zum nächsten CAPTURE
+```
 
-### LTDC Timing-Konfiguration
+Im Code sieht Schritt 1 bis 3 so aus:
 
-LTDC ist in main.c manuell in USER CODE implementiert:
-- HorizontalSync = 4
-- VerticalSync = 4
-- AccumulatedHBP = 12
-- AccumulatedVBP = 12
-- AccumulatedActiveW = 812
-- AccumulatedActiveH = 492
-- TotalWidth = 820
-- TotalHeigh = 500
+```c
+if (pipe_suspended) {
+  CMW_CAMERA_Resume(DCMIPP_PIPE1);
+  pipe_suspended = 0;
+}
+tx_thread_sleep(CAPTURE_SETTLE_TICKS);
+
+CMW_CAMERA_Suspend(DCMIPP_PIPE1);
+pipe_suspended = 1;
+```
 
-Layer 0:
-- Fenster 0..640 x 0..480
-- PixelFormat RGB565
-- FBStartAddress = 0x34200000
+> [!IMPORTANT]
+> Nach dem Header und während der Binärdaten darf **kein Text** mehr über CDC gesendet
+> werden. Sonst verschiebt sich der Datenstrom und der Laptop bekommt ein zerstörtes
+> Bild. Alle Statusmeldungen gehen deshalb ab diesem Punkt nur noch über UART.
 
-LTDC Clock in MSP:
-- IC16 von PLL1 mit Teiler 48 (Pixelclock 25 MHz)
+Der Header ist bewusst simpel gehalten, Länge als Little-Endian:
 
-GPIO:
-- RGB/Sync/DE-Pins auf AF14 LCD
-- zusaetzliche LCD-Control-Leitungen (Reset, OnOff, Backlight) werden als GPIO gesetzt.
+```c
+memcpy(header, IMG_HEADER_MAGIC, IMG_HEADER_MAGIC_LEN);   // "IMG:"
+header[4] = (UCHAR)((payload_size >>  0) & 0xFF);
+header[5] = (UCHAR)((payload_size >>  8) & 0xFF);
+header[6] = (UCHAR)((payload_size >> 16) & 0xFF);
+header[7] = (UCHAR)((payload_size >> 24) & 0xFF);
+```
 
-## 3. ThreadX-Ausfuehrungsmodell
+Jeder Block wird bei einem Fehler bis zu fünfmal wiederholt, und der gesamte Transfer 
+bricht nach 10 Sekunden ab. Damit hängt der Thread nicht fest, wenn die USB-Verbindung 
+wegbricht.
 
-Wichtiger Punkt zur Anforderung "arbeiten in einem Thread":
+---
 
-Der aktuelle Code verwendet zwei Anwendungs-Threads:
-- camera_thread
-- cmd_thread
+## 5. Die Komponenten im Detail
 
-Zusatzthread:
-- USBX Device App Thread fuer USB-Start/Stack-Integration
+### 5.1 USB CDC
 
-### Thread-Konfiguration
+Betrieben wird der USBX Device Stack mit der CDC-ACM-Klasse.
 
-In app_threadx.c:
-- camera_thread:
-  - Stack: 8192
-  - Priority: 15
-- cmd_thread:
-  - Stack: 4096
-  - Priority: 12
+**Endpunkte:**
 
-Interpretation:
-- Kamera/Display-Pipeline laeuft im camera_thread.
-- USB-Befehle und Bildausgabe laeuft im cmd_thread.
-- Die Komponenten arbeiten also logisch zusammen, aber nicht in exakt einem einzigen Thread.
+| Endpunkt | Typ | Größe |
+|---|---|---|
+| `0x81` | Interrupt IN, Kommandos | 8 Byte |
+| `0x82` | Bulk IN, Daten zum Laptop | 512 Byte (High Speed) |
+| `0x03` | Bulk OUT, Daten vom Laptop | 512 Byte (High Speed) |
 
-## 4. Zusammenspiel USB + Kamera + Display
+**FIFO-Aufteilung** in `app_usbx_device.c`, insgesamt stehen 1024 Words zur Verfügung:
 
-Laufzeitfluss:
-1. camera_thread startet Sensor + DCMIPP und aktualisiert den Framebuffer.
-2. LTDC zeigt den Framebuffer permanent an.
-3. cmd_thread wartet auf USB-Befehle.
-4. Bei CAPTURE:
-   - Kamera wird kurz resumed (settle)
-   - danach suspendiert (Freeze)
-   - aktueller Frame wird via USB CDC gesendet.
+```c
+HAL_PCDEx_SetRxFiFo(&hpcd_USB_OTG_HS1, 0x200);   // 512 Words, 2048 Byte
+HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_HS1, 0, 0x10); //  16 Words, EP0 Control
+HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_HS1, 1, USBD_CDCACM_EPINCMD_HS_MPS / 4);
+HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_HS1, 2, 0x100); // 256 Words, Bulk IN
+```
 
-Dadurch ist der gesendete Frame konsistent und entspricht dem eingefrorenen Displaybild.
+Die USB-Hardware läuft als High Speed mit eingebautem PHY, DMA ist ausgeschaltet und
+VBUS-Sensing ebenfalls.
 
-## 5. Speicher, MPU, Cache und Security
+### 5.2 Kamera
 
-## 5.1 MPU und Cache
+Der Ablauf im `camera_thread`:
 
-In main.c wird MPU vor HAL_Init konfiguriert:
-- Non-cacheable Region fuer USBX/USB-Strukturen ueber Linker-Symbole (__snoncacheable, __enoncacheable)
+```
+1. CMW_CAMERA_GetSensorName()        Sensor identifizieren
+2. CMW_CAMERA_Init()                 2592 x 1944, 30 fps, gespiegelt
+3. HAL_DCMIPP_SetIPPlugConfig()      Burst 128 Byte, Page 256 Byte, Client 5
+4. CMW_CAMERA_SetPipeConfig()        PIPE1 auf 640 x 480 RGB565, Aspect-Ratio-Crop
+5. CMW_CAMERA_Start()                kontinuierlich in den Framebuffer
+6. 200 Ticks ISP-Warmup              Belichtung und Weißabgleich einschwingen
+7. CMW_CAMERA_Suspend()              einfrieren, bis das erste CAPTURE kommt
+8. while(1) { CMW_CAMERA_Run(); }
+```
 
-Caches:
-- I-Cache aktiviert
-- D-Cache absichtlich deaktiviert
+Der ISP braucht die Aufwärmphase, sonst sind die ersten Bilder über- oder
+unterbelichtet und damit für das Training unbrauchbar.
 
-Grund im Codekommentar:
-- Fruehere D-Cache-Aktivierung fuehrte zu HardFaults bzw. Datenkonsistenzproblemen mit DMA/Kamera/USB.
+**Taktkonfiguration** in `main.c`, Funktion `MX_DCMIPP_ClockConfig()`:
 
-## 5.2 RIF / Security Attribute
-
-SystemIsolation_Config() setzt Sicherheitsattribute fuer relevante Bus-Master/Peripherien:
-- DCMIPP
-- LTDC
-- GPDMA Kanaele fuer UCPD
-
-Damit wird der Zugriff im Secure/Privileged-Kontext explizit festgelegt.
-
-## 5.3 ThreadX/USBX Memory Pools
-
-In app_azure_rtos_config.h:
-- TX_APP_MEM_POOL_SIZE = 1024
-- UX_APP_MEM_POOL_SIZE = 38912 + 16*1024
-- USBPD_DEVICE_APP_MEM_POOL_SIZE = 5000
-
-In app_azure_rtos.c:
-- Separate Byte-Pools fuer ThreadX, USBX und USBPD
-- USBX-Pool liegt in spezieller Section (.UsbxPoolSection)
-
-## 6. Weitere konfigurierte Peripherie (derzeit bewusst deaktiviert)
-
-In main.c sind mehrere MX_*_Init-Funktionen bewusst per fruehem return stillgelegt:
-- ADC
-- MDF
-- SAI
-- SDMMC2
-- USB2 HCD
-- XSPI1/XSPI2
-
-Damit bleibt die Laufzeit auf die benoetigten Funktionen fokussiert (USB CDC Device, Kamera, LTDC, ThreadX).
-
-## 7. Build- und Projektintegration
-
-Relevante Build-Dateien:
-- CMakeLists.txt (Projektroot)
-- FSBL/CMakeLists.txt
-- FSBL/CMakePresets.json
-- FSBL/mx-generated.cmake
-
-Kernaussagen:
-- FSBL Ziel: CDC_ACM_FSBL
-- Toolchain: arm-none-eabi
-- Post-Build erzeugt .bin
-- custom target flash ruft sign_binaries.bat auf
-- mx-generated.cmake bindet HAL, ThreadX, USBX, USBPD, Camera Middleware und BSP ein
-
-## 8. Zusammenfassung
-
-Im implementierten Stand bildet das Projekt eine stabile Echtzeitkette:
-- Kameraaufnahme (IMX335 -> DCMIPP)
-- Live-Anzeige (LTDC auf RK050HR18)
-- On-Demand-Bildtransfer ueber USB CDC
-
-Wesentlich fuer die Stabilitaet sind:
-- klare Trennung von Kamera- und Kommando-Thread
-- Freeze/Resume-Mechanik fuer konsistente CAPTURE-Frames
-- MPU Non-cacheable Bereich fuer USB-Strukturen
-- deaktivierter D-Cache zur Vermeidung von DMA-Kohaerenzproblemen
-
-Wenn die Architektur zwingend auf einen einzigen Thread umgestellt werden soll, kann das als naechster Schritt umgesetzt werden, indem die CDC-Befehlsbehandlung in den camera_thread integriert wird.
+| Signal | Quelle | Teiler | Ergebnis |
+|---|---|---|---|
+| DCMIPP | IC17 von PLL1 | 4 | 300 MHz |
+| CSI PHY Ref | IC18 von PLL1 | 60 | 20 MHz |
+
+Die ISP-Parameter für den IMX335 (Weißabgleich, Belichtungsautomatik, Demosaicing)
+kommen aus `imx335_isp_param_conf.h` und der Camera Middleware.
+
+### 5.3 Display
+
+Der LTDC ist in `main.c` von Hand konfiguriert, nicht über CubeMX generiert.
+
+| Parameter | Wert |
+|---|---|
+| Framebuffer | `0x34200000` in AXISRAM |
+| Auflösung | 640 x 480 |
+| Pixelformat | RGB565, 2 Byte je Pixel |
+| Größe | 640 * 480 * 2 = 614400 Byte |
+| Pixeltakt | IC16 von PLL1, Teiler 48, also 25 MHz |
+
+Die Timings für das RK050HR18:
+
+```
+HorizontalSync     =   4      AccumulatedActiveW = 812
+VerticalSync       =   4      AccumulatedActiveH = 492
+AccumulatedHBP     =  12      TotalWidth         = 820
+AccumulatedVBP     =  12      TotalHeight        = 500
+```
+
+AXISRAM3 und AXISRAM4 werden früh in `main()` eingeschaltet, sonst können LTDC und
+Kamera nicht auf den Framebuffer zugreifen und das Display bleibt schwarz.
+
+### 5.4 Speicher, MPU und Sicherheit
+
+**MPU.** Für die USB-Strukturen legt `MPU_Config()` einen nicht cachebaren Bereich an.
+Die Grenzen kommen aus Linker-Symbolen (`__snoncacheable` und `__enoncacheable`), sind
+also nicht hart verdrahtet.
+
+**RIF.** `SystemIsolation_Config()` setzt die Sicherheitsattribute für die Bus-Master,
+die tatsächlich zugreifen dürfen: DCMIPP, LTDC und die GPDMA-Kanäle für UCPD. Ohne das
+werden Zugriffe blockiert.
+
+**Speicherpools** in `app_azure_rtos_config.h`:
+
+| Pool | Größe |
+|---|---|
+| ThreadX | 1024 Byte |
+| USBX | 38912 + 16 * 1024 Byte |
+| USBPD | 5000 Byte |
+
+Der USBX-Pool liegt in einer eigenen Linker-Section `.UsbxPoolSection`, damit er
+garantiert im richtigen Speicherbereich landet.
+
+### 5.5 Abgeschaltete Peripherie
+
+In `main.c` sind mehrere von CubeMX erzeugte Init-Funktionen durch ein frühes `return`
+stillgelegt: ADC, MDF, SAI, SDMMC2, USB2 HCD und XSPI1/XSPI2.
+
+Das ist Absicht und kein Versehen. Die Funktionen bleiben im Code stehen, damit CubeMX
+sie bei einer Neugenerierung nicht wieder anlegt, tun aber nichts.
+
+---
+
+## 6. Wichtige Konstanten
+
+Alle in `FSBL/Core/Src/app_threadx.c`, weiter oben in der Datei:
+
+| Konstante | Wert | Bedeutung |
+|---|---|---|
+| `LCD_FB_ADDRESS` | `0x34200000` | Framebuffer, auch in `main.c` definiert |
+| `LCD_WIDTH` / `LCD_HEIGHT` | 640 / 480 | Bildgröße |
+| `LCD_BPP` | 2 | RGB565 |
+| `SENSOR_IMX335_WIDTH` / `_HEIGHT` | 2592 / 1944 | Sensorauflösung |
+| `CAMERA_FPS` | 30 | Sollwert |
+| `ISP_WARMUP_TICKS` | 200 | Aufwärmzeit nach dem Start |
+| `CAPTURE_SETTLE_TICKS` | 50 | Wartezeit vor dem Einfrieren |
+| `CDC_RX_BUF_SIZE` | 64 | Empfangspuffer für Kommandos |
+| `CDC_TX_BUF_SIZE` | 8192 | Blockgröße beim Senden |
+| `CDC_WRITE_RETRIES` | 5 | Wiederholungen je Block |
+| `XFER_TIMEOUT_SEC` | 10 | Abbruch des Gesamttransfers |
+| `IMG_HEADER_MAGIC` | `"IMG:"` | Kennung im Header |
+
+> [!IMPORTANT]
+> `LCD_FB_ADDRESS` ist in `main.c` **und** in `app_threadx.c` getrennt definiert. Wenn
+> ihr die Adresse ändert, müsst ihr es an beiden Stellen tun. Sonst schreibt die Kamera
+> in einen anderen Puffer, als über USB gesendet wird, und ihr bekommt ein Standbild
+> oder Datenmüll.
+
+---
+
+## 7. Troubleshooting
+
+| Symptom | Ursache und Abhilfe |
+|---|---|
+| Board meldet sich nicht als COM-Port | Firmware nicht korrekt geflasht oder nicht signiert. Nochmal flashen, danach RESET drücken |
+| Kein `READY` nach dem Anstecken | Board resetten. Im UART-Log über ST-Link prüfen, ob `[DBG] cmd_thread started` erscheint |
+| `PING` funktioniert, `CAPTURE` nicht | Meist ein Timeout. `XFER_TIMEOUT_SEC` erhöhen oder ein anderes USB-Kabel probieren |
+| Bild kommt unvollständig oder verschoben an | Irgendwo wird Text über CDC gesendet, während Binärdaten laufen. Alle Ausgaben nach dem Header müssen über UART gehen |
+| Display bleibt schwarz | AXISRAM3/4-Takt nicht aktiviert, oder LTDC-Timings stimmen nicht |
+| Bild auf dem Display steht, ändert sich aber nicht | Normal. Die Kamera ist nach dem Warmup eingefroren und läuft erst beim ersten `CAPTURE` wieder an |
+| Bilder sind über- oder unterbelichtet | ISP-Warmup zu kurz. `ISP_WARMUP_TICKS` erhöhen |
+| HardFault kurz nach dem Start | Meist der D-Cache. Er muss deaktiviert bleiben, solange kein Cache-Maintenance für Kamera und USB ergänzt ist |
+
+---
