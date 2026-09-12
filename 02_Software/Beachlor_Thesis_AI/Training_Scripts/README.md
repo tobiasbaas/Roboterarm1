@@ -10,14 +10,49 @@ Blender über das Training bis zum quantisierten ONNX-Modell für den STM32N6.
 
 ## Inhalt
 
-1. [Übersicht](#1-übersicht)
-2. [Schnellstart](#2-schnellstart)
-3. [Projektstruktur](#3-projektstruktur)
-4. [Die Pipeline im Überblick als Flussdiagramm](#4-die-pipeline-im-überblick-als-flussdiagramm)
-5. [Die Skripte im Detail](#5-die-skripte-im-detail)
-6. [Pfad- und Run-Verwaltung](#6-pfad-und-run-verwaltung)
-7. [Datensätze und Label-Formate](#7-datensätze-und-label-formate)
-8. [Häufige Fehler](#8-häufige-fehler)
+- [Roboterarm Joint-Erkennung: KI-Dokumentation](#roboterarm-joint-erkennung-ki-dokumentation)
+  - [Inhalt](#inhalt)
+  - [1. Übersicht](#1-übersicht)
+    - [Klassen](#klassen)
+    - [Keypoint-Schema (9 Keypoints)](#keypoint-schema-9-keypoints)
+  - [2. Schnellstart](#2-schnellstart)
+  - [3. Projektstruktur](#3-projektstruktur)
+  - [4. Die Pipeline im Überblick als Flussdiagramm](#4-die-pipeline-im-überblick-als-flussdiagramm)
+  - [5. Die Skripte im Detail](#5-die-skripte-im-detail)
+    - [5.1 Blender: Datenerzeugung](#51-blender-datenerzeugung)
+      - [Randomisierungsparameter](#randomisierungsparameter)
+    - [5.2 `Umrisse_in_Polygone.py`: Datenvorbereitung](#52-umrisse_in_polygonepy-datenvorbereitung)
+      - [Schritt 1: Virtuell](#schritt-1-virtuell)
+      - [Schritt 2: Echt](#schritt-2-echt)
+      - [Die richtige Reihenfolge](#die-richtige-reihenfolge)
+      - [Segmentierung gegenüber Pose bei echten Bildern](#segmentierung-gegenüber-pose-bei-echten-bildern)
+      - [Schritt 3: Winkelberechnung](#schritt-3-winkelberechnung)
+      - [Zwei Wege zur Winkelberechnung im Vergleich](#zwei-wege-zur-winkelberechnung-im-vergleich)
+    - [5.3 `EdgeAI.py`: Training, Validierung, Export](#53-edgeaipy-training-validierung-export)
+      - [Device-Auswahl](#device-auswahl)
+      - [Aktuellen KI-Trainingsparameter](#aktuellen-ki-trainingsparameter)
+      - [Standard gegenüber Optimiert](#standard-gegenüber-optimiert)
+    - [5.4 `Validierung.ipynb`: Auswertung](#54-validierungipynb-auswertung)
+    - [5.5 Label Studio: Labels prüfen und zurückspielen](#55-label-studio-labels-prüfen-und-zurückspielen)
+      - [Hinweg: `label_studio_converter.py`](#hinweg-label_studio_converterpy)
+      - [Bilder bereitstellen](#bilder-bereitstellen)
+      - [Import in Label Studio](#import-in-label-studio)
+      - [Rückweg: `label_studio_sync.py`](#rückweg-label_studio_syncpy)
+    - [5.6 `npzConverter.py`: Kalibrierdaten für STM32Cube AI Studio](#56-npzconverterpy-kalibrierdaten-für-stm32cube-ai-studio)
+      - [Warum Kalibrierung nötig ist](#warum-kalibrierung-nötig-ist)
+      - [Kommandozeilenoptionen](#kommandozeilenoptionen)
+      - [Beispiel](#beispiel)
+  - [6. Pfad- und Run-Verwaltung](#6-pfad--und-run-verwaltung)
+    - [Versionierte Runs](#versionierte-runs)
+    - [Automatische Erkennung neuer Realbild-Daten](#automatische-erkennung-neuer-realbild-daten)
+    - [Optionale Umgebungsvariablen](#optionale-umgebungsvariablen)
+  - [7. Datensätze und Label-Formate](#7-datensätze-und-label-formate)
+    - [YOLO-Segmentierungs-Label](#yolo-segmentierungs-label)
+    - [YOLO-Pose-Label](#yolo-pose-label)
+  - [8. Häufige Fehler](#8-häufige-fehler)
+    - [Training (`EdgeAI.py`)](#training-edgeaipy)
+    - [Datenvorbereitung (`Umrisse_in_Polygone.py`)](#datenvorbereitung-umrisse_in_polygonepy)
+    - [Kalibrierdaten (`npzConverter.py`)](#kalibrierdaten-npzconverterpy)
 
 ---
 
@@ -151,55 +186,7 @@ Beachlor_Thesis_AI/
 
 ## 4. Die Pipeline im Überblick als Flussdiagramm
 
-```mermaid
-flowchart TB
-    subgraph DATENERZEUGUNG["1: Datenerzeugung"]
-        BLENDER["Blender-Szene<br/>(Roboterarm-Modell)"]
-        BLENDER_SCRIPT["Blender_Segment_Keypoint_Generation.py<br/>● Zufaellige Posen<br/>● Domain Randomization<br/>● RGB + Masken + Pose-Labels + CSV"]
-        BLENDER --> BLENDER_SCRIPT
-    end
-
-    subgraph KONVERTIERUNG["2: Datenkonvertierung"]
-        UMRISSE_V["Umrisse_in_Polygone.py [1] Virtuell<br/>● Masken zu YOLO-Seg-Labels<br/>● Pose-Labels organisieren<br/>● Train/Val Split"]
-        UMRISSE_R["Umrisse_in_Polygone.py [2] Echt<br/>● Auto-Annotation mit Blender-Modell<br/>● Seg zu Pose-Labels ableiten"]
-        KAMERA["Echte Kamera-Bilder<br/>(Image_Capture_Python)"]
-    end
-
-    subgraph TRAINING["3: Modell-Training"]
-        EDGE_V["EdgeAI.py [1] Virtuell<br/>● Seg-Modell (YOLO11n-seg)<br/>● Pose-Modell (YOLO11n-pose)"]
-        EDGE_R["EdgeAI.py [2] Echt<br/>● Fine-Tune Seg auf echten Bildern<br/>● Fine-Tune Pose auf echten Bildern"]
-    end
-
-    subgraph VALIDIERUNG["4: Validierung"]
-        VAL["Validierung.ipynb<br/>● Loss-Kurven, mAP, Confusion Matrix<br/>● Seg zu Centroids zu Winkel<br/>● Pose zu Keypoints zu Winkel"]
-        WINKEL["Umrisse_in_Polygone.py [3]<br/>Winkelberechnung"]
-    end
-
-    subgraph DEPLOYMENT["5: Export und Deployment"]
-        EXPORT["EdgeAI.py [4] Export<br/>● ONNX-Export<br/>● INT8-Quantisierung"]
-        NPZ["npzConverter.py<br/>● Kalibrierungsdaten fuer INT8"]
-        EDGE_HW["STM32N6 / Edge-Hardware<br/>Echtzeit-Inferenz"]
-    end
-
-    BLENDER_SCRIPT -->|"dataset/<br/>images + masks + labels_pose + CSV"| UMRISSE_V
-    UMRISSE_V -->|"yolo_dataset/ + pose_dataset/"| EDGE_V
-    EDGE_V -->|"Blender-Modelle"| UMRISSE_R
-    KAMERA -->|"Echte Fotos"| UMRISSE_R
-    UMRISSE_R -->|"real_dataset/ + real_pose_dataset/"| EDGE_R
-    EDGE_V -->|"Pre-trained Weights"| EDGE_R
-    EDGE_V --> VAL
-    EDGE_R --> VAL
-    EDGE_R -->|"best.pt"| WINKEL
-    EDGE_R -->|"best.pt"| EXPORT
-    NPZ -->|"calibration.npz"| EXPORT
-    EXPORT -->|"ONNX / INT8"| EDGE_HW
-
-    style DATENERZEUGUNG fill:#e8f4fd,stroke:#1976d2,stroke-width:2px
-    style KONVERTIERUNG fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    style TRAINING fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
-    style VALIDIERUNG fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    style DEPLOYMENT fill:#fce4ec,stroke:#c62828,stroke-width:2px
-```
+![KI-Trainingspipeline vollständig aufgeührt](image.png)
 
 ---
 

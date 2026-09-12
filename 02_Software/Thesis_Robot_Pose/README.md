@@ -1,11 +1,15 @@
 # Thesis_Robot_Pose: Firmware mit Edge-KI auf dem STM32N6570-DK
 
-Diese Firmware nimmt mit der Bordkamera ein Live-Bild auf, lässt darauf ein
-YOLO-Modell auf der NPU des STM32N6 rechnen und zeichnet das Ergebnis direkt in den
-Framebuffer des Displays. Alles läuft auf dem Mikrocontroller, ohne PC.
+Das ist das Hauptskript, wenn die Schritte des KI-Trainings vollständig abgeeschlossen 
+sind. Dabei inferiert das trainierte YOLO-Modell auf dem geraden vorhandenen Bild und es 
+werden die entsprechende Bereiche markiert und die Winkel errechnet. 
 
 Zwei Modelle sind gleichzeitig eingebunden und lassen sich per Tastendruck umschalten:
 **Pose** (Keypoints des Roboterarms) und **Segmentierung** (Masken der fünf Armsektionen).
+
+>[!IMPORTANT]
+>Der Code konnte in der Vergangenheit erfolgreich geflsht werden, aber der STM32N6 startet nicht
+>den Programmcode aus dem Flash. Ursache konnte nicht gefunden werden. 
 
 ---
 
@@ -14,13 +18,12 @@ Zwei Modelle sind gleichzeitig eingebunden und lassen sich per Tastendruck umsch
 - [Thesis\_Robot\_Pose: Firmware mit Edge-KI auf dem STM32N6570-DK](#thesis_robot_pose-firmware-mit-edge-ki-auf-dem-stm32n6570-dk)
   - [Inhalt](#inhalt)
   - [1. Was man sieht, wenn es läuft](#1-was-man-sieht-wenn-es-läuft)
-  - [2. Schnellstart: bauen, signieren, flashen](#2-schnellstart-bauen-signieren-flashen)
-    - [Voraussetzungen](#voraussetzungen)
+  - [2. Schnellstart](#2-schnellstart)
     - [Board vorbereiten](#board-vorbereiten)
     - [Der eine Befehl](#der-eine-befehl)
     - [Der Signier-Befehl im Klartext](#der-signier-befehl-im-klartext)
     - [Debuggen aus VS Code](#debuggen-aus-vs-code)
-  - [3. Das Grundprinzip: zwei Programme, nicht eins](#3-das-grundprinzip-zwei-programme-nicht-eins)
+  - [3. Das Grundprinzip: zwei Programme](#3-das-grundprinzip-zwei-programme)
     - [Was der FSBL genau tut](#was-der-fsbl-genau-tut)
   - [4. Speicherlayout](#4-speicherlayout)
   - [5. Laufzeitarchitektur: die drei Threads](#5-laufzeitarchitektur-die-drei-threads)
@@ -31,18 +34,16 @@ Zwei Modelle sind gleichzeitig eingebunden und lassen sich per Tastendruck umsch
     - [Die Erweiterungspunkte (weak Hooks)](#die-erweiterungspunkte-weak-hooks)
   - [6. Der KI-Teil im Detail](#6-der-ki-teil-im-detail)
     - [Zwei Modelle nebeneinander](#zwei-modelle-nebeneinander)
-    - [Wie eine Inferenz abläuft](#wie-eine-inferenz-abläuft)
-    - [Postprocessing auf dem Mikrocontroller](#postprocessing-auf-dem-mikrocontroller)
+    - [Ablauf einer Inferenz](#ablauf-einer-inferenz)
+    - [Postprocessing](#postprocessing)
     - [NPU-Initialisierung](#npu-initialisierung)
   - [7. Bedienung am Board](#7-bedienung-am-board)
   - [8. USB-CDC-Protokoll](#8-usb-cdc-protokoll)
   - [9. Dateiübersicht](#9-dateiübersicht)
     - [Wo die Anwendungslogik liegt](#wo-die-anwendungslogik-liegt)
-    - [Was generiert ist und nicht von Hand geändert werden sollte](#was-generiert-ist-und-nicht-von-hand-geändert-werden-sollte)
+    - [Generiert und darf nicht verändert werden!](#generiert-und-darf-nicht-verändert-werden)
     - [Bootkette und Build](#bootkette-und-build)
-  - [10. Ein neues Modell einbinden](#10-ein-neues-modell-einbinden)
-  - [Skript gibt am Ende die tatsächlich programmierten Dateien aus.](#skript-gibt-am-ende-die-tatsächlich-programmierten-dateien-aus)
-  - [11. Troubleshooting](#11-troubleshooting)
+  - [10. Troubleshooting](#10-troubleshooting)
 
 ---
 
@@ -61,23 +62,9 @@ Segmentierungs-Modus.
 
 Der Taster **USER1 (B2)** schaltet zwischen den beiden Modellen um.
 
-Hardware: STM32N6570-DK mit Kamera IMX335 und Display RK050HR18.
-
 ---
 
-## 2. Schnellstart: bauen, signieren, flashen
-
-### Voraussetzungen
-
-| Werkzeug | Wofür |
-|----------|-------|
-| VS Code mit der STM32-Erweiterung | Build-Integration, Debugger |
-| STM32CubeCLT | `arm-none-eabi-gcc`, `objcopy`, GDB-Server, CMake, Ninja, SVD-Dateien |
-| STM32CubeProgrammer | `STM32_SigningTool_CLI.exe` und der External Loader |
-| STM32CubeMX (optional) | nur wenn die `.ioc` geändert wird |
-
-STM32CubeIDE wird **nicht** gebraucht. Der Pfad zur CubeIDE in `sign_binaries.bat` ist
-nur ein Fallback für den Fall, dass kein CMake-Build-Ordner gefunden wird.
+## 2. Schnellstart
 
 ### Board vorbereiten
 
@@ -113,11 +100,6 @@ Der STM32N6 führt nur signierte Images aus. Der Aufruf lautet:
 STM32_SigningTool_CLI.exe -bin <name>.bin -nk -of 0x80000000 -t fsbl -o <name>-trusted.bin -align -hv 2.3 -dump <name>-trusted.bin
 ```
 
-Wichtig zu wissen: **auch die Appli wird mit `-t fsbl` signiert.** Das ist kein
-Tippfehler, der Bootloader-Typ bezieht sich hier auf das Header-Format, nicht auf die
-Rolle im System. Das Ergebnis der Signierung steht ganz **oben** in der Ausgabe des
-Tools, nicht am Ende.
-
 ### Debuggen aus VS Code
 
 Die Konfiguration steht in `.vscode/launch.json` und nutzt den Debug-Typ
@@ -131,21 +113,13 @@ Die Konfiguration steht in `.vscode/launch.json` und nutzt den Debug-Typ
 
 ---
 
-## 3. Das Grundprinzip: zwei Programme, nicht eins
+## 3. Das Grundprinzip: zwei Programme
 
 Der STM32N6 hat **keinen internen Flash**. Der gesamte Code liegt in einem externen
 NOR-Flash (MX66UW1G45G) und muss von dort erst zugänglich gemacht werden. Deshalb
 besteht das Projekt aus zwei getrennten Programmen.
 
-```mermaid
-flowchart LR
-    ROM["Boot ROM<br/>(im Chip, unveraenderlich)"]
-    FSBL["FSBL<br/>laeuft aus AXISRAM2<br/>0x34180400"]
-    APPLI["Appli<br/>laeuft aus dem NOR-Flash<br/>0x70100400"]
-
-    ROM -->|"laedt signiertes<br/>FSBL-Image"| FSBL
-    FSBL -->|"XSPI memory-mapped<br/>schalten, dann springen"| APPLI
-```
+![Bootloader Überblick](image-1.png)
 
 **FSBL** steht für First Stage Bootloader. Er ist klein, läuft aus dem internen RAM
 und hat genau eine Aufgabe: die beiden XSPI-Schnittstellen in den Memory-Mapped-Modus
@@ -153,9 +127,6 @@ versetzen, damit die CPU Befehle direkt aus dem externen Flash holen kann
 (Execute in Place). Danach springt er in die Appli.
 
 **Appli** ist die eigentliche Anwendung: Kamera, Display, USB, ThreadX und die KI.
-
-Diese Trennung erklärt auch, warum das Flash-Skript zwei getrennte Builds signiert und
-in unterschiedliche Adressen schreibt.
 
 ### Was der FSBL genau tut
 
@@ -197,7 +168,7 @@ KI-Modelle bringen zusammen rund 5,9 MB an Gewichten mit, die nicht in einen ein
 |---------|-------|--------|---------------|
 | FSBL | klein | Bootloader | `0x70000000` |
 | ROM | 511 KB, ca. 28 % belegt | `.text`, Anwendungscode, Runtime, ThreadX | `0x70100000` |
-| ROM2 | 2047 KB, ca. 47 % belegt | `.rodata`, **Modellgewichte** beider Netze | `0x70200400` |
+| ROM2 | 2047 KB, ca. 47 % belegt | `.rodata`, **Modellgewichte** beider Neuronalen Netzen | `0x70200400` |
 | RAM | 2048 KB, ca. 0,5 % belegt | `.data`, `.bss`, Stacks | AXISRAM |
 
 Linker-Skript: `Appli/STM32N657XX_ROMxspi1xspi2_RAMxspi3.ld`
@@ -207,11 +178,6 @@ Die Gewichte müssen **nicht** separat als Hex-Datei programmiert werden. Sie si
 automatisch in `.rodata` und damit in ROM2. Das Flash-Skript extrahiert diesen
 Abschnitt mit `objcopy -j .rodata` in ein eigenes Binary und schreibt es an die
 passende Adresse.
-
-> **Achtung, häufige Fehlerquelle:** Wird ROM2 nicht mitgeflasht, stürzt die Appli
-> beim allerersten Zugriff auf eine Konstante oder einen String ab, also sehr früh in
-> `main()`. Das Flash-Skript prüft deshalb, ob das ROM2-Binary existiert und nicht
-> leer ist, und warnt sonst deutlich.
 
 Zusätzlich liegen im internen RAM:
 
@@ -239,8 +205,6 @@ STM32CubeAI_Studio_AI_Init();    // NPU und beide Netze initialisieren
 MX_ThreadX_Init();               // tx_kernel_enter, kehrt nie zurueck
 ```
 
-Zwei Details lohnen die Erklärung:
-
 **Die MPU wird vor dem I-Cache konfiguriert.** Der Cache beginnt sofort, Befehlszeilen
 aus dem XSPI-Bereich zu holen. Stimmen die Speicherattribute zu diesem Zeitpunkt
 nicht, holt er sie mit den falschen Eigenschaften.
@@ -264,34 +228,7 @@ Zahl bedeutet höhere Priorität.**
 Alle drei laufen als Endlosschleife mit `tx_thread_sleep(1)` am Ende, geben also nach
 jedem Durchlauf einen Tick ab. Dadurch blockiert keiner die anderen.
 
-```mermaid
-flowchart TB
-    subgraph HW["Hardware"]
-        CAM["Kamera IMX335<br/>2592 x 1944, 30 fps"]
-        DCMIPP["DCMIPP<br/>Crop + Skalierung"]
-        FB["Framebuffer 0x34400000<br/>640 x 480 RGB565"]
-        LTDC["LTDC"]
-        LCD["Display RK050HR18"]
-        NPU["NPU"]
-    end
-
-    subgraph THREADS["ThreadX"]
-        TCAM["Camera Thread (15)<br/>CMW_CAMERA_Run()"]
-        TAI["AI Thread (10)<br/>Inferenz + Overlay"]
-        TCMD["CMD Thread (12)<br/>USB CDC"]
-    end
-
-    CAM --> DCMIPP --> FB
-    FB --> LTDC --> LCD
-    TCAM -.->|"bedient"| DCMIPP
-    FB -->|"liest als<br/>Modelleingang"| TAI
-    TAI -->|"rechnet auf"| NPU
-    TAI -->|"zeichnet Overlay<br/>zurueck"| FB
-    FB -->|"CAPTURE"| TCMD
-
-    style HW fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
-    style THREADS fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
-```
+![Programmablauf innerhalb des STM32N6](image.png)
 
 Der Framebuffer ist der zentrale Treffpunkt: die Kamera schreibt hinein, der LTDC
 zeigt ihn an, der AI-Thread liest daraus seinen Eingang und zeichnet sein Ergebnis in
@@ -316,7 +253,7 @@ kontinuierlich ein aktuelles Bild bekommt.
 
 ### AI Thread
 
-Der Kern des Ganzen, und bewusst kurz gehalten:
+Der gesamte AI-Prozess lässt sich in diesen Zeilen kombrimieren: 
 
 ```c
 for (;;)
@@ -339,8 +276,7 @@ for (;;)
 ### Die Erweiterungspunkte (weak Hooks)
 
 Der KI-Code kennt weder Kamera noch Display. Die Verbindung entsteht über Funktionen,
-die als `__weak` deklariert sind und projektspezifisch überschrieben werden. Das ist
-der vorgesehene Ort für eigene Erweiterungen.
+die als `__weak` deklariert sind und projektspezifisch überschrieben werden. 
 
 | Hook | Aufgabe | Standardverhalten |
 |------|---------|-------------------|
@@ -375,7 +311,7 @@ LL_ATON_DECLARE_NAMED_NN_INSTANCE_AND_INTERFACE(seg)
 ```
 
 Beide Netze sind fest einkompiliert und liegen gleichzeitig im Flash. Umgeschaltet
-wird nicht das Programm, sondern nur ein Zeiger auf den passenden Kontext:
+wird nicht das Programm, sondern nur ein Zeiger.
 
 ```c
 typedef struct {
@@ -390,15 +326,15 @@ typedef struct {
 
 `aiInit()` initialisiert die Runtime, beide Netze und beide Kontexte. Die Puffer-Adressen
 holt es sich zur Laufzeit vom Runtime über `LL_ATON_Input_Buffers_Info()` und
-`LL_ATON_Output_Buffers_Info()`, sie sind also nirgends hart verdrahtet.
+`LL_ATON_Output_Buffers_Info()`.
 
 `App_AI_SetModel()` setzt lediglich `g_active_model` und aktualisiert die
-Puffer-Zeiger. Der Wechsel kostet damit praktisch nichts.
+Puffer-Zeiger.
 
-### Wie eine Inferenz abläuft
+### Ablauf einer Inferenz
 
-Die NPU arbeitet ein Netz nicht in einem Rutsch ab, sondern in sogenannten
-Epoch-Blöcken. `aiRun()` treibt diese Schleife:
+Die NPU arbeitet ein Netz nicht in einem Durchlauf ab, sondern in sogenannten
+Epoch-Blöcken. `aiRun()` betreibt folgende Schleife:
 
 ```c
 LL_ATON_RT_Reset_Network(ctx->instance);
@@ -416,29 +352,27 @@ do {
 Bare-Metal-Programm würde hier `LL_ATON_OSAL_WFE()` stehen und die CPU schlafen legen.
 Unter ThreadX wäre das gefährlich, denn bleibt der NPU-Interrupt aus, hängt der Thread
 für immer. Deshalb wird stattdessen ein Tick abgegeben und gepollt, mit zwei Zählern
-als Notbremse:
+als Zwangsabbruch.
 
 | Rückgabewert | Bedeutung |
 |--------------|-----------|
 | `0` | Inferenz erfolgreich |
 | `-1` | Gesamt-Guard ausgelöst, 2.000.000 Durchläufe |
-| `-2` | WFE-Guard ausgelöst, 4000 Ticks ohne Fortschritt, meist ein fehlender NPU-Interrupt |
+| `-2` | WFE-Guard ausgelöst, 4000 Ticks ohne Fortschritt, fehlender NPU-Interrupt |
 
 Abfragen lässt sich der letzte Status über `App_AI_GetLastRunStatus()`, die Anzahl der
 gelaufenen Inferenzen über `App_AI_GetRunCounter()`.
 
-### Postprocessing auf dem Mikrocontroller
+### Postprocessing
 
 Das Modell liefert rohe int8-Tensoren. Die Umwandlung in Boxen, Masken und Keypoints
-passiert vollständig auf dem STM32.
+passiert vollständig auf der CPU des STM32N6.
 
 **Die Formaterkennung ist adaptiv.** `App_AI_InferYoloSegParams()` bekommt nur die
 beiden Puffergrößen und rät daraus die Geometrie: es probiert Masken-Kantenlängen aus
 der Liste 160, 128, 96, 80, 64, 48, 40, 32 durch und prüft, ob die Maskengröße glatt
 aufgeht. Danach testet es Box-Anzahlen aus 8400, 5376, 25200, 1344, 1008, 768 gegen
-die Detektionsgröße und leitet die Klassenzahl aus dem Rest ab. Das klingt nach einem
-Hack, hat aber einen praktischen Vorteil: exportiert man ein Modell mit anderer
-Eingangsgröße neu, muss im Firmware-Code nichts angepasst werden.
+die Detektionsgröße und leitet die Klassenzahl aus dem Rest ab. 
 
 **Danach die übliche YOLO-Kette:**
 
@@ -470,10 +404,10 @@ In `npu_init.c` passieren vier Dinge, bevor überhaupt ein Netz laufen kann:
 | `aiPreInitialize()` | Sammelaufruf, wird vor `aiInit()` ausgeführt |
 
 RISAF ist der Speicherschutz des STM32N6. Ohne passende Konfiguration darf die NPU
-nicht auf die Puffer im RAM zugreifen und die Inferenz schlägt fehl.
+nicht auf die Puffer im RAM zugreifen.
 
 In `app_config.h` steht `USE_OVERDRIVE 1`. Das bedeutet CPU mit 800 MHz und NPU mit
-1 GHz. Ohne Overdrive wären es 600 MHz und 800 MHz.
+1 GHz. Standardwerte sind 600 MHz und 800 MHz.
 
 ---
 
@@ -496,8 +430,9 @@ dafür heißen `dbg()` und `dbg_val()` in `app_threadx.c`.
 
 ## 8. USB-CDC-Protokoll
 
-Der CMD-Thread meldet sich als virtueller COM-Port und wartet auf Textkommandos. Über
-diesen Weg holt das Python-Skript `capture_image.py` seine Trainingsbilder.
+Dieses Feature, wurde ursprünglich dafür vorgesehen, dass das Display Overlay auch auf einem 
+externen Display angezeigt werden kann und damit nicht abhängig wäre auf dem bereits installierten 
+LCD. Umsetztung wurde nicht getestet. 
 
 | Kommando | Antwort |
 |----------|---------|
@@ -533,7 +468,7 @@ fehlgeschlagene Blöcke werden bis zu fünfmal wiederholt.
 | `Appli/AI/App/npu_init.c` | NPU-Takt, RISAF, Cache |
 | `Appli/AI/App/app_config.h` | Cache- und Overdrive-Schalter |
 
-### Was generiert ist und nicht von Hand geändert werden sollte
+### Generiert und darf nicht verändert werden!
 
 | Ort | Inhalt |
 |-----|--------|
@@ -560,37 +495,17 @@ Läuft der Code-Generator erneut, überschreibt er `mx-generated.cmake`, aber ni
 
 ---
 
-## 10. Ein neues Modell einbinden
-
-1. Modell mit `EdgeAI.py 4 --quantize` als INT8-ONNX exportieren
-2. Kalibrierdaten mit `npzConverter.py` erzeugen, `--imgsz` muss zur Eingangsgröße
-   des Modells passen
-3. In STM32Cube AI Studio importieren und Netzwerkcode generieren lassen
-4. Den generierten Code nach `Appli/AI/models/<pose|seg>/generated/` übernehmen
-5. Falls sich die Anzahl der Ausgänge geändert hat, in `aiInit()` den zweiten
-   Parameter von `App_AI_InitModelCtx()` anpassen. Aktuell: Pose hat einen Ausgang,
-   Segmentierung hat zwei.
-6. Neu bauen und flashen
-
-Ändert sich nur die Eingangsgröße oder die Anzahl der Boxen, muss am Code
-nichts angepasst werden. Die Formaterkennung aus Abschnitt 6 fängt das ab, und
-`App_AI_PrepareInput()` liest die Eingangsgröße zur Laufzeit aus.
-
-Nach jeder Änderung an den Gewichten unbedingt prüfen, ob ROM2 mitgeflasht wurde. Das
-Skript gibt am Ende die tatsächlich programmierten Dateien aus.
----
-
-## 11. Troubleshooting
+## 10. Troubleshooting
 
 | Symptom | Ursache und Abhilfe |
 |---------|---------------------|
 | Board startet nach dem Flashen nicht | RESET drücken. Der automatische Reset am Ende des Skripts darf fehlschlagen, ohne dass das Programmieren ungültig ist |
-| HardFault sehr früh in `main()` | ROM2 wurde nicht geflasht. Ausgabe des Flash-Skripts prüfen, dort steht eine ausdrückliche Warnung |
+| HardFault sehr früh in `main()` | ROM2 wurde nicht geflasht. Ausgabe des Flash-Skripts prüfen. |
 | Display bleibt schwarz | AXISRAM3-Takt nicht aktiviert, oder `LCD_FB_ADDRESS` in `main.c` und `app_threadx.c` stimmen nicht überein. Beide Dateien definieren die Adresse getrennt |
 | Bild steht, aber kein Overlay | `App_AI_GetDisplayFramebuffer()` liefert `NULL`. Die Überschreibung in `app_threadx.c` muss aktiv sein |
 | `aiRun()` liefert dauerhaft `-2` | NPU-Interrupt kommt nicht an. RISAF-Konfiguration und NPU-Takt in `npu_init.c` prüfen |
 | Overlay zeichnet Unsinn | Die Formaterkennung hat die Tensorgeometrie falsch geraten. Ausgangsgrößen des Modells gegen `App_AI_InferYoloSegParams()` prüfen |
-| Flash-Skript findet keinen Programmer | Nur der ST-Link-Zweig ist funktionsfähig, siehe Abschnitt 13 |
-| Signierung schlägt fehl | Pfad `CUBE_PROGRAMMER_PATH` im Skript prüfen. Das Ergebnis steht oben in der Ausgabe, nicht unten |
+| Flash-Skript findet keinen Programmer | Nur der ST-Link-Zweig ist funktionsfähig. |
+| Signierung schlägt fehl | Pfad `CUBE_PROGRAMMER_PATH` im Skript prüfen. Das Ergebnis steht oben in der Ausgabe. |
 | Debugger zeigt `??@<hex> Unknown Source` | In `launch.json` im stlink-Abschnitt `"serverApID": "1"` ergänzen |
 | Bilder über USB kommen unvollständig | `XFER_TIMEOUT_SEC` erhöhen, anderes USB-Kabel probieren |
